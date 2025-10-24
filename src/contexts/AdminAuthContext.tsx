@@ -22,7 +22,12 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [admin, setAdmin] = useState<Admin | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const API_URL = 'http://localhost:5000/api';
+  // Use the same API base URL as mongodb.ts
+  const API_BASE_URL = import.meta.env.PROD ? '/api' : 'http://localhost:5000/api';
+  const API_URL = API_BASE_URL;
+
+  console.log('🔐 AdminAuth API URL:', API_URL);
+  console.log('🔐 AdminAuth Environment:', import.meta.env.PROD ? 'production' : 'development');
 
   // Check for existing admin session on mount
   useEffect(() => {
@@ -69,6 +74,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     try {
       console.log('🔐 Attempting admin login with:', { username, password: '***' });
+      console.log('🔐 Using API URL:', `${API_URL}/auth/admin/login`);
       
       const response = await fetch(`${API_URL}/auth/admin/login`, {
         method: 'POST',
