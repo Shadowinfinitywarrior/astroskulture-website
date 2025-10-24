@@ -2,9 +2,15 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Load environment variables FIRST - before any other imports
 dotenv.config();
+
+// Fix for ES modules __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Debug environment variables
 console.log('🔧 Environment Variables Check:');
@@ -36,7 +42,9 @@ if (missingEnvVars.length > 0) {
 
 // Enhanced CORS configuration
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: process.env.NODE_ENV === 'production' 
+    ? false // Same origin in production
+    : process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -132,6 +140,29 @@ app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/admin', adminRoutes);
 
+// Serve static files from React build in production
+if (process.env.NODE_ENV === 'production') {
+  console.log('🏗️  Production mode: Serving React static files');
+  
+  // Serve static files from the React app build
+  app.use(express.static(path.join(__dirname, '../../dist')));
+
+  // The "catchall" handler: for any request that doesn't match API routes
+  app.get('*', (req, res) => {
+    // Don't serve HTML for API routes
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'API route not found' 
+      });
+    }
+    
+    console.log(`📄 Serving React app for: ${req.path}`);
+    // Serve React app for all other routes
+    res.sendFile(path.join(__dirname, '../../dist/index.html'));
+  });
+}
+
 // Enhanced health check endpoint
 app.get('/api/health', (req, res) => {
   const dbStatus = mongoose.connection.readyState;
@@ -158,6 +189,7 @@ app.get('/api/health', (req, res) => {
       port: PORT,
       uptime: process.uptime()
     },
+    staticFiles: process.env.NODE_ENV === 'production' ? 'serving React build' : 'development mode',
     routes: {
       auth: '/api/auth',
       products: '/api/products',
@@ -176,6 +208,7 @@ app.get('/api', (req, res) => {
     message: 'ASTRO-MAIN API Server',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
+    deployment: process.env.NODE_ENV === 'production' ? 'production' : 'development',
     endpoints: {
       auth: {
         login: 'POST /api/auth/login',
@@ -287,4 +320,9 @@ app.listen(PORT, () => {
   console.log('   • /api/users/address');
   console.log('   • /api/admin/*');
   console.log('═'.repeat(60));
+  
+  // Additional production info
+  if (process.env.NODE_ENV === 'production') {
+    console.log('🏗️  Production Mode: Serving React frontend from /dist');
+  }
 });

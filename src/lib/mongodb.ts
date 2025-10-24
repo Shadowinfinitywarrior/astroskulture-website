@@ -1,4 +1,11 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+// For production, use relative path since both are on same domain
+// For development, use localhost
+const API_BASE_URL = import.meta.env.PROD 
+  ? '/api'  // Same domain as frontend in production
+  : 'http://localhost:5000/api'; // Local development
+
+console.log('🌍 API Base URL:', API_BASE_URL);
+console.log('🚀 Environment:', import.meta.env.PROD ? 'production' : 'development');
 
 class ApiService {
   private async request(endpoint: string, options: RequestInit = {}, isAdmin: boolean = false) {
@@ -6,7 +13,10 @@ class ApiService {
     const token = isAdmin ? localStorage.getItem('adminToken') : localStorage.getItem('token');
     const url = `${API_BASE_URL}${endpoint}`;
     
-    console.log(`🔄 API Request: ${url}`, { isAdmin, hasToken: !!token });
+    // Only log in development to reduce noise in production
+    if (!import.meta.env.PROD) {
+      console.log(`🔄 API Request: ${url}`, { isAdmin, hasToken: !!token });
+    }
     
     const config: RequestInit = {
       headers: {
@@ -20,6 +30,11 @@ class ApiService {
     try {
       const response = await fetch(url, config);
       
+      // Handle connection errors
+      if (!response.ok && response.status === 0) {
+        throw new Error('Cannot connect to backend server. Please check if the server is running.');
+      }
+      
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.message || `API request failed: ${response.status}`);
@@ -27,7 +42,10 @@ class ApiService {
 
       return await response.json();
     } catch (error) {
-      console.error('API request error:', error);
+      // Only log errors in development
+      if (!import.meta.env.PROD) {
+        console.error('API request error:', error);
+      }
       throw error;
     }
   }
