@@ -18,6 +18,7 @@ console.log('MONGODB_URI:', process.env.MONGODB_URI ? '✓ Loaded' : '✗ MISSIN
 console.log('JWT_SECRET:', process.env.JWT_SECRET ? '✓ Loaded' : '✗ MISSING');
 console.log('PORT:', process.env.PORT || '5000 (default)');
 console.log('NODE_ENV:', process.env.NODE_ENV || 'development (default)');
+console.log('CLIENT_URL:', process.env.CLIENT_URL || 'Not set');
 
 // Import routes after environment variables are loaded
 import authRoutes from './routes/auth.js';
@@ -40,11 +41,13 @@ if (missingEnvVars.length > 0) {
   process.exit(1);
 }
 
-// Enhanced CORS configuration
+// Enhanced CORS configuration - FIXED
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? false // Same origin in production
-    : process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: [
+    'https://astroskulture-website.onrender.com',
+    'https://astrokulture-fullstack.onrender.com',
+    'http://localhost:5173'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -190,6 +193,13 @@ app.get('/api/health', (req, res) => {
       uptime: process.uptime()
     },
     staticFiles: process.env.NODE_ENV === 'production' ? 'serving React build' : 'development mode',
+    cors: {
+      allowedOrigins: [
+        'https://astroskulture-website.onrender.com',
+        'https://astrokulture-fullstack.onrender.com',
+        'http://localhost:5173'
+      ]
+    },
     routes: {
       auth: '/api/auth',
       products: '/api/products',
@@ -209,6 +219,13 @@ app.get('/api', (req, res) => {
     version: '1.0.0',
     timestamp: new Date().toISOString(),
     deployment: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+    cors: {
+      allowedOrigins: [
+        'https://astroskulture-website.onrender.com',
+        'https://astrokulture-fullstack.onrender.com',
+        'http://localhost:5173'
+      ]
+    },
     endpoints: {
       auth: {
         login: 'POST /api/auth/login',
@@ -301,10 +318,15 @@ app.listen(PORT, () => {
   console.log('═'.repeat(60));
   console.log(`📍 Server Port: ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Client URL: ${process.env.CLIENT_URL || 'http://localhost:5173'}`);
+  console.log(`🔗 Client URL: ${process.env.CLIENT_URL || 'Not set'}`);
   console.log(`📡 API Base URL: http://localhost:${PORT}/api`);
   console.log(`❤️  Health Check: http://localhost:${PORT}/api/health`);
   console.log(`🛜 Server Ready: http://localhost:${PORT}`);
+  console.log('═'.repeat(60));
+  console.log('🌐 CORS Allowed Origins:');
+  console.log('   • https://astroskulture-website.onrender.com');
+  console.log('   • https://astrokulture-fullstack.onrender.com');
+  console.log('   • http://localhost:5173');
   console.log('═'.repeat(60));
   console.log('📋 Available Routes:');
   console.log('   AUTH       /api/auth');
