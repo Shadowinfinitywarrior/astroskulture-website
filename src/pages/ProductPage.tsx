@@ -61,9 +61,9 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
     addToCart({
       productId: product._id,
       name: product.name,
-      price: product.price,
-      discountPrice: product.discountPrice,
+      price: product.discountPrice || product.price,
       image: product.images[0]?.url || '',
+      quantity: 1,
       size: selectedSize,
     });
   };
@@ -106,6 +106,9 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
     ? Math.round((1 - product.discountPrice / product.price) * 100)
     : 0;
 
+  // Get category name - handle both category and categoryData
+  const categoryName = product.categoryData?.name || product.category?.name || 'ASTROSKULTURE';
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -123,7 +126,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
             {/* Category & Brand */}
             <div className="space-y-2">
               <span className="text-sm text-red-600 font-medium uppercase tracking-wide">
-                {product.categoryId?.name || 'ASTRO KULTURE'}
+                {categoryName}
               </span>
               <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
                 {product.name}
@@ -137,15 +140,15 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                   <Star
                     key={i}
                     className={`w-5 h-5 ${
-                      i < Math.floor(product.rating)
+                      i < Math.floor(product.rating || 0)
                         ? 'text-yellow-400 fill-yellow-400'
                         : 'text-gray-300'
                     }`}
                   />
                 ))}
               </div>
-              <span className="text-lg font-medium text-gray-700">{product.rating.toFixed(1)}</span>
-              <span className="text-gray-500">({product.reviewCount} reviews)</span>
+              <span className="text-lg font-medium text-gray-700">{(product.rating || 0).toFixed(1)}</span>
+              <span className="text-gray-500">({product.reviewCount || 0} reviews)</span>
             </div>
 
             {/* Pricing */}

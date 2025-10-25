@@ -129,15 +129,23 @@ export const getProductById = async (req, res) => {
 
 export const getProductBySlug = async (req, res) => {
   try {
-    const product = await Product.findOne({ slug: req.params.slug })
+    console.log('🔍 [DEBUG] Searching for product with slug:', req.params.slug);
+    
+    const product = await Product.findOne({ 
+      slug: req.params.slug,
+      isActive: true 
+    })
       .populate({
         path: 'category',
         select: 'name slug imageUrl description',
         match: { isActive: true }
       })
       .lean();
+
+    console.log('📦 [DEBUG] Product found:', product ? product.name : 'None');
     
     if (!product) {
+      console.log('❌ [DEBUG] Product not found with slug:', req.params.slug);
       return res.status(404).json({ 
         success: false,
         message: 'Product not found' 
@@ -155,12 +163,13 @@ export const getProductBySlug = async (req, res) => {
       }
     };
 
+    console.log('✅ [DEBUG] Returning product:', cleanedProduct.name);
     res.json({
       success: true,
       data: cleanedProduct
     });
   } catch (error) {
-    console.error('Get product by slug error:', error);
+    console.error('❌ Get product by slug error:', error);
     res.status(500).json({ 
       success: false,
       message: 'Failed to fetch product', 
@@ -395,6 +404,32 @@ export const getCategoriesWithCounts = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch categories with counts',
+      error: error.message
+    });
+  }
+};
+
+// Debug endpoint to see all products and slugs
+export const getAllProductsDebug = async (req, res) => {
+  try {
+    const products = await Product.find({ isActive: true })
+      .select('name slug _id category totalStock isActive')
+      .populate('category', 'name slug')
+      .sort({ name: 1 })
+      .lean();
+    
+    console.log('🔍 [DEBUG] All active products:', products.length);
+    
+    res.json({
+      success: true,
+      data: products,
+      count: products.length,
+      message: `Found ${products.length} active products in database`
+    });
+  } catch (error) {
+    console.error('Get products debug error:', error);
+    res.status(500).json({
+      success: false,
       error: error.message
     });
   }
