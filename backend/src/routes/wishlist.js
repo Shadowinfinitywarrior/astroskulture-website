@@ -5,7 +5,7 @@ import {
   removeFromWishlist,
   checkWishlistStatus
 } from '../controllers/wishlistController.js';
-import auth from '../middleware/auth.js';
+import { auth } from '../middleware/auth.js'; // FIXED: Use named import
 
 const router = express.Router();
 
