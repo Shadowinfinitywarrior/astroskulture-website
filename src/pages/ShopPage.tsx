@@ -43,7 +43,7 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
     try {
       const params: any = {};
       
-      if (selectedCategory) {
+      if (selectedCategory && selectedCategory !== 'all') {
         params.category = selectedCategory;
       }
       
@@ -62,17 +62,24 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
 
         // Apply price range filter on client side
         filteredProducts = filteredProducts.filter(product => {
-          const price = product.discountPrice || product.price;
+          const price = product.comparePrice || product.price;
           return price >= priceRange[0] && price <= priceRange[1];
         });
 
         // Apply sorting on client side
         if (sortBy === 'price_low') {
-          filteredProducts.sort((a, b) => (a.discountPrice || a.price) - (b.discountPrice || b.price));
+          filteredProducts.sort((a, b) => (a.comparePrice || a.price) - (b.comparePrice || b.price));
         } else if (sortBy === 'price_high') {
-          filteredProducts.sort((a, b) => (b.discountPrice || b.price) - (a.discountPrice || a.price));
+          filteredProducts.sort((a, b) => (b.comparePrice || b.price) - (a.comparePrice || a.price));
         } else if (sortBy === 'rating') {
-          filteredProducts.sort((a, b) => b.rating - a.rating);
+          filteredProducts.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        } else if (sortBy === 'featured') {
+          // Featured products first, then by creation date
+          filteredProducts.sort((a, b) => {
+            if (a.isFeatured && !b.isFeatured) return -1;
+            if (!a.isFeatured && b.isFeatured) return 1;
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          });
         }
 
         setProducts(filteredProducts);
@@ -85,21 +92,47 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
   };
 
   const handleAddToCart = (product: Product) => {
-    const defaultSize = product.sizes.find(size => size.stock > 0)?.size || 'M';
-    
     addToCart({
       productId: product._id,
       name: product.name,
-      price: product.price,
-      discountPrice: product.discountPrice,
-      image: product.images[0]?.url || '',
-      size: defaultSize,
+      price: product.comparePrice || product.price,
+      image: product.images[0] || '',
+      quantity: 1,
+      size: 'Standard' // Default size since we removed sizes array
     });
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     loadProducts();
+  };
+
+  const clearFilters = () => {
+    setSelectedCategory(null);
+    setSearchQuery('');
+    setPriceRange([0, 3000]);
+    setSortBy('featured');
+  };
+
+  const getProductImage = (product: Product) => {
+    return product.images[0] || 'https://images.pexels.com/photos/1152994/pexels-photo-1152994.jpeg?auto=compress&cs=tinysrgb&w=400';
+  };
+
+  const getProductPrice = (product: Product) => {
+    return product.comparePrice || product.price;
+  };
+
+  const getDisplayPrice = (product: Product) => {
+    return product.comparePrice || product.price;
+  };
+
+  const hasDiscount = (product: Product) => {
+    return product.comparePrice && product.comparePrice < product.price;
+  };
+
+  const getDiscountPercentage = (product: Product) => {
+    if (!product.comparePrice || product.comparePrice >= product.price) return 0;
+    return Math.round((1 - product.comparePrice / product.price) * 100);
   };
 
   return (
@@ -192,12 +225,12 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                   </div>
                 </div>
 
-                {/* Apply Filters Button */}
+                {/* Clear Filters Button */}
                 <button
-                  onClick={loadProducts}
-                  className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
+                  onClick={clearFilters}
+                  className="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors"
                 >
-                  Apply Filters
+                  Clear Filters
                 </button>
               </div>
             </div>
@@ -205,9 +238,12 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
 
           {/* Products Grid */}
           <main className="flex-1">
-            <div className="bg-white p-4 rounded-lg shadow-sm mb-6 flex items-center justify-between">
+            <div className="bg-white p-4 rounded-lg shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
               <p className="text-gray-600">
                 Showing <span className="font-semibold">{products.length}</span> products
+                {selectedCategory && (
+                  <> in <span className="font-semibold">{categories.find(c => c.slug === selectedCategory)?.name}</span></>
+                )}
               </p>
               <select
                 value={sortBy}
@@ -218,6 +254,7 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                 <option value="price_low">Price: Low to High</option>
                 <option value="price_high">Price: High to Low</option>
                 <option value="rating">Highest Rated</option>
+                <option value="newest">Newest First</option>
               </select>
             </div>
 
@@ -231,17 +268,22 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                   <div key={product._id} className="bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
                     <div className="relative overflow-hidden">
                       <img
-                        src={product.images[0]?.url || 'https://images.pexels.com/photos/1152994/pexels-photo-1152994.jpeg?auto=compress&cs=tinysrgb&w=400'}
+                        src={getProductImage(product)}
                         alt={product.name}
                         className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer"
                         onClick={() => onNavigate('product', { slug: product.slug })}
                       />
-                      {product.discountPrice && (
+                      {hasDiscount(product) && (
                         <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                          {Math.round((1 - product.discountPrice / product.price) * 100)}% OFF
+                          {getDiscountPercentage(product)}% OFF
                         </div>
                       )}
-                      <button className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50">
+                      {product.isFeatured && (
+                        <div className="absolute top-4 right-4 bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                          Featured
+                        </div>
+                      )}
+                      <button className="absolute top-16 right-4 p-2 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50">
                         <Heart className="w-5 h-5 text-red-600" />
                       </button>
                     </div>
@@ -252,36 +294,42 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                       >
                         {product.name}
                       </h3>
+                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                        {product.description}
+                      </p>
                       <div className="flex items-center space-x-1 mb-2">
                         <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                        <span className="text-sm font-medium">{product.rating.toFixed(1)}</span>
-                        <span className="text-sm text-gray-500">({product.reviewCount})</span>
+                        <span className="text-sm font-medium">{(product.rating || 0).toFixed(1)}</span>
+                        <span className="text-sm text-gray-500">({product.reviewCount || 0})</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <div>
-                          {product.discountPrice ? (
+                          {hasDiscount(product) ? (
                             <div className="flex items-center space-x-2">
                               <span className="text-lg font-bold text-red-600">
-                                ₹{product.discountPrice}
+                                ₹{getDisplayPrice(product)}
                               </span>
                               <span className="text-sm text-gray-500 line-through">
                                 ₹{product.price}
                               </span>
                             </div>
                           ) : (
-                            <span className="text-lg font-bold text-gray-900">₹{product.price}</span>
+                            <span className="text-lg font-bold text-gray-900">₹{getDisplayPrice(product)}</span>
                           )}
                         </div>
                         <button
                           onClick={() => handleAddToCart(product)}
-                          disabled={product.totalStock === 0}
+                          disabled={product.stock === 0}
                           className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                         >
                           <ShoppingCart className="w-5 h-5" />
                         </button>
                       </div>
-                      {product.totalStock === 0 && (
+                      {product.stock === 0 && (
                         <p className="text-red-600 text-sm mt-2">Out of Stock</p>
+                      )}
+                      {product.stock > 0 && product.stock < 10 && (
+                        <p className="text-orange-600 text-sm mt-2">Only {product.stock} left in stock</p>
                       )}
                     </div>
                   </div>
@@ -293,12 +341,7 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
               <div className="text-center py-16">
                 <p className="text-gray-500 text-lg mb-4">No products found matching your criteria.</p>
                 <button
-                  onClick={() => {
-                    setSelectedCategory(null);
-                    setSearchQuery('');
-                    setPriceRange([0, 3000]);
-                    setSortBy('featured');
-                  }}
+                  onClick={clearFilters}
                   className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
                 >
                   Clear Filters

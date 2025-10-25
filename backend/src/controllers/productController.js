@@ -8,10 +8,22 @@ export const getAllProducts = async (req, res) => {
     let query = { isActive: true };
     
     // Filter by category slug
-    if (category) {
+    if (category && category !== 'all') {
       const categoryDoc = await Category.findOne({ slug: category, isActive: true });
       if (categoryDoc) {
-        query.categoryId = categoryDoc._id;
+        query.category = categoryDoc._id;
+      } else {
+        // If category not found, return empty results
+        return res.json({
+          success: true,
+          data: [],
+          pagination: {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            total: 0,
+            pages: 0
+          }
+        });
       }
     }
     
@@ -24,12 +36,13 @@ export const getAllProducts = async (req, res) => {
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { description: { $regex: search, $options: 'i' } },
+        { tags: { $in: [new RegExp(search, 'i')] } }
       ];
     }
 
     const products = await Product.find(query)
-      .populate('categoryId', 'name slug')
+      .populate('category', 'name slug')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
@@ -59,7 +72,7 @@ export const getAllProducts = async (req, res) => {
 export const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
-      .populate('categoryId', 'name slug');
+      .populate('category', 'name slug');
     
     if (!product) {
       return res.status(404).json({ 
@@ -85,7 +98,7 @@ export const getProductById = async (req, res) => {
 export const getProductBySlug = async (req, res) => {
   try {
     const product = await Product.findOne({ slug: req.params.slug })
-      .populate('categoryId', 'name slug');
+      .populate('category', 'name slug');
     
     if (!product) {
       return res.status(404).json({ 
@@ -114,7 +127,7 @@ export const createProduct = async (req, res) => {
     await product.save();
     
     const populatedProduct = await Product.findById(product._id)
-      .populate('categoryId', 'name slug');
+      .populate('category', 'name slug');
 
     res.status(201).json({
       success: true,
@@ -136,7 +149,7 @@ export const updateProduct = async (req, res) => {
       req.params.id,
       { ...req.body, updatedAt: Date.now() },
       { new: true, runValidators: true }
-    ).populate('categoryId', 'name slug');
+    ).populate('category', 'name slug');
     
     if (!product) {
       return res.status(404).json({ 
@@ -194,7 +207,7 @@ export const getFeaturedProducts = async (req, res) => {
       isFeatured: true, 
       isActive: true 
     })
-      .populate('categoryId', 'name slug')
+      .populate('category', 'name slug')
       .sort({ createdAt: -1 })
       .limit(8);
 
@@ -208,6 +221,60 @@ export const getFeaturedProducts = async (req, res) => {
       success: false,
       message: 'Failed to fetch featured products', 
       error: error.message 
+    });
+  }
+};
+
+// Get products by category
+export const getProductsByCategory = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { page = 1, limit = 12 } = req.query;
+
+    const category = await Category.findOne({ slug, isActive: true });
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: 'Category not found'
+      });
+    }
+
+    const products = await Product.find({ 
+      category: category._id,
+      isActive: true 
+    })
+      .populate('category', 'name slug')
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    const total = await Product.countDocuments({ 
+      category: category._id,
+      isActive: true 
+    });
+
+    res.json({
+      success: true,
+      data: products,
+      category: {
+        _id: category._id,
+        name: category.name,
+        slug: category.slug,
+        description: category.description
+      },
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Get products by category error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch products by category',
+      error: error.message
     });
   }
 };
