@@ -43,6 +43,7 @@ function AppContent() {
   }, []);
 
   const handleNavigate = (page: string, params?: NavigationParams) => {
+    console.log('🔄 Navigation:', page, params);
     setCurrentPage(page);
     setPageParams(params || {});
     window.scrollTo(0, 0);
@@ -126,13 +127,15 @@ function AdminRoutes({ currentPage, onNavigate }: { currentPage: string; onNavig
     );
   }
 
+  console.log('🏗️ Rendering admin page:', currentPage);
+
   switch (currentPage) {
     case 'admin-products':
-      return <AdminProductsPage />;
+      return <AdminProductsPage onNavigate={onNavigate} />; // FIXED: Added onNavigate prop
     case 'admin-orders':
-      return <AdminOrdersPage />;
+      return <AdminOrdersPage onNavigate={onNavigate} />; // FIXED: Added onNavigate prop
     case 'admin-users':
-      return <AdminUsersPage />;
+      return <AdminUsersPage onNavigate={onNavigate} />; // FIXED: Added onNavigate prop
     case 'admin-dashboard':
     default:
       return <AdminDashboardPage onNavigate={onNavigate} />;

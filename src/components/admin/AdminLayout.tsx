@@ -4,7 +4,7 @@ import { LogOut, Package, ShoppingCart, Users, Home, Menu, X } from 'lucide-reac
 
 interface AdminLayoutProps {
   children: ReactNode;
-  currentPage: string; // Changed to string to be more flexible
+  currentPage: string;
   onNavigate: (page: string) => void;
 }
 
@@ -21,7 +21,6 @@ export default function AdminLayout({ children, currentPage, onNavigate }: Admin
 
   const handleLogout = () => {
     logout();
-    // Use window.location for logout to ensure complete reset
     window.location.href = '/';
   };
 
@@ -30,13 +29,21 @@ export default function AdminLayout({ children, currentPage, onNavigate }: Admin
     if (isSidebarOpen) {
       setIsSidebarOpen(false);
     }
-    // Navigate using the existing navigation system
-    onNavigate(target);
+    
+    // Safety check for onNavigate function
+    if (typeof onNavigate === 'function') {
+      console.log('🔄 Navigating to:', target);
+      onNavigate(target);
+    } else {
+      console.error('❌ onNavigate is not a function!');
+      // Fallback navigation
+      const route = target.replace('admin-', '/admin/');
+      window.location.href = route;
+    }
   };
 
   // Helper function to determine if a nav item is active
   const isNavActive = (navItem: typeof navigation[0]) => {
-    // Check both page and target for flexibility
     return currentPage === navItem.page || currentPage === navItem.target;
   };
 
@@ -53,7 +60,6 @@ export default function AdminLayout({ children, currentPage, onNavigate }: Admin
                 alt="Astros Kulture Logo" 
                 className="w-6 h-6 object-contain"
                 onError={(e) => {
-                  // Fallback if logo doesn't exist
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
                   target.parentElement!.innerHTML = '<div class="w-6 h-6 bg-slate-900 rounded-full"></div>';
@@ -88,7 +94,6 @@ export default function AdminLayout({ children, currentPage, onNavigate }: Admin
                   alt="Astros Kulture Logo" 
                   className="w-8 h-8 object-contain"
                   onError={(e) => {
-                    // Fallback if logo doesn't exist
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
                     target.parentElement!.innerHTML = '<div class="w-8 h-8 bg-slate-900 rounded-full"></div>';

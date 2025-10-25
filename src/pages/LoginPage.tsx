@@ -57,17 +57,6 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
     }
   };
 
-  // Test credentials quick fill
-  const fillTestCredentials = (type: 'admin' | 'user') => {
-    if (type === 'admin') {
-      setIdentifier('admin');
-      setPassword('admin123');
-    } else {
-      setIdentifier('test@example.com');
-      setPassword('password123');
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -130,26 +119,6 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
               </div>
             </div>
 
-            {/* Quick Test Buttons */}
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => fillTestCredentials('admin')}
-                className="flex-1 bg-slate-800 text-white py-2 rounded-lg text-sm font-medium hover:bg-slate-700 transition-colors"
-                disabled={isLoading}
-              >
-                Fill Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => fillTestCredentials('user')}
-                className="flex-1 bg-slate-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-slate-500 transition-colors"
-                disabled={isLoading}
-              >
-                Fill User
-              </button>
-            </div>
-
             <button
               type="submit"
               disabled={isLoading}
@@ -177,11 +146,6 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                 Sign up
               </button>
             </p>
-          </div>
-
-          <div className="mt-4 text-center text-xs text-slate-500 space-y-1">
-            <p><strong>Admin Test:</strong> username "admin" / password "admin123"</p>
-            <p><strong>User Test:</strong> email "user@example.com" / password "password123"</p>
           </div>
         </div>
       </div>
