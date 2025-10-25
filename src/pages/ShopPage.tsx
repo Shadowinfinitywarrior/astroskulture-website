@@ -105,6 +105,15 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
     });
   };
 
+  const handleProductClick = (product: Product) => {
+    console.log('🛍️ [DEBUG] Navigating to product:', {
+      id: product._id,
+      slug: product.slug,
+      name: product.name
+    });
+    onNavigate('product', { slug: product.slug });
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     loadProducts();
@@ -278,7 +287,7 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                         src={getProductImage(product)}
                         alt={product.images[0]?.alt || product.name}
                         className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer"
-                        onClick={() => onNavigate('product', { slug: product.slug })}
+                        onClick={() => handleProductClick(product)}
                       />
                       {hasDiscount(product) && (
                         <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
@@ -296,7 +305,7 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                     </div>
                     <div className="p-4">
                       <h3
-                        onClick={() => onNavigate('product', { slug: product.slug })}
+                        onClick={() => handleProductClick(product)}
                         className="font-semibold text-gray-900 mb-2 cursor-pointer hover:text-red-600 transition-colors line-clamp-2"
                       >
                         {product.name}

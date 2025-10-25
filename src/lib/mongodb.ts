@@ -14,10 +14,13 @@ class ApiService {
     const token = isAdmin ? localStorage.getItem('adminToken') : localStorage.getItem('token');
     const url = `${API_BASE_URL}${endpoint}`;
     
-    // Only log in development to reduce noise in production
-    if (!import.meta.env.PROD) {
-      console.log(`🔄 API Request: ${url}`, { isAdmin, hasToken: !!token });
-    }
+    // Enhanced logging for debugging
+    console.log(`🔄 API Request: ${url}`, { 
+      isAdmin, 
+      hasToken: !!token,
+      endpoint,
+      method: options.method || 'GET'
+    });
     
     const config: RequestInit = {
       headers: {
@@ -43,10 +46,11 @@ class ApiService {
 
       return await response.json();
     } catch (error) {
-      // Only log errors in development
-      if (!import.meta.env.PROD) {
-        console.error('API request error:', error);
-      }
+      console.error('❌ API request error:', {
+        endpoint,
+        url,
+        error: error.message
+      });
       throw error;
     }
   }
@@ -97,6 +101,40 @@ class ApiService {
     
     const queryString = queryParams.toString();
     return this.request(`/products${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getProduct(id: string) {
+    console.log('📦 [DEBUG] Fetching product by ID:', id);
+    return this.request(`/products/${id}`);
+  }
+
+  async getProductBySlug(slug: string) {
+    console.log('📦 [DEBUG] Fetching product by slug:', slug);
+    try {
+      const response = await this.request(`/products/slug/${slug}`);
+      console.log('✅ [DEBUG] Product by slug response:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [DEBUG] Error fetching product by slug:', {
+        slug,
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  async getFeaturedProducts() {
+    return this.request('/products/featured');
+  }
+
+  async getProductsByCategory(categorySlug: string) {
+    return this.request(`/products/category/${categorySlug}`);
+  }
+
+  // Debug methods
+  async debugGetAllProducts() {
+    console.log('🔍 [DEBUG] Getting all products for debugging');
+    return this.request('/products/debug/all');
   }
 
   // Admin methods - use isAdmin: true
@@ -174,16 +212,13 @@ class ApiService {
     return this.request(`/orders/${id}`);
   }
 
+  // Category methods
   async getCategories() {
     return this.request('/categories');
   }
 
-  async getProduct(id: string) {
-    return this.request(`/products/${id}`);
-  }
-
-  async getProductBySlug(slug: string) {
-    return this.request(`/products/slug/${slug}`);
+  async getCategoriesWithCounts() {
+    return this.request('/products/categories/with-counts');
   }
 }
 

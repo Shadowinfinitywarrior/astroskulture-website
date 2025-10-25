@@ -18,6 +18,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
   const { addToCart } = useCart();
 
   useEffect(() => {
+    console.log('🔄 [DEBUG] ProductPage received slug:', slug);
     loadProduct();
   }, [slug]);
 
@@ -25,8 +26,10 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
     try {
       setLoading(true);
       setError('');
+      console.log('📦 [DEBUG] Loading product with slug:', slug);
       
       const data = await apiService.getProductBySlug(slug);
+      console.log('📦 [DEBUG] Product API response:', data);
       
       if (data.success && data.data) {
         setProduct(data.data);
@@ -38,11 +41,13 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
         if (availableSizes.length > 0) {
           setSelectedSize(availableSizes[0]);
         }
+        console.log('✅ [DEBUG] Product loaded successfully:', data.data.name);
       } else {
+        console.log('❌ [DEBUG] Product not found in response');
         setError('Product not found');
       }
     } catch (err) {
-      console.error('Error loading product:', err);
+      console.error('❌ [DEBUG] Error loading product:', err);
       setError('Failed to load product');
     } finally {
       setLoading(false);
@@ -62,9 +67,9 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
       productId: product._id,
       name: product.name,
       price: product.discountPrice || product.price,
-      image: product.images[0]?.url || '',
       quantity: 1,
       size: selectedSize,
+      image: product.images[0]?.url || '',
     });
   };
 
