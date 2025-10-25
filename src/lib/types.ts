@@ -217,6 +217,34 @@ export interface WishlistItem {
   createdAt: string;
 }
 
+export interface WishlistResponse {
+  success: boolean;
+  data: WishlistItem[];
+  message?: string;
+}
+
+export interface WishlistStatusResponse {
+  success: boolean;
+  data: {
+    inWishlist: boolean;
+  };
+}
+
+export interface AddToWishlistRequest {
+  productId: string;
+}
+
+export interface AddToWishlistResponse {
+  success: boolean;
+  message: string;
+  data: WishlistItem;
+}
+
+export interface RemoveFromWishlistResponse {
+  success: boolean;
+  message: string;
+}
+
 // Payment Types
 export interface PaymentIntent {
   id: string;
@@ -225,3 +253,27 @@ export interface PaymentIntent {
   status: string;
   client_secret: string;
 }
+
+// Context Types
+export interface WishlistContextType {
+  wishlist: WishlistItem[];
+  loading: boolean;
+  addToWishlist: (product: Product) => Promise<void>;
+  removeFromWishlist: (productId: string) => Promise<void>;
+  isInWishlist: (productId: string) => boolean;
+  refreshWishlist: () => Promise<void>;
+  wishlistCount: number;
+}
+
+// Export all types
+export type {
+  User as UserType,
+  Product as ProductType,
+  Category as CategoryType,
+  Order as OrderType,
+  Cart as CartType,
+  Review as ReviewType,
+  WishlistItem as WishlistItemType,
+  WishlistResponse as WishlistResponseType,
+  WishlistStatusResponse as WishlistStatusResponseType
+};

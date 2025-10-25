@@ -137,6 +137,71 @@ class ApiService {
     return this.request('/products/debug/all');
   }
 
+  // Wishlist methods
+  async getWishlist() {
+    console.log('💖 [DEBUG] Fetching user wishlist');
+    try {
+      const response = await this.request('/wishlist');
+      console.log('✅ [DEBUG] Wishlist response:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [DEBUG] Error fetching wishlist:', {
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  async addToWishlist(productId: string) {
+    console.log('💖 [DEBUG] Adding product to wishlist:', productId);
+    try {
+      const response = await this.request('/wishlist', {
+        method: 'POST',
+        body: JSON.stringify({ productId }),
+      });
+      console.log('✅ [DEBUG] Add to wishlist response:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [DEBUG] Error adding to wishlist:', {
+        productId,
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  async removeFromWishlist(productId: string) {
+    console.log('💖 [DEBUG] Removing product from wishlist:', productId);
+    try {
+      const response = await this.request(`/wishlist/${productId}`, {
+        method: 'DELETE',
+      });
+      console.log('✅ [DEBUG] Remove from wishlist response:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [DEBUG] Error removing from wishlist:', {
+        productId,
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  async checkWishlistStatus(productId: string) {
+    console.log('💖 [DEBUG] Checking wishlist status for product:', productId);
+    try {
+      const response = await this.request(`/wishlist/check/${productId}`);
+      console.log('✅ [DEBUG] Wishlist status response:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [DEBUG] Error checking wishlist status:', {
+        productId,
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
   // Admin methods - use isAdmin: true
   async adminGetProducts() {
     return this.request('/admin/products', {}, true);

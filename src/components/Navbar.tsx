@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ShoppingCart, User, Menu, X, Search, Heart, Star } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
+import { useWishlist } from '../contexts/WishlistContext'; // Add this import
 
 interface NavbarProps {
   onNavigate: (page: string) => void;
@@ -13,6 +14,7 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { user, isAdmin, signOut } = useAuth();
   const { cartCount } = useCart();
+  const { wishlist } = useWishlist(); // Add this line
 
   const handleSignOut = async () => {
     try {
@@ -96,9 +98,14 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
             {user && (
               <button
                 onClick={() => handleNavigation('wishlist')}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors relative"
               >
                 <Heart className="w-5 h-5 text-gray-700" />
+                {wishlist.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
+                    {wishlist.length}
+                  </span>
+                )}
               </button>
             )}
 
@@ -141,6 +148,17 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                       >
                         My Orders
+                      </button>
+                      <button
+                        onClick={() => handleNavigation('wishlist')}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        My Wishlist
+                        {wishlist.length > 0 && (
+                          <span className="ml-2 bg-red-100 text-red-600 text-xs px-1.5 py-0.5 rounded-full">
+                            {wishlist.length}
+                          </span>
+                        )}
                       </button>
                       {isAdmin && (
                         <button
@@ -232,9 +250,14 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
                 </button>
                 <button
                   onClick={() => handleNavigation('wishlist')}
-                  className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-between"
                 >
-                  My Wishlist
+                  <span>My Wishlist</span>
+                  {wishlist.length > 0 && (
+                    <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded-full">
+                      {wishlist.length}
+                    </span>
+                  )}
                 </button>
                 {isAdmin && (
                   <button

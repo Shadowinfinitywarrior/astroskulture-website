@@ -27,6 +27,7 @@ import orderRoutes from './routes/orders.js';
 import userRoutes from './routes/users.js';
 import categoryRoutes from './routes/categories.js';
 import adminRoutes from './routes/admin.js';
+import wishlistRoutes from './routes/wishlist.js'; // ADDED WISHLIST ROUTES
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -142,6 +143,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/wishlist', wishlistRoutes); // ADDED WISHLIST ROUTES
 
 // Serve static files from React build in production
 if (process.env.NODE_ENV === 'production') {
@@ -206,7 +208,8 @@ app.get('/api/health', (req, res) => {
       orders: '/api/orders',
       users: '/api/users',
       categories: '/api/categories',
-      admin: '/api/admin'
+      admin: '/api/admin',
+      wishlist: '/api/wishlist' // ADDED WISHLIST ROUTE
     }
   });
 });
@@ -272,6 +275,12 @@ app.get('/api', (req, res) => {
         createUser: 'POST /api/admin/users',
         updateUser: 'PUT /api/admin/users/:id',
         deleteUser: 'DELETE /api/admin/users/:id'
+      },
+      wishlist: { // ADDED WISHLIST ENDPOINTS
+        get: 'GET /api/wishlist',
+        add: 'POST /api/wishlist',
+        remove: 'DELETE /api/wishlist/:productId',
+        check: 'GET /api/wishlist/check/:productId'
       }
     },
     authentication: {
@@ -308,6 +317,7 @@ app.use('*', (req, res) => {
       '/api/users',
       '/api/categories',
       '/api/admin',
+      '/api/wishlist', // ADDED WISHLIST ROUTE
       '/api/health'
     ]
   });
@@ -335,12 +345,14 @@ app.listen(PORT, () => {
   console.log('   USERS      /api/users');
   console.log('   CATEGORIES /api/categories');
   console.log('   ADMIN      /api/admin');
+  console.log('   WISHLIST   /api/wishlist'); // ADDED WISHLIST ROUTE
   console.log('═'.repeat(60));
   console.log('🔐 Protected Routes (require JWT):');
   console.log('   • /api/orders/*');
   console.log('   • /api/users/profile');
   console.log('   • /api/users/address');
   console.log('   • /api/admin/*');
+  console.log('   • /api/wishlist/*'); // ADDED WISHLIST PROTECTED ROUTES
   console.log('═'.repeat(60));
   
   // Additional production info

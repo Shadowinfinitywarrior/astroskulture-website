@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
+import { WishlistProvider } from './contexts/WishlistContext';
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
@@ -9,6 +10,7 @@ import { ShopPage } from './pages/ShopPage';
 import { ProductPage } from './pages/ProductPage';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
+import { WishlistPage } from './pages/WishlistPage';
 import LoginPage from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
@@ -76,6 +78,8 @@ function AppContent() {
         return <CartPage onNavigate={handleNavigate} />;
       case 'checkout':
         return <CheckoutPage onNavigate={handleNavigate} />;
+      case 'wishlist':
+        return <WishlistPage onNavigate={handleNavigate} />;
       case 'login':
         return <LoginPage onNavigate={handleNavigate} />;
       case 'register':
@@ -131,11 +135,11 @@ function AdminRoutes({ currentPage, onNavigate }: { currentPage: string; onNavig
 
   switch (currentPage) {
     case 'admin-products':
-      return <AdminProductsPage onNavigate={onNavigate} />; // FIXED: Added onNavigate prop
+      return <AdminProductsPage onNavigate={onNavigate} />;
     case 'admin-orders':
-      return <AdminOrdersPage onNavigate={onNavigate} />; // FIXED: Added onNavigate prop
+      return <AdminOrdersPage onNavigate={onNavigate} />;
     case 'admin-users':
-      return <AdminUsersPage onNavigate={onNavigate} />; // FIXED: Added onNavigate prop
+      return <AdminUsersPage onNavigate={onNavigate} />;
     case 'admin-dashboard':
     default:
       return <AdminDashboardPage onNavigate={onNavigate} />;
@@ -146,9 +150,11 @@ function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <AdminAuthProvider>
-          <AppContent />
-        </AdminAuthProvider>
+        <WishlistProvider>
+          <AdminAuthProvider>
+            <AppContent />
+          </AdminAuthProvider>
+        </WishlistProvider>
       </CartProvider>
     </AuthProvider>
   );
