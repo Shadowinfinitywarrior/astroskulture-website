@@ -41,22 +41,26 @@ export const getAllProducts = async (req, res) => {
       ];
     }
 
-    // FIX: Use lean() and manual population to avoid Mongoose errors
     const products = await Product.find(query)
       .populate({
         path: 'category',
-        select: 'name slug',
-        match: { isActive: true } // Only populate if category is active
+        select: 'name slug imageUrl description',
+        match: { isActive: true }
       })
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit)
-      .lean(); // Convert to plain objects to avoid Mongoose document issues
+      .lean();
 
-    // FIX: Clean up products with null category
+    // Clean up products with null category
     const cleanedProducts = products.map(product => ({
       ...product,
-      category: product.category || { name: 'Uncategorized', slug: 'uncategorized' }
+      category: product.category || { 
+        name: 'Uncategorized', 
+        slug: 'uncategorized',
+        imageUrl: null,
+        description: null
+      }
     }));
 
     const total = await Product.countDocuments(query);
@@ -86,7 +90,7 @@ export const getProductById = async (req, res) => {
     const product = await Product.findById(req.params.id)
       .populate({
         path: 'category',
-        select: 'name slug',
+        select: 'name slug imageUrl description',
         match: { isActive: true }
       })
       .lean();
@@ -98,10 +102,15 @@ export const getProductById = async (req, res) => {
       });
     }
 
-    // FIX: Clean up category if null
+    // Clean up category if null
     const cleanedProduct = {
       ...product,
-      category: product.category || { name: 'Uncategorized', slug: 'uncategorized' }
+      category: product.category || { 
+        name: 'Uncategorized', 
+        slug: 'uncategorized',
+        imageUrl: null,
+        description: null
+      }
     };
 
     res.json({
@@ -123,7 +132,7 @@ export const getProductBySlug = async (req, res) => {
     const product = await Product.findOne({ slug: req.params.slug })
       .populate({
         path: 'category',
-        select: 'name slug',
+        select: 'name slug imageUrl description',
         match: { isActive: true }
       })
       .lean();
@@ -135,10 +144,15 @@ export const getProductBySlug = async (req, res) => {
       });
     }
 
-    // FIX: Clean up category if null
+    // Clean up category if null
     const cleanedProduct = {
       ...product,
-      category: product.category || { name: 'Uncategorized', slug: 'uncategorized' }
+      category: product.category || { 
+        name: 'Uncategorized', 
+        slug: 'uncategorized',
+        imageUrl: null,
+        description: null
+      }
     };
 
     res.json({
@@ -157,13 +171,18 @@ export const getProductBySlug = async (req, res) => {
 
 export const createProduct = async (req, res) => {
   try {
+    // Calculate totalStock from sizes if provided
+    if (req.body.sizes && Array.isArray(req.body.sizes)) {
+      req.body.totalStock = req.body.sizes.reduce((total, size) => total + (size.stock || 0), 0);
+    }
+
     const product = new Product(req.body);
     await product.save();
     
     const populatedProduct = await Product.findById(product._id)
       .populate({
         path: 'category',
-        select: 'name slug'
+        select: 'name slug imageUrl description'
       })
       .lean();
 
@@ -183,13 +202,18 @@ export const createProduct = async (req, res) => {
 
 export const updateProduct = async (req, res) => {
   try {
+    // Calculate totalStock from sizes if provided
+    if (req.body.sizes && Array.isArray(req.body.sizes)) {
+      req.body.totalStock = req.body.sizes.reduce((total, size) => total + (size.stock || 0), 0);
+    }
+
     const product = await Product.findByIdAndUpdate(
       req.params.id,
       { ...req.body, updatedAt: Date.now() },
       { new: true, runValidators: true }
     ).populate({
       path: 'category',
-      select: 'name slug'
+      select: 'name slug imageUrl description'
     }).lean();
     
     if (!product) {
@@ -250,17 +274,22 @@ export const getFeaturedProducts = async (req, res) => {
     })
       .populate({
         path: 'category',
-        select: 'name slug',
+        select: 'name slug imageUrl description',
         match: { isActive: true }
       })
       .sort({ createdAt: -1 })
       .limit(8)
       .lean();
 
-    // FIX: Clean up products with null category
+    // Clean up products with null category
     const cleanedProducts = products.map(product => ({
       ...product,
-      category: product.category || { name: 'Uncategorized', slug: 'uncategorized' }
+      category: product.category || { 
+        name: 'Uncategorized', 
+        slug: 'uncategorized',
+        imageUrl: null,
+        description: null
+      }
     }));
 
     res.json({
@@ -297,7 +326,7 @@ export const getProductsByCategory = async (req, res) => {
     })
       .populate({
         path: 'category',
-        select: 'name slug'
+        select: 'name slug imageUrl description'
       })
       .sort({ createdAt: -1 })
       .limit(limit * 1)
@@ -316,7 +345,8 @@ export const getProductsByCategory = async (req, res) => {
         _id: category._id,
         name: category.name,
         slug: category.slug,
-        description: category.description
+        description: category.description,
+        imageUrl: category.imageUrl
       },
       pagination: {
         page: parseInt(page),
@@ -335,11 +365,46 @@ export const getProductsByCategory = async (req, res) => {
   }
 };
 
-// FIX: Add a fallback endpoint without population for debugging
+// Get all categories with product counts
+export const getCategoriesWithCounts = async (req, res) => {
+  try {
+    const categories = await Category.find({ isActive: true })
+      .sort({ displayOrder: 1, name: 1 })
+      .lean();
+
+    // Get product counts for each category
+    const categoriesWithCounts = await Promise.all(
+      categories.map(async (category) => {
+        const productCount = await Product.countDocuments({
+          category: category._id,
+          isActive: true
+        });
+        return {
+          ...category,
+          productCount
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      data: categoriesWithCounts
+    });
+  } catch (error) {
+    console.error('Get categories with counts error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch categories with counts',
+      error: error.message
+    });
+  }
+};
+
+// Emergency fallback endpoint without population
 export const getAllProductsSimple = async (req, res) => {
   try {
     const products = await Product.find({ isActive: true })
-      .select('-category') // Exclude category field
+      .select('-category')
       .sort({ createdAt: -1 })
       .limit(12)
       .lean();

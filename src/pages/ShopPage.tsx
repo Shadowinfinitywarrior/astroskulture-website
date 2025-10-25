@@ -14,7 +14,7 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 3000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [sortBy, setSortBy] = useState('featured');
   const { addToCart } = useCart();
 
@@ -62,15 +62,15 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
 
         // Apply price range filter on client side
         filteredProducts = filteredProducts.filter(product => {
-          const price = product.comparePrice || product.price;
+          const price = product.discountPrice || product.price;
           return price >= priceRange[0] && price <= priceRange[1];
         });
 
         // Apply sorting on client side
         if (sortBy === 'price_low') {
-          filteredProducts.sort((a, b) => (a.comparePrice || a.price) - (b.comparePrice || b.price));
+          filteredProducts.sort((a, b) => (a.discountPrice || a.price) - (b.discountPrice || b.price));
         } else if (sortBy === 'price_high') {
-          filteredProducts.sort((a, b) => (b.comparePrice || b.price) - (a.comparePrice || a.price));
+          filteredProducts.sort((a, b) => (b.discountPrice || b.price) - (a.discountPrice || a.price));
         } else if (sortBy === 'rating') {
           filteredProducts.sort((a, b) => (b.rating || 0) - (a.rating || 0));
         } else if (sortBy === 'featured') {
@@ -92,13 +92,16 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
   };
 
   const handleAddToCart = (product: Product) => {
+    const defaultSize = product.sizes.find(size => size.stock > 0)?.size || 'M';
+    const imageUrl = product.images[0]?.url || '';
+    
     addToCart({
       productId: product._id,
       name: product.name,
-      price: product.comparePrice || product.price,
-      image: product.images[0] || '',
+      price: product.discountPrice || product.price,
       quantity: 1,
-      size: 'Standard' // Default size since we removed sizes array
+      size: defaultSize,
+      image: imageUrl
     });
   };
 
@@ -110,29 +113,33 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
   const clearFilters = () => {
     setSelectedCategory(null);
     setSearchQuery('');
-    setPriceRange([0, 3000]);
+    setPriceRange([0, 10000]);
     setSortBy('featured');
   };
 
   const getProductImage = (product: Product) => {
-    return product.images[0] || 'https://images.pexels.com/photos/1152994/pexels-photo-1152994.jpeg?auto=compress&cs=tinysrgb&w=400';
+    return product.images[0]?.url || 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500';
   };
 
   const getProductPrice = (product: Product) => {
-    return product.comparePrice || product.price;
+    return product.discountPrice || product.price;
   };
 
   const getDisplayPrice = (product: Product) => {
-    return product.comparePrice || product.price;
+    return product.discountPrice || product.price;
   };
 
   const hasDiscount = (product: Product) => {
-    return product.comparePrice && product.comparePrice < product.price;
+    return product.discountPrice && product.discountPrice < product.price;
   };
 
   const getDiscountPercentage = (product: Product) => {
-    if (!product.comparePrice || product.comparePrice >= product.price) return 0;
-    return Math.round((1 - product.comparePrice / product.price) * 100);
+    if (!product.discountPrice || product.discountPrice >= product.price) return 0;
+    return Math.round((1 - product.discountPrice / product.price) * 100);
+  };
+
+  const getAvailableSizes = (product: Product) => {
+    return product.sizes.filter(size => size.stock > 0).map(size => size.size);
   };
 
   return (
@@ -213,7 +220,7 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                     <input
                       type="range"
                       min="0"
-                      max="3000"
+                      max="10000"
                       value={priceRange[1]}
                       onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
                       className="w-full accent-red-600"
@@ -269,7 +276,7 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                     <div className="relative overflow-hidden">
                       <img
                         src={getProductImage(product)}
-                        alt={product.name}
+                        alt={product.images[0]?.alt || product.name}
                         className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer"
                         onClick={() => onNavigate('product', { slug: product.slug })}
                       />
@@ -302,7 +309,7 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                         <span className="text-sm font-medium">{(product.rating || 0).toFixed(1)}</span>
                         <span className="text-sm text-gray-500">({product.reviewCount || 0})</span>
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mb-2">
                         <div>
                           {hasDiscount(product) ? (
                             <div className="flex items-center space-x-2">
@@ -319,17 +326,24 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                         </div>
                         <button
                           onClick={() => handleAddToCart(product)}
-                          disabled={product.stock === 0}
+                          disabled={product.totalStock === 0}
                           className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                         >
                           <ShoppingCart className="w-5 h-5" />
                         </button>
                       </div>
-                      {product.stock === 0 && (
-                        <p className="text-red-600 text-sm mt-2">Out of Stock</p>
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {getAvailableSizes(product).map(size => (
+                          <span key={size} className="text-xs bg-gray-100 px-2 py-1 rounded">
+                            {size}
+                          </span>
+                        ))}
+                      </div>
+                      {product.totalStock === 0 && (
+                        <p className="text-red-600 text-sm">Out of Stock</p>
                       )}
-                      {product.stock > 0 && product.stock < 10 && (
-                        <p className="text-orange-600 text-sm mt-2">Only {product.stock} left in stock</p>
+                      {product.totalStock > 0 && product.totalStock < 10 && (
+                        <p className="text-orange-600 text-sm">Only {product.totalStock} left in stock</p>
                       )}
                     </div>
                   </div>

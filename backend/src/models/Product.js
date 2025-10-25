@@ -13,11 +13,8 @@ const productSchema = new mongoose.Schema({
     lowercase: true
   },
   description: {
-    type: String
-  },
-  categoryId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Category'
+    type: String,
+    required: true
   },
   price: {
     type: Number,
@@ -34,12 +31,13 @@ const productSchema = new mongoose.Schema({
   }],
   sizes: [{
     size: String,
-    stock: {
-      type: Number,
-      default: 0,
-      min: 0
-    }
+    stock: Number
   }],
+  category: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+    required: true
+  },
   totalStock: {
     type: Number,
     required: true,
@@ -64,6 +62,7 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  tags: [String],
   createdAt: {
     type: Date,
     default: Date.now
@@ -74,15 +73,19 @@ const productSchema = new mongoose.Schema({
   }
 });
 
-// Calculate total stock from sizes
+// Generate slug from name before saving
 productSchema.pre('save', function(next) {
-  this.totalStock = this.sizes.reduce((total, size) => total + size.stock, 0);
+  if (this.isModified('name') && !this.slug) {
+    this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+  }
+  
+  // Calculate total stock from sizes
+  if (this.sizes && this.sizes.length > 0) {
+    this.totalStock = this.sizes.reduce((total, size) => total + (size.stock || 0), 0);
+  }
+  
   this.updatedAt = Date.now();
   next();
 });
-
-// Index for better query performance
-productSchema.index({ categoryId: 1, isActive: 1 });
-productSchema.index({ isFeatured: 1, isActive: 1 });
 
 export default mongoose.model('Product', productSchema);

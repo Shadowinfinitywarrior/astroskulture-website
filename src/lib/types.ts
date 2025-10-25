@@ -30,17 +30,27 @@ export interface Product {
   category: string; // Reference to category ID
   categoryData?: Category; // Populated category data
   price: number;
-  comparePrice?: number;
-  images: string[];
-  stock: number;
+  discountPrice?: number;
+  images: ProductImage[];
+  sizes: ProductSize[];
+  totalStock: number;
   isFeatured: boolean;
   isActive: boolean;
-  specifications?: Record<string, string>;
+  rating: number;
+  reviewCount: number;
   tags: string[];
-  rating?: number;
-  reviewCount?: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ProductImage {
+  url: string;
+  alt: string;
+}
+
+export interface ProductSize {
+  size: string;
+  stock: number;
 }
 
 // Category Types
@@ -82,7 +92,7 @@ export interface OrderItem {
   name: string;
   price: number;
   quantity: number;
-  size?: string;
+  size: string;
 }
 
 // Auth Types
@@ -124,7 +134,7 @@ export interface CartItem {
   name: string;
   price: number;
   quantity: number;
-  size?: string;
+  size: string;
   image: string;
 }
 
@@ -169,13 +179,12 @@ export interface ProductFormData {
   name: string;
   description: string;
   price: number;
-  comparePrice?: number;
+  discountPrice?: number;
   category: string;
-  stock: number;
-  images: string[];
+  images: ProductImage[];
+  sizes: ProductSize[];
   isFeatured: boolean;
   isActive: boolean;
-  specifications?: Record<string, string>;
   tags: string[];
 }
 
@@ -216,14 +225,3 @@ export interface PaymentIntent {
   status: string;
   client_secret: string;
 }
-
-// Export all types
-export type {
-  User as UserType,
-  Product as ProductType,
-  Category as CategoryType,
-  Order as OrderType,
-  Cart as CartType,
-  Review as ReviewType,
-  WishlistItem as WishlistItemType
-};
