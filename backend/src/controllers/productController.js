@@ -41,17 +41,29 @@ export const getAllProducts = async (req, res) => {
       ];
     }
 
+    // FIX: Use lean() and manual population to avoid Mongoose errors
     const products = await Product.find(query)
-      .populate('category', 'name slug')
+      .populate({
+        path: 'category',
+        select: 'name slug',
+        match: { isActive: true } // Only populate if category is active
+      })
       .sort({ createdAt: -1 })
       .limit(limit * 1)
-      .skip((page - 1) * limit);
+      .skip((page - 1) * limit)
+      .lean(); // Convert to plain objects to avoid Mongoose document issues
+
+    // FIX: Clean up products with null category
+    const cleanedProducts = products.map(product => ({
+      ...product,
+      category: product.category || { name: 'Uncategorized', slug: 'uncategorized' }
+    }));
 
     const total = await Product.countDocuments(query);
 
     res.json({
       success: true,
-      data: products,
+      data: cleanedProducts,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -72,7 +84,12 @@ export const getAllProducts = async (req, res) => {
 export const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
-      .populate('category', 'name slug');
+      .populate({
+        path: 'category',
+        select: 'name slug',
+        match: { isActive: true }
+      })
+      .lean();
     
     if (!product) {
       return res.status(404).json({ 
@@ -81,9 +98,15 @@ export const getProductById = async (req, res) => {
       });
     }
 
+    // FIX: Clean up category if null
+    const cleanedProduct = {
+      ...product,
+      category: product.category || { name: 'Uncategorized', slug: 'uncategorized' }
+    };
+
     res.json({
       success: true,
-      data: product
+      data: cleanedProduct
     });
   } catch (error) {
     console.error('Get product error:', error);
@@ -98,7 +121,12 @@ export const getProductById = async (req, res) => {
 export const getProductBySlug = async (req, res) => {
   try {
     const product = await Product.findOne({ slug: req.params.slug })
-      .populate('category', 'name slug');
+      .populate({
+        path: 'category',
+        select: 'name slug',
+        match: { isActive: true }
+      })
+      .lean();
     
     if (!product) {
       return res.status(404).json({ 
@@ -107,9 +135,15 @@ export const getProductBySlug = async (req, res) => {
       });
     }
 
+    // FIX: Clean up category if null
+    const cleanedProduct = {
+      ...product,
+      category: product.category || { name: 'Uncategorized', slug: 'uncategorized' }
+    };
+
     res.json({
       success: true,
-      data: product
+      data: cleanedProduct
     });
   } catch (error) {
     console.error('Get product by slug error:', error);
@@ -127,7 +161,11 @@ export const createProduct = async (req, res) => {
     await product.save();
     
     const populatedProduct = await Product.findById(product._id)
-      .populate('category', 'name slug');
+      .populate({
+        path: 'category',
+        select: 'name slug'
+      })
+      .lean();
 
     res.status(201).json({
       success: true,
@@ -149,7 +187,10 @@ export const updateProduct = async (req, res) => {
       req.params.id,
       { ...req.body, updatedAt: Date.now() },
       { new: true, runValidators: true }
-    ).populate('category', 'name slug');
+    ).populate({
+      path: 'category',
+      select: 'name slug'
+    }).lean();
     
     if (!product) {
       return res.status(404).json({ 
@@ -207,13 +248,24 @@ export const getFeaturedProducts = async (req, res) => {
       isFeatured: true, 
       isActive: true 
     })
-      .populate('category', 'name slug')
+      .populate({
+        path: 'category',
+        select: 'name slug',
+        match: { isActive: true }
+      })
       .sort({ createdAt: -1 })
-      .limit(8);
+      .limit(8)
+      .lean();
+
+    // FIX: Clean up products with null category
+    const cleanedProducts = products.map(product => ({
+      ...product,
+      category: product.category || { name: 'Uncategorized', slug: 'uncategorized' }
+    }));
 
     res.json({
       success: true,
-      data: products
+      data: cleanedProducts
     });
   } catch (error) {
     console.error('Get featured products error:', error);
@@ -243,10 +295,14 @@ export const getProductsByCategory = async (req, res) => {
       category: category._id,
       isActive: true 
     })
-      .populate('category', 'name slug')
+      .populate({
+        path: 'category',
+        select: 'name slug'
+      })
       .sort({ createdAt: -1 })
       .limit(limit * 1)
-      .skip((page - 1) * limit);
+      .skip((page - 1) * limit)
+      .lean();
 
     const total = await Product.countDocuments({ 
       category: category._id,
@@ -275,6 +331,29 @@ export const getProductsByCategory = async (req, res) => {
       success: false,
       message: 'Failed to fetch products by category',
       error: error.message
+    });
+  }
+};
+
+// FIX: Add a fallback endpoint without population for debugging
+export const getAllProductsSimple = async (req, res) => {
+  try {
+    const products = await Product.find({ isActive: true })
+      .select('-category') // Exclude category field
+      .sort({ createdAt: -1 })
+      .limit(12)
+      .lean();
+
+    res.json({
+      success: true,
+      data: products
+    });
+  } catch (error) {
+    console.error('Get products simple error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch products', 
+      error: error.message 
     });
   }
 };
