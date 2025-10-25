@@ -1,8 +1,9 @@
-// For production, use relative path since both are on same domain
-// For development, use localhost
-const API_BASE_URL = import.meta.env.PROD 
-  ? '/api'  // Same domain as frontend in production
-  : 'http://localhost:5000/api'; // Local development
+// Use absolute URLs for both environments since frontend and backend are on different domains
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+  (import.meta.env.PROD 
+    ? 'https://astroskulture-website.onrender.com/api'  // Absolute URL in production
+    : 'http://localhost:5000/api' // Local development
+  );
 
 console.log('🌍 API Base URL:', API_BASE_URL);
 console.log('🚀 Environment:', import.meta.env.PROD ? 'production' : 'development');
@@ -136,6 +137,10 @@ class ApiService {
 
   async adminGetUsers() {
     return this.request('/admin/users', {}, true);
+  }
+
+  async adminGetStats() {
+    return this.request('/admin/stats', {}, true);
   }
 
   // User methods (regular user routes)

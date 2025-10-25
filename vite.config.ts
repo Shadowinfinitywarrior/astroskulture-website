@@ -7,6 +7,14 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true, // Listen on all addresses
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '/api')
+      },
+    },
   },
   build: {
     outDir: 'dist', // Build to dist folder in root

@@ -1,0 +1,78 @@
+ASTRO-MAIN/
+├── 📁 backend/
+│   ├── 📁 src/
+│   │   ├── 📁 controllers/
+│   │   │   ├── authController.js
+│   │   │   ├── orderController.js
+│   │   │   ├── productController.js
+│   │   │   └── userController.js
+│   │   ├── 📁 middleware/
+│   │   │   └── auth.js
+│   │   ├── 📁 models/
+│   │   │   ├── Admin.js
+│   │   │   ├── Category.js
+│   │   │   ├── Order.js
+│   │   │   ├── Payment.js
+│   │   │   ├── Product.js
+│   │   │   ├── Review.js
+│   │   │   ├── User.js
+│   │   │   └── Wishlist.js
+│   │   ├── 📁 routes/
+│   │   │   ├── admin.js
+│   │   │   ├── auth.js
+│   │   │   ├── categories.js
+│   │   │   ├── orders.js
+│   │   │   ├── products.js
+│   │   │   └── users.js
+│   │   ├── 📁 scripts/
+│   │   │   └── seedData.js
+│   │   └── server.js
+│   ├── .env
+│   ├── package.json
+│   └── package-lock.json
+│
+├── 📁 src/
+│   ├── 📁 components/
+│   │   └── 📁 admin/
+│   │       ├── AdminLayout.tsx
+│   │       ├── Footer.tsx
+│   │       ├── Navbar.tsx
+│   │       └── ProductImageGallery.tsx
+│   ├── 📁 contexts/
+│   │   ├── AdminAuthContext.tsx
+│   │   ├── AuthContext.tsx
+│   │   └── CartContext.tsx
+│   ├── 📁 lib/
+│   │   ├── index.ts
+│   │   ├── mongodb.ts
+│   │   └── types.ts
+│   ├── 📁 pages/
+│   │   ├── 📁 admin/
+│   │   │   ├── AdminDashboardPage.tsx
+│   │   │   ├── AdminOrdersPage.tsx
+│   │   │   ├── AdminProductsPage.tsx
+│   │   │   └── AdminUsersPage.tsx
+│   │   ├── CartPage.tsx
+│   │   ├── CheckoutPage.tsx
+│   │   ├── HomePage.tsx
+│   │   ├── LoginPage.tsx
+│   │   ├── ProductPage.tsx
+│   │   ├── RegisterPage.tsx
+│   │   ├── ShopPage.tsx
+│   │   ├── UserAccountPage.tsx
+│   │   └── UserOrdersPage.tsx
+│   ├── App.tsx
+│   ├── index.css
+│   ├── main.tsx
+│   └── vite-env.d.ts
+│
+├── .gitignore
+├── eslint.config.js
+├── index.html
+├── package.json
+├── postcss.config.js
+├── tailwind.config.js
+├── tsconfig.json
+├── tsconfig.app.json
+├── tsconfig.node.json
+└── vite.config.ts

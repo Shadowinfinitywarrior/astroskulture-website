@@ -22,8 +22,12 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [admin, setAdmin] = useState<Admin | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Use the same API base URL as mongodb.ts
-  const API_BASE_URL = import.meta.env.PROD ? '/api' : 'http://localhost:5000/api';
+  // FIXED: Use environment variable with fallback
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+    (import.meta.env.PROD 
+      ? 'https://astroskulture-website.onrender.com/api' 
+      : 'http://localhost:5000/api'
+    );
   const API_URL = API_BASE_URL;
 
   console.log('🔐 AdminAuth API URL:', API_URL);

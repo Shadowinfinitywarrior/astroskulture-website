@@ -26,7 +26,12 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
   const [error, setError] = useState<string | null>(null);
   const [adminAccess, setAdminAccess] = useState<boolean>(true);
 
-  const API_URL = 'http://localhost:5000/api';
+  // FIXED: Use environment-based API URL
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+    (import.meta.env.PROD 
+      ? 'https://astroskulture-website.onrender.com/api' 
+      : 'http://localhost:5000/api'
+    );
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -46,6 +51,7 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
       
       console.log('📊 Fetching dashboard stats with token:', token ? 'Present' : 'Missing');
       console.log('👤 Current admin:', admin);
+      console.log('🌍 Using API URL:', API_BASE_URL);
       
       // Debug token
       if (token) {
@@ -58,7 +64,7 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
       }
 
       // Test admin access first
-      const testAccess = await fetch(`${API_URL}/admin/products`, {
+      const testAccess = await fetch(`${API_BASE_URL}/admin/products`, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -87,17 +93,17 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
 
       const requests = [
         // Public endpoint for products
-        fetch(`${API_URL}/products`).then(res => res.json()),
+        fetch(`${API_BASE_URL}/products`).then(res => res.json()),
         
         // Admin endpoints
-        fetch(`${API_URL}/admin/orders`, {
+        fetch(`${API_BASE_URL}/admin/orders`, {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
         }).then(res => res.json()),
         
-        fetch(`${API_URL}/admin/users`, {
+        fetch(`${API_BASE_URL}/admin/users`, {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

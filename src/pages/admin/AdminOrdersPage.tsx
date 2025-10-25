@@ -36,7 +36,12 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const API_URL = 'http://localhost:5000/api';
+  // FIXED: Use environment-based API URL
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+    (import.meta.env.PROD 
+      ? 'https://astroskulture-website.onrender.com/api' 
+      : 'http://localhost:5000/api'
+    );
 
   useEffect(() => {
     fetchOrders();
@@ -46,14 +51,20 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
     const token = localStorage.getItem('adminToken');
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/admin/orders`, {
+      console.log('📦 Fetching orders from:', `${API_BASE_URL}/admin/orders`);
+      
+      const response = await fetch(`${API_BASE_URL}/admin/orders`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
+      
+      console.log('📦 Orders response status:', response.status);
+      
       const result = await response.json();
       
       if (result.success) {
+        console.log('📦 Orders data received:', result.data?.length || 0, 'orders');
         setOrders(result.data || []);
       } else {
         console.error('Error fetching orders:', result.message);
@@ -70,7 +81,9 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
   const updateOrderStatus = async (orderId: string, status: string) => {
     const token = localStorage.getItem('adminToken');
     try {
-      const response = await fetch(`${API_URL}/admin/orders/${orderId}/status`, {
+      console.log('🔄 Updating order status:', { orderId, status });
+      
+      const response = await fetch(`${API_BASE_URL}/admin/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -82,6 +95,7 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
       const result = await response.json();
       
       if (result.success) {
+        console.log('✅ Order status updated successfully');
         fetchOrders();
         if (selectedOrder?._id === orderId) {
           setSelectedOrder({ ...selectedOrder, status });
@@ -101,7 +115,9 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
 
     const token = localStorage.getItem('adminToken');
     try {
-      const response = await fetch(`${API_URL}/admin/orders/${orderId}`, {
+      console.log('🗑️ Deleting order:', orderId);
+      
+      const response = await fetch(`${API_BASE_URL}/admin/orders/${orderId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -111,6 +127,7 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
       const result = await response.json();
       
       if (result.success) {
+        console.log('✅ Order deleted successfully');
         fetchOrders();
         setSelectedOrder(null);
       } else {
@@ -149,12 +166,26 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
   return (
     <AdminLayout currentPage="orders" onNavigate={onNavigate}>
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-slate-900 mb-6">Orders</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-slate-900">Orders</h1>
+          <button
+            onClick={fetchOrders}
+            className="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+          >
+            Refresh Orders
+          </button>
+        </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
           {orders.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-slate-500">No orders found.</p>
+              <button 
+                onClick={fetchOrders}
+                className="mt-4 bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                Retry Loading Orders
+              </button>
             </div>
           ) : (
             <table className="min-w-full divide-y divide-slate-200">
@@ -205,13 +236,15 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => setSelectedOrder(order)}
-                        className="text-slate-600 hover:text-slate-900 mr-3"
+                        className="text-slate-600 hover:text-slate-900 mr-3 p-1 rounded hover:bg-slate-100 transition-colors"
+                        title="View order details"
                       >
                         <Eye className="w-5 h-5" />
                       </button>
                       <button
                         onClick={() => deleteOrder(order._id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors"
+                        title="Delete order"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
@@ -231,7 +264,7 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
               <h2 className="text-2xl font-bold text-slate-900">Order Details</h2>
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100 transition-colors"
               >
                 ×
               </button>

@@ -33,7 +33,12 @@ export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
     role: 'customer',
   });
 
-  const API_URL = 'http://localhost:5000/api';
+  // FIXED: Use environment-based API URL
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+    (import.meta.env.PROD 
+      ? 'https://astroskulture-website.onrender.com/api' 
+      : 'http://localhost:5000/api'
+    );
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -49,9 +54,10 @@ export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
       setLoading(true);
       setError(null);
       
-      console.log('👥 Fetching users with token:', token ? 'Present' : 'Missing');
+      console.log('👥 Fetching users from:', `${API_BASE_URL}/admin/users`);
+      console.log('👥 Token present:', !!token);
       
-      const response = await fetch(`${API_URL}/admin/users`, {
+      const response = await fetch(`${API_BASE_URL}/admin/users`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -62,7 +68,7 @@ export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
       
       if (response.ok) {
         const result = await response.json();
-        console.log('👥 Users data received:', result);
+        console.log('👥 Users data received:', result.data?.length || 0, 'users');
         
         if (result.success) {
           setUsers(result.data || []);
@@ -103,10 +109,12 @@ export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
       setError(null);
       
       const url = editingUser
-        ? `${API_URL}/admin/users/${editingUser._id}`
-        : `${API_URL}/admin/users`;
+        ? `${API_BASE_URL}/admin/users/${editingUser._id}`
+        : `${API_BASE_URL}/admin/users`;
 
       const method = editingUser ? 'PUT' : 'POST';
+
+      console.log('💾 Saving user to:', url);
 
       const response = await fetch(url, {
         method,
@@ -120,6 +128,7 @@ export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
       const result = await response.json();
       
       if (result.success) {
+        console.log('✅ User saved successfully');
         fetchUsers();
         closeModal();
         alert(editingUser ? 'User updated successfully!' : 'User created successfully!');
@@ -140,7 +149,9 @@ export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
     try {
       setError(null);
       
-      const response = await fetch(`${API_URL}/admin/users/${id}`, {
+      console.log('🗑️ Deleting user:', id);
+      
+      const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -150,6 +161,7 @@ export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
       const result = await response.json();
       
       if (result.success) {
+        console.log('✅ User deleted successfully');
         fetchUsers();
         alert('User deleted successfully!');
       } else {
