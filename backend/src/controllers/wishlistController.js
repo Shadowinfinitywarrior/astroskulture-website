@@ -1,12 +1,20 @@
-import mongoose from 'mongoose'; // ADD THIS IMPORT
+import mongoose from 'mongoose';
 import Wishlist from '../models/Wishlist.js';
 import Product from '../models/Product.js';
 
 export const getWishlist = async (req, res) => {
   try {
-    console.log('💖 [SERVER] Fetching wishlist for user:', req.user.id);
+    // Validate req.user._id
+    if (!req.user || !mongoose.Types.ObjectId.isValid(req.user._id)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or missing user ID'
+      });
+    }
+
+    console.log('💖 [SERVER] Fetching wishlist for user:', req.user._id);
     
-    const wishlist = await Wishlist.find({ userId: req.user.id })
+    const wishlist = await Wishlist.find({ userId: req.user._id })
       .populate({
         path: 'productId',
         select: 'name slug price discountPrice images isActive totalStock rating reviewCount sizes categoryId',
@@ -42,7 +50,15 @@ export const getWishlist = async (req, res) => {
 export const addToWishlist = async (req, res) => {
   try {
     const { productId } = req.body;
-    const userId = req.user.id;
+    const userId = req.user._id;
+
+    // Validate req.user._id
+    if (!req.user || !mongoose.Types.ObjectId.isValid(req.user._id)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or missing user ID'
+      });
+    }
 
     console.log('💖 [SERVER] Adding to wishlist:', { userId, productId });
 
@@ -141,7 +157,15 @@ export const addToWishlist = async (req, res) => {
 export const removeFromWishlist = async (req, res) => {
   try {
     const { productId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
+
+    // Validate req.user._id
+    if (!req.user || !mongoose.Types.ObjectId.isValid(req.user._id)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or missing user ID'
+      });
+    }
 
     console.log('💖 [SERVER] Removing from wishlist:', { userId, productId });
 
@@ -190,7 +214,15 @@ export const removeFromWishlist = async (req, res) => {
 export const checkWishlistStatus = async (req, res) => {
   try {
     const { productId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
+
+    // Validate req.user._id
+    if (!req.user || !mongoose.Types.ObjectId.isValid(req.user._id)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or missing user ID'
+      });
+    }
 
     console.log('💖 [SERVER] Checking wishlist status:', { userId, productId });
 
@@ -229,10 +261,18 @@ export const checkWishlistStatus = async (req, res) => {
   }
 };
 
-// Additional method to get wishlist count
 export const getWishlistCount = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
+
+    // Validate req.user._id
+    if (!req.user || !mongoose.Types.ObjectId.isValid(req.user._id)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or missing user ID'
+      });
+    }
+
     const count = await Wishlist.countDocuments({ userId });
     
     console.log('💖 [SERVER] Wishlist count for user:', userId, '=', count);
@@ -251,10 +291,17 @@ export const getWishlistCount = async (req, res) => {
   }
 };
 
-// Bulk operations
 export const clearWishlist = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
+
+    // Validate req.user._id
+    if (!req.user || !mongoose.Types.ObjectId.isValid(req.user._id)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or missing user ID'
+      });
+    }
     
     const result = await Wishlist.deleteMany({ userId });
     
@@ -275,11 +322,18 @@ export const clearWishlist = async (req, res) => {
   }
 };
 
-// Add multiple products to wishlist
 export const addMultipleToWishlist = async (req, res) => {
   try {
     const { productIds } = req.body;
-    const userId = req.user.id;
+    const userId = req.user._id;
+
+    // Validate req.user._id
+    if (!req.user || !mongoose.Types.ObjectId.isValid(req.user._id)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or missing user ID'
+      });
+    }
 
     console.log('💖 [SERVER] Adding multiple products to wishlist:', { userId, productIds });
 
