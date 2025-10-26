@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { ShoppingCart, Heart, Star, Truck, Shield, RefreshCw } from 'lucide-react';
+import { ShoppingCart, Heart, Star, Truck, Shield, RefreshCw, ArrowLeft } from 'lucide-react';
 import { apiService } from '../lib/mongodb';
 import { useCart } from '../contexts/CartContext';
+import { useWishlist } from '../contexts/WishlistContext';
 import type { Product } from '../lib/types';
 import ProductImageGallery from '../components/ProductImageGallery';
 
@@ -16,6 +17,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist, operationLoading } = useWishlist();
 
   useEffect(() => {
     console.log('🔄 [DEBUG] ProductPage received slug:', slug);
@@ -78,10 +80,28 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
     onNavigate('checkout');
   };
 
+  const handleWishlistToggle = async () => {
+    if (!product) return;
+    
+    try {
+      if (isInWishlist(product._id)) {
+        await removeFromWishlist(product._id);
+      } else {
+        await addToWishlist(product);
+      }
+    } catch (error) {
+      console.error('❌ [DEBUG] Error toggling wishlist:', error);
+      // Error is handled in the context
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading product details...</p>
+        </div>
       </div>
     );
   }
@@ -113,10 +133,20 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
 
   // Get category name - handle both category and categoryData
   const categoryName = product.categoryData?.name || product.category?.name || 'ASTROSKULTURE';
+  const isProductInWishlist = isInWishlist(product._id);
 
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Navigation */}
+        <button 
+          onClick={() => onNavigate('shop')}
+          className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors group"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+          Back to Shop
+        </button>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Product Images */}
           <div>
@@ -199,15 +229,20 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                     key={sizeData.size}
                     onClick={() => setSelectedSize(sizeData.size)}
                     disabled={sizeData.stock === 0}
-                    className={`px-6 py-3 border-2 rounded-lg font-medium transition-all min-w-[60px] ${
+                    className={`px-6 py-3 border-2 rounded-lg font-medium transition-all min-w-[60px] relative ${
                       selectedSize === sizeData.size
-                        ? 'border-red-600 bg-red-600 text-white'
+                        ? 'border-red-600 bg-red-600 text-white shadow-md'
                         : sizeData.stock > 0
-                        ? 'border-gray-300 hover:border-red-600 hover:text-red-600 text-gray-700'
+                        ? 'border-gray-300 hover:border-red-600 hover:text-red-600 text-gray-700 hover:shadow-md'
                         : 'border-gray-200 text-gray-400 cursor-not-allowed'
                     }`}
                   >
                     {sizeData.size}
+                    {sizeData.stock > 0 && sizeData.stock < 10 && (
+                      <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        {sizeData.stock}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -235,7 +270,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
               <button 
                 onClick={handleAddToCart} 
                 disabled={product.totalStock === 0 || !selectedSize}
-                className="flex-1 bg-gray-900 text-white py-4 px-6 rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center font-medium"
+                className="flex-1 bg-gray-900 text-white py-4 px-6 rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center font-medium shadow-sm"
               >
                 <ShoppingCart className="w-5 h-5 mr-2" />
                 Add to Cart
@@ -243,14 +278,37 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
               <button 
                 onClick={handleBuyNow}
                 disabled={product.totalStock === 0 || !selectedSize}
-                className="flex-1 bg-red-600 text-white py-4 px-6 rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                className="flex-1 bg-red-600 text-white py-4 px-6 rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium shadow-sm"
               >
                 Buy Now
               </button>
-              <button className="p-4 border-2 border-gray-300 rounded-lg hover:border-red-600 hover:text-red-600 transition-colors">
-                <Heart className="w-6 h-6" />
+              <button 
+                onClick={handleWishlistToggle}
+                disabled={operationLoading}
+                className={`p-4 border-2 rounded-lg transition-colors shadow-sm ${
+                  isProductInWishlist
+                    ? 'border-red-600 bg-red-50 text-red-600 hover:bg-red-100'
+                    : 'border-gray-300 text-gray-600 hover:border-red-600 hover:text-red-600 hover:bg-red-50'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                title={isProductInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
+              >
+                {operationLoading ? (
+                  <div className="w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <Heart className={`w-6 h-6 ${isProductInWishlist ? 'fill-current' : ''}`} />
+                )}
               </button>
             </div>
+
+            {/* Wishlist Feedback */}
+            {isProductInWishlist && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="text-green-800 text-sm flex items-center">
+                  <Heart className="w-4 h-4 fill-current mr-2" />
+                  This product is in your wishlist
+                </p>
+              </div>
+            )}
 
             {/* Features */}
             <div className="space-y-4 border-t border-gray-200 pt-6">
@@ -265,6 +323,29 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
               <div className="flex items-center space-x-3 text-gray-600">
                 <Shield className="w-5 h-5 text-red-600" />
                 <span className="text-sm">100% authentic products</span>
+              </div>
+            </div>
+
+            {/* Additional Product Info */}
+            <div className="border-t border-gray-200 pt-6">
+              <h3 className="font-semibold text-gray-900 mb-3">Product Details</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                <div>
+                  <span className="font-medium">Category:</span>{' '}
+                  {categoryName}
+                </div>
+                <div>
+                  <span className="font-medium">SKU:</span>{' '}
+                  {product.slug.toUpperCase()}
+                </div>
+                <div>
+                  <span className="font-medium">Availability:</span>{' '}
+                  {product.totalStock > 0 ? 'In Stock' : 'Out of Stock'}
+                </div>
+                <div>
+                  <span className="font-medium">Rating:</span>{' '}
+                  {product.rating?.toFixed(1)}/5 ({product.reviewCount} reviews)
+                </div>
               </div>
             </div>
           </div>

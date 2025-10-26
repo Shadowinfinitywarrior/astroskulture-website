@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { ShoppingCart, Heart, Star, Search, SlidersHorizontal } from 'lucide-react';
 import { apiService } from '../lib/mongodb';
 import { useCart } from '../contexts/CartContext';
+import { useWishlist } from '../contexts/WishlistContext';
+import { useAuth } from '../contexts/AuthContext';
 import type { Product, Category } from '../lib/types';
 
 interface ShopPageProps {
@@ -17,6 +19,8 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [sortBy, setSortBy] = useState('featured');
   const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadCategories();
@@ -103,6 +107,23 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
       size: defaultSize,
       image: imageUrl
     });
+  };
+
+  const handleWishlistToggle = async (product: Product) => {
+    if (!user) {
+      onNavigate('login');
+      return;
+    }
+
+    try {
+      if (isInWishlist(product._id)) {
+        await removeFromWishlist(product._id);
+      } else {
+        await addToWishlist(product);
+      }
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
+    }
   };
 
   const handleProductClick = (product: Product) => {
@@ -299,10 +320,23 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                           Featured
                         </div>
                       )}
-                      <button className="absolute top-16 right-4 p-2 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50">
-                        <Heart className="w-5 h-5 text-red-600" />
+                      
+                      {/* Wishlist Button */}
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleWishlistToggle(product);
+                        }}
+                        className={`absolute top-16 right-4 p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 ${
+                          isInWishlist(product._id) 
+                            ? 'bg-red-100 text-red-600 opacity-100' 
+                            : 'bg-white text-gray-600 hover:bg-red-50 hover:text-red-600'
+                        }`}
+                      >
+                        <Heart className={`w-5 h-5 ${isInWishlist(product._id) ? 'fill-red-600' : ''}`} />
                       </button>
                     </div>
+                    
                     <div className="p-4">
                       <h3
                         onClick={() => handleProductClick(product)}

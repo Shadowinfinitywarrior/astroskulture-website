@@ -10,7 +10,7 @@ console.log('🚀 Environment:', import.meta.env.PROD ? 'production' : 'developm
 
 class ApiService {
   private async request(endpoint: string, options: RequestInit = {}, isAdmin: boolean = false) {
-    // Use adminToken for admin routes, regular token for user routes
+    // Determine which token to use based on the isAdmin flag
     const token = isAdmin ? localStorage.getItem('adminToken') : localStorage.getItem('token');
     const url = `${API_BASE_URL}${endpoint}`;
     
@@ -18,6 +18,7 @@ class ApiService {
     console.log(`🔄 API Request: ${url}`, { 
       isAdmin, 
       hasToken: !!token,
+      tokenType: isAdmin ? 'adminToken' : 'userToken',
       endpoint,
       method: options.method || 'GET'
     });
@@ -40,8 +41,13 @@ class ApiService {
       }
       
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || `API request failed: ${response.status}`);
+        // Try to parse error response, but handle cases where response is not JSON
+        try {
+          const data = await response.json();
+          throw new Error(data.message || `API request failed: ${response.status}`);
+        } catch (parseError) {
+          throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+        }
       }
 
       return await response.json();
@@ -55,7 +61,7 @@ class ApiService {
     }
   }
 
-  // Auth methods
+  // Auth methods - regular user auth
   async login(email: string, password: string) {
     return this.request('/auth/login', {
       method: 'POST',
@@ -86,10 +92,10 @@ class ApiService {
     return this.request('/auth/admin/login', {
       method: 'POST',
       body: JSON.stringify({ username, password }),
-    });
+    }, true); // FIXED: Added isAdmin: true
   }
 
-  // Product methods (public)
+  // Product methods (public) - no auth required
   async getProducts(params?: { category?: string; featured?: boolean; search?: string; page?: number; limit?: number }) {
     const queryParams = new URLSearchParams();
     
@@ -137,11 +143,11 @@ class ApiService {
     return this.request('/products/debug/all');
   }
 
-  // Wishlist methods
+  // Wishlist methods - regular user auth (NOT admin)
   async getWishlist() {
     console.log('💖 [DEBUG] Fetching user wishlist');
     try {
-      const response = await this.request('/wishlist');
+      const response = await this.request('/wishlist'); // FIXED: No isAdmin flag
       console.log('✅ [DEBUG] Wishlist response:', response);
       return response;
     } catch (error) {
@@ -158,7 +164,7 @@ class ApiService {
       const response = await this.request('/wishlist', {
         method: 'POST',
         body: JSON.stringify({ productId }),
-      });
+      }); // FIXED: No isAdmin flag
       console.log('✅ [DEBUG] Add to wishlist response:', response);
       return response;
     } catch (error) {
@@ -175,7 +181,7 @@ class ApiService {
     try {
       const response = await this.request(`/wishlist/${productId}`, {
         method: 'DELETE',
-      });
+      }); // FIXED: No isAdmin flag
       console.log('✅ [DEBUG] Remove from wishlist response:', response);
       return response;
     } catch (error) {
@@ -190,7 +196,7 @@ class ApiService {
   async checkWishlistStatus(productId: string) {
     console.log('💖 [DEBUG] Checking wishlist status for product:', productId);
     try {
-      const response = await this.request(`/wishlist/check/${productId}`);
+      const response = await this.request(`/wishlist/check/${productId}`); // FIXED: No isAdmin flag
       console.log('✅ [DEBUG] Wishlist status response:', response);
       return response;
     } catch (error) {
@@ -246,38 +252,38 @@ class ApiService {
     return this.request('/admin/stats', {}, true);
   }
 
-  // User methods (regular user routes)
+  // User methods (regular user routes) - regular user auth
   async updateProfile(userData: any) {
     return this.request('/users/profile', {
       method: 'PUT',
       body: JSON.stringify(userData),
-    });
+    }); // FIXED: No isAdmin flag
   }
 
   async addAddress(addressData: any) {
     return this.request('/users/address', {
       method: 'POST',
       body: JSON.stringify(addressData),
-    });
+    }); // FIXED: No isAdmin flag
   }
 
-  // Order methods
+  // Order methods - regular user auth
   async createOrder(orderData: any) {
     return this.request('/orders', {
       method: 'POST',
       body: JSON.stringify(orderData),
-    });
+    }); // FIXED: No isAdmin flag
   }
 
   async getOrders() {
-    return this.request('/orders/my-orders');
+    return this.request('/orders/my-orders'); // FIXED: No isAdmin flag
   }
 
   async getOrder(id: string) {
-    return this.request(`/orders/${id}`);
+    return this.request(`/orders/${id}`); // FIXED: No isAdmin flag
   }
 
-  // Category methods
+  // Category methods - public
   async getCategories() {
     return this.request('/categories');
   }

@@ -5,11 +5,17 @@ import type { WishlistItem, Product } from '../lib/types';
 interface WishlistContextType {
   wishlist: WishlistItem[];
   loading: boolean;
-  addToWishlist: (product: Product) => Promise<void>;
-  removeFromWishlist: (productId: string) => Promise<void>;
+  error: string | null;
+  addToWishlist: (product: Product) => Promise<boolean>;
+  removeFromWishlist: (productId: string) => Promise<boolean>;
   isInWishlist: (productId: string) => boolean;
   refreshWishlist: () => Promise<void>;
   wishlistCount: number;
+  clearError: () => void;
+  clearWishlist: () => Promise<boolean>;
+  addMultipleToWishlist: (products: Product[]) => Promise<boolean>;
+  getWishlistCount: () => Promise<number>;
+  operationLoading: boolean;
 }
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
@@ -29,16 +35,39 @@ interface WishlistProviderProps {
 export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) => {
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [operationLoading, setOperationLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const clearError = () => setError(null);
 
   const refreshWishlist = async () => {
     try {
       setLoading(true);
+      setError(null);
+      console.log('💖 [CONTEXT] Refreshing wishlist...');
+      
       const data = await apiService.getWishlist();
+      
       if (data.success) {
+        console.log('💖 [CONTEXT] Wishlist refreshed successfully:', data.data.length, 'items');
         setWishlist(data.data);
+      } else {
+        throw new Error(data.message || 'Failed to load wishlist');
       }
-    } catch (error) {
-      console.error('Error refreshing wishlist:', error);
+    } catch (error: any) {
+      console.error('❌ [CONTEXT] Error refreshing wishlist:', error);
+      
+      // Handle specific error cases
+      if (error.message.includes('No token provided') || 
+          error.message.includes('authorization denied') ||
+          error.message.includes('401')) {
+        setError('Please log in to view your wishlist');
+        setWishlist([]);
+      } else if (error.message.includes('Failed to fetch') || error.message.includes('Network')) {
+        setError('Unable to connect to server. Please check your connection.');
+      } else {
+        setError(error.message || 'Failed to load wishlist');
+      }
     } finally {
       setLoading(false);
     }
@@ -48,46 +77,168 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
     refreshWishlist();
   }, []);
 
-  const addToWishlist = async (product: Product) => {
+  const addToWishlist = async (product: Product): Promise<boolean> => {
     try {
+      setOperationLoading(true);
+      setError(null);
+      console.log('💖 [CONTEXT] Adding to wishlist:', product._id, product.name);
+      
       const data = await apiService.addToWishlist(product._id);
+      
       if (data.success) {
+        console.log('💖 [CONTEXT] Added to wishlist successfully');
         await refreshWishlist();
+        return true;
+      } else {
+        throw new Error(data.message || 'Failed to add to wishlist');
       }
-    } catch (error) {
-      console.error('Error adding to wishlist:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('❌ [CONTEXT] Error adding to wishlist:', error);
+      
+      if (error.message.includes('already in wishlist')) {
+        setError('This product is already in your wishlist');
+      } else if (error.message.includes('not found')) {
+        setError('Product not found or not available');
+      } else {
+        setError(error.message || 'Failed to add to wishlist');
+      }
+      return false;
+    } finally {
+      setOperationLoading(false);
     }
   };
 
-  const removeFromWishlist = async (productId: string) => {
+  const removeFromWishlist = async (productId: string): Promise<boolean> => {
     try {
+      setOperationLoading(true);
+      setError(null);
+      console.log('💖 [CONTEXT] Removing from wishlist:', productId);
+      
       const data = await apiService.removeFromWishlist(productId);
+      
       if (data.success) {
+        console.log('💖 [CONTEXT] Removed from wishlist successfully');
         setWishlist(prev => prev.filter(item => item.productId !== productId));
+        return true;
+      } else {
+        throw new Error(data.message || 'Failed to remove from wishlist');
       }
-    } catch (error) {
-      console.error('Error removing from wishlist:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('❌ [CONTEXT] Error removing from wishlist:', error);
+      setError(error.message || 'Failed to remove from wishlist');
+      return false;
+    } finally {
+      setOperationLoading(false);
     }
   };
 
-  const isInWishlist = (productId: string) => {
+  const clearWishlist = async (): Promise<boolean> => {
+    try {
+      setOperationLoading(true);
+      setError(null);
+      console.log('💖 [CONTEXT] Clearing entire wishlist');
+      
+      // Since we don't have a clearWishlist API endpoint yet, remove items one by one
+      // Alternatively, you can implement a bulk delete endpoint in the backend
+      const deletePromises = wishlist.map(item => 
+        apiService.removeFromWishlist(item.productId)
+      );
+      
+      await Promise.all(deletePromises);
+      setWishlist([]);
+      console.log('💖 [CONTEXT] Wishlist cleared successfully');
+      return true;
+    } catch (error: any) {
+      console.error('❌ [CONTEXT] Error clearing wishlist:', error);
+      setError(error.message || 'Failed to clear wishlist');
+      return false;
+    } finally {
+      setOperationLoading(false);
+    }
+  };
+
+  const addMultipleToWishlist = async (products: Product[]): Promise<boolean> => {
+    try {
+      setOperationLoading(true);
+      setError(null);
+      console.log('💖 [CONTEXT] Adding multiple products to wishlist:', products.length);
+      
+      // Since we don't have a bulk add API endpoint yet, add items one by one
+      const addPromises = products.map(product => 
+        apiService.addToWishlist(product._id).catch(err => {
+          console.warn('❌ [CONTEXT] Failed to add product:', product._id, err.message);
+          return null;
+        })
+      );
+      
+      const results = await Promise.all(addPromises);
+      const successCount = results.filter(result => result?.success).length;
+      
+      console.log('💖 [CONTEXT] Added multiple products:', successCount, 'successful');
+      
+      // Refresh the wishlist to get the updated state
+      await refreshWishlist();
+      
+      if (successCount < products.length) {
+        setError(`Added ${successCount} out of ${products.length} products to wishlist`);
+      }
+      
+      return successCount > 0;
+    } catch (error: any) {
+      console.error('❌ [CONTEXT] Error adding multiple to wishlist:', error);
+      setError(error.message || 'Failed to add products to wishlist');
+      return false;
+    } finally {
+      setOperationLoading(false);
+    }
+  };
+
+  const getWishlistCount = async (): Promise<number> => {
+    try {
+      // Use the local state for count, but you could also call an API endpoint if available
+      return wishlist.length;
+    } catch (error) {
+      console.error('❌ [CONTEXT] Error getting wishlist count:', error);
+      return wishlist.length;
+    }
+  };
+
+  const isInWishlist = (productId: string): boolean => {
     return wishlist.some(item => item.productId === productId);
   };
 
   const wishlistCount = wishlist.length;
 
+  // Debug effect to log wishlist changes
+  useEffect(() => {
+    console.log('💖 [CONTEXT] Wishlist updated:', {
+      count: wishlist.length,
+      items: wishlist.map(item => ({
+        id: item._id,
+        productId: item.productId,
+        productName: item.product?.name
+      }))
+    });
+  }, [wishlist]);
+
+  const value: WishlistContextType = {
+    wishlist,
+    loading,
+    error,
+    addToWishlist,
+    removeFromWishlist,
+    isInWishlist,
+    refreshWishlist,
+    wishlistCount,
+    clearError,
+    clearWishlist,
+    addMultipleToWishlist,
+    getWishlistCount,
+    operationLoading
+  };
+
   return (
-    <WishlistContext.Provider value={{
-      wishlist,
-      loading,
-      addToWishlist,
-      removeFromWishlist,
-      isInWishlist,
-      refreshWishlist,
-      wishlistCount
-    }}>
+    <WishlistContext.Provider value={value}>
       {children}
     </WishlistContext.Provider>
   );

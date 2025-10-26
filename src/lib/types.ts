@@ -215,18 +215,21 @@ export interface WishlistItem {
   productId: string;
   product?: Product;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface WishlistResponse {
   success: boolean;
   data: WishlistItem[];
   message?: string;
+  count?: number;
 }
 
 export interface WishlistStatusResponse {
   success: boolean;
   data: {
     inWishlist: boolean;
+    wishlistItem?: WishlistItem;
   };
 }
 
@@ -243,6 +246,14 @@ export interface AddToWishlistResponse {
 export interface RemoveFromWishlistResponse {
   success: boolean;
   message: string;
+  removedItem?: string;
+}
+
+export interface WishlistCountResponse {
+  success: boolean;
+  data: {
+    count: number;
+  };
 }
 
 // Payment Types
@@ -258,14 +269,117 @@ export interface PaymentIntent {
 export interface WishlistContextType {
   wishlist: WishlistItem[];
   loading: boolean;
-  addToWishlist: (product: Product) => Promise<void>;
-  removeFromWishlist: (productId: string) => Promise<void>;
+  error: string | null;
+  addToWishlist: (product: Product) => Promise<boolean>;
+  removeFromWishlist: (productId: string) => Promise<boolean>;
   isInWishlist: (productId: string) => boolean;
   refreshWishlist: () => Promise<void>;
   wishlistCount: number;
+  clearError: () => void;
+  clearWishlist: () => Promise<boolean>;
+  addMultipleToWishlist: (products: Product[]) => Promise<boolean>;
+  getWishlistCount: () => Promise<number>;
+  operationLoading: boolean;
 }
 
-// Export all types
+export interface CartContextType {
+  items: CartItem[];
+  total: number;
+  itemCount: number;
+  addToCart: (item: Omit<CartItem, 'product'>) => void;
+  removeFromCart: (productId: string, size: string) => void;
+  updateQuantity: (productId: string, size: string, quantity: number) => void;
+  clearCart: () => void;
+  getItemCount: () => number;
+  getTotalPrice: () => number;
+}
+
+export interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (userData: RegisterData) => Promise<void>;
+  logout: () => void;
+  refreshUser: () => Promise<void>;
+}
+
+export interface AdminAuthContextType {
+  admin: any | null;
+  loading: boolean;
+  isAuthenticated: boolean;
+  login: (username: string, password: string) => Promise<void>;
+  logout: () => void;
+}
+
+// Navigation Types
+export interface NavigationParams {
+  slug?: string;
+  buyNow?: boolean;
+  id?: string;
+}
+
+// Component Props Types
+export interface ProductCardProps {
+  product: Product;
+  onNavigate: (page: string, params?: NavigationParams) => void;
+  showWishlist?: boolean;
+}
+
+export interface ProductPageProps {
+  slug: string;
+  onNavigate: (page: string, params?: NavigationParams) => void;
+}
+
+export interface WishlistPageProps {
+  onNavigate: (page: string, params?: NavigationParams) => void;
+}
+
+export interface CartPageProps {
+  onNavigate: (page: string, params?: NavigationParams) => void;
+}
+
+export interface NavbarProps {
+  onNavigate: (page: string) => void;
+  currentPage: string;
+}
+
+// Form Types
+export interface LoginFormData {
+  email: string;
+  password: string;
+}
+
+export interface RegisterFormData {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  fullName: string;
+  phone?: string;
+}
+
+export interface AddressFormData {
+  fullName: string;
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  isDefault: boolean;
+}
+
+// Utility Types
+export type ApiServiceMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+
+export interface ApiRequestOptions {
+  method?: ApiServiceMethod;
+  headers?: Record<string, string>;
+  body?: any;
+  isAdmin?: boolean;
+}
+
+// Export all types with aliases
 export type {
   User as UserType,
   Product as ProductType,
@@ -275,5 +389,7 @@ export type {
   Review as ReviewType,
   WishlistItem as WishlistItemType,
   WishlistResponse as WishlistResponseType,
-  WishlistStatusResponse as WishlistStatusResponseType
+  WishlistStatusResponse as WishlistStatusResponseType,
+  CartItem as CartItemType,
+  Address as AddressType
 };
