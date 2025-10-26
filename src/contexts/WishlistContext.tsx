@@ -46,6 +46,15 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
       setError(null);
       console.log('💖 [CONTEXT] Refreshing wishlist...');
       
+      // FIXED: Check if user is authenticated before making wishlist request
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.log('💖 [CONTEXT] No user token found, skipping wishlist fetch');
+        setWishlist([]);
+        setError('Please log in to view your wishlist');
+        return;
+      }
+      
       const data = await apiService.getWishlist();
       
       if (data.success) {
@@ -74,7 +83,15 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
   };
 
   useEffect(() => {
-    refreshWishlist();
+    // FIXED: Only refresh wishlist if user is authenticated
+    const token = localStorage.getItem('token');
+    if (token) {
+      refreshWishlist();
+    } else {
+      setLoading(false);
+      setWishlist([]);
+      console.log('💖 [CONTEXT] No user token, wishlist not loaded');
+    }
   }, []);
 
   const addToWishlist = async (product: Product): Promise<boolean> => {
@@ -82,6 +99,13 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
       setOperationLoading(true);
       setError(null);
       console.log('💖 [CONTEXT] Adding to wishlist:', product._id, product.name);
+      
+      // FIXED: Check authentication before adding to wishlist
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Please log in to add items to wishlist');
+        return false;
+      }
       
       const data = await apiService.addToWishlist(product._id);
       
@@ -99,6 +123,8 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
         setError('This product is already in your wishlist');
       } else if (error.message.includes('not found')) {
         setError('Product not found or not available');
+      } else if (error.message.includes('401') || error.message.includes('authorization')) {
+        setError('Please log in to add items to wishlist');
       } else {
         setError(error.message || 'Failed to add to wishlist');
       }
@@ -114,6 +140,13 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
       setError(null);
       console.log('💖 [CONTEXT] Removing from wishlist:', productId);
       
+      // FIXED: Check authentication before removing from wishlist
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Please log in to manage your wishlist');
+        return false;
+      }
+      
       const data = await apiService.removeFromWishlist(productId);
       
       if (data.success) {
@@ -125,7 +158,12 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
       }
     } catch (error: any) {
       console.error('❌ [CONTEXT] Error removing from wishlist:', error);
-      setError(error.message || 'Failed to remove from wishlist');
+      
+      if (error.message.includes('401') || error.message.includes('authorization')) {
+        setError('Please log in to manage your wishlist');
+      } else {
+        setError(error.message || 'Failed to remove from wishlist');
+      }
       return false;
     } finally {
       setOperationLoading(false);
@@ -137,6 +175,13 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
       setOperationLoading(true);
       setError(null);
       console.log('💖 [CONTEXT] Clearing entire wishlist');
+      
+      // FIXED: Check authentication before clearing wishlist
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Please log in to manage your wishlist');
+        return false;
+      }
       
       // Use the clearWishlist API endpoint
       const response = await apiService.request('/wishlist', {
@@ -152,7 +197,12 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
       }
     } catch (error: any) {
       console.error('❌ [CONTEXT] Error clearing wishlist:', error);
-      setError(error.message || 'Failed to clear wishlist');
+      
+      if (error.message.includes('401') || error.message.includes('authorization')) {
+        setError('Please log in to manage your wishlist');
+      } else {
+        setError(error.message || 'Failed to clear wishlist');
+      }
       return false;
     } finally {
       setOperationLoading(false);
@@ -164,6 +214,13 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
       setOperationLoading(true);
       setError(null);
       console.log('💖 [CONTEXT] Adding multiple products to wishlist:', products.length);
+      
+      // FIXED: Check authentication before bulk operations
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Please log in to add items to wishlist');
+        return false;
+      }
       
       // Use the bulk add API endpoint
       const productIds = products.map(product => product._id);
@@ -188,6 +245,11 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
       }
     } catch (error: any) {
       console.error('❌ [CONTEXT] Error adding multiple to wishlist:', error);
+      
+      if (error.message.includes('401') || error.message.includes('authorization')) {
+        setError('Please log in to add items to wishlist');
+        return false;
+      }
       
       // Fallback to individual requests if bulk endpoint fails
       console.log('💖 [CONTEXT] Falling back to individual requests');

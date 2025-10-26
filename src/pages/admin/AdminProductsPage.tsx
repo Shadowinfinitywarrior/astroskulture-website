@@ -20,6 +20,14 @@ interface Product {
   reviewCount: number;
 }
 
+interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  isActive: boolean;
+}
+
 interface AdminProductsPageProps {
   onNavigate: (page: string) => void;
 }
@@ -27,9 +35,11 @@ interface AdminProductsPageProps {
 export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps) {
   const { isAuthenticated, login, loading: authLoading } = useAdminAuth();
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]); // NEW: Categories state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(false); // NEW: Categories loading state
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [formData, setFormData] = useState({
     name: '',
@@ -59,6 +69,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
   useEffect(() => {
     if (isAuthenticated) {
       fetchProducts();
+      fetchCategories(); // NEW: Fetch categories when authenticated
     } else {
       setLoading(false);
     }
@@ -109,6 +120,36 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
     }
   };
 
+  // NEW: Fetch categories function
+  const fetchCategories = async () => {
+    try {
+      setCategoriesLoading(true);
+      console.log('📂 Fetching categories...');
+      
+      const response = await fetch(`${API_BASE_URL}/categories`);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('📂 Categories data received:', result.data?.length || 0, 'categories');
+        
+        if (result.success) {
+          setCategories(result.data || []);
+        } else {
+          console.error('Error fetching categories:', result.message);
+          setCategories([]);
+        }
+      } else {
+        console.error('HTTP Error fetching categories:', response.status);
+        setCategories([]);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      setCategories([]);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -146,6 +187,20 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         return;
       }
 
+      // Validate that category exists
+      const selectedCategory = categories.find(cat => cat._id === formData.categoryId);
+      if (!selectedCategory) {
+        alert('Please select a valid category');
+        return;
+      }
+
+      // Validate at least one image URL
+      const validImages = formData.images.filter(img => img.url.trim() !== '');
+      if (validImages.length === 0) {
+        alert('Please add at least one product image URL');
+        return;
+      }
+
       // Calculate total stock
       const totalStock = formData.sizes.reduce((sum, size) => sum + (Number(size.stock) || 0), 0);
 
@@ -155,7 +210,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         price: price,
         discountPrice: discountPrice,
         categoryId: formData.categoryId.trim(),
-        images: formData.images.filter(img => img.url.trim() !== ''), // Remove empty images
+        images: validImages,
         sizes: formData.sizes.map(size => ({
           size: size.size,
           stock: Number(size.stock) || 0
@@ -177,13 +232,15 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-
       const result = await response.json();
       
+      if (!response.ok) {
+        // Get detailed error message from backend
+        const errorMessage = result.message || result.error || `HTTP error! status: ${response.status}`;
+        console.error('❌ Backend error details:', result);
+        throw new Error(errorMessage);
+      }
+
       if (result.success) {
         console.log('✅ Product saved successfully');
         fetchProducts();
@@ -193,8 +250,8 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         throw new Error(result.message || 'Failed to save product');
       }
     } catch (error: any) {
-      console.error('Error saving product:', error);
-      alert(error.message || 'Failed to save product');
+      console.error('❌ Error saving product:', error);
+      alert(`Failed to save product: ${error.message}`);
     }
   };
 
@@ -516,15 +573,31 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                   />
                 </div>
 
+                {/* FIXED: Category dropdown instead of free text input */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Category ID</label>
-                  <input
-                    type="text"
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Category</label>
+                  <select
                     value={formData.categoryId}
                     onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                     required
-                  />
+                  >
+                    <option value="">Select a category</option>
+                    {categoriesLoading ? (
+                      <option disabled>Loading categories...</option>
+                    ) : (
+                      categories.map((category) => (
+                        <option key={category._id} value={category._id}>
+                          {category.name}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                  {categories.length === 0 && !categoriesLoading && (
+                    <p className="text-sm text-red-600 mt-1">
+                      No categories found. Please create categories first in the admin panel.
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -675,6 +748,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                   <button
                     type="submit"
                     className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+                    disabled={categories.length === 0} // Disable if no categories
                   >
                     {editingProduct ? 'Update' : 'Create'}
                   </button>
