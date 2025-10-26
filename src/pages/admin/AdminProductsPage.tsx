@@ -130,13 +130,39 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
 
       const method = editingProduct ? 'PUT' : 'POST';
 
+      // FIXED: Proper number conversion with validation
+      const price = Number(formData.price) || 0;
+      const discountPrice = formData.discountPrice ? Number(formData.discountPrice) : undefined;
+
+      // Validate required fields
+      if (!formData.name.trim() || !formData.description.trim() || price <= 0 || !formData.categoryId.trim()) {
+        alert('Please fill in all required fields with valid values');
+        return;
+      }
+
+      // Validate discount price is less than regular price
+      if (discountPrice && discountPrice >= price) {
+        alert('Discount price must be less than regular price');
+        return;
+      }
+
       // Calculate total stock
-      const totalStock = formData.sizes.reduce((sum, size) => sum + size.stock, 0);
+      const totalStock = formData.sizes.reduce((sum, size) => sum + (Number(size.stock) || 0), 0);
 
       const payload = {
-        ...formData,
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        price: price,
+        discountPrice: discountPrice,
+        categoryId: formData.categoryId.trim(),
+        images: formData.images.filter(img => img.url.trim() !== ''), // Remove empty images
+        sizes: formData.sizes.map(size => ({
+          size: size.size,
+          stock: Number(size.stock) || 0
+        })),
         totalStock,
-        discountPrice: formData.discountPrice || undefined,
+        isFeatured: formData.isFeatured,
+        isActive: formData.isActive,
       };
 
       console.log('💾 Saving product to:', url);
@@ -151,6 +177,11 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         body: JSON.stringify(payload),
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
       const result = await response.json();
       
       if (result.success) {
@@ -159,12 +190,11 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         closeModal();
         alert(editingProduct ? 'Product updated successfully!' : 'Product created successfully!');
       } else {
-        console.error('Error saving product:', result.message);
-        alert(result.message || 'Failed to save product');
+        throw new Error(result.message || 'Failed to save product');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving product:', error);
-      alert('Failed to save product');
+      alert(error.message || 'Failed to save product');
     }
   };
 
@@ -220,7 +250,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
 
   const updateSizeStock = (sizeIndex: number, stock: number) => {
     const newSizes = formData.sizes.map((size, i) => 
-      i === sizeIndex ? { ...size, stock } : size
+      i === sizeIndex ? { ...size, stock: Number(stock) || 0 } : size
     );
     setFormData({ ...formData, sizes: newSizes });
   };
@@ -515,8 +545,9 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                   <input
                     type="number"
                     step="0.01"
+                    min="0"
                     value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                     required
                   />
@@ -527,8 +558,9 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                   <input
                     type="number"
                     step="0.01"
+                    min="0"
                     value={formData.discountPrice}
-                    onChange={(e) => setFormData({ ...formData, discountPrice: parseFloat(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, discountPrice: Number(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                   />
                 </div>
@@ -596,7 +628,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                         type="number"
                         min="0"
                         value={size.stock}
-                        onChange={(e) => updateSizeStock(index, parseInt(e.target.value) || 0)}
+                        onChange={(e) => updateSizeStock(index, Number(e.target.value) || 0)}
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-center"
                       />
                     </div>
