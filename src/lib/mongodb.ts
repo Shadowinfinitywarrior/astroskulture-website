@@ -208,6 +208,57 @@ class ApiService {
     }
   }
 
+  // NEW: Clear entire wishlist
+  async clearWishlist() {
+    console.log('💖 [DEBUG] Clearing entire wishlist');
+    try {
+      const response = await this.request('/wishlist', {
+        method: 'DELETE',
+      });
+      console.log('✅ [DEBUG] Clear wishlist response:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [DEBUG] Error clearing wishlist:', {
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  // NEW: Add multiple products to wishlist
+  async addMultipleToWishlist(productIds: string[]) {
+    console.log('💖 [DEBUG] Adding multiple products to wishlist:', productIds);
+    try {
+      const response = await this.request('/wishlist/bulk', {
+        method: 'POST',
+        body: JSON.stringify({ productIds }),
+      });
+      console.log('✅ [DEBUG] Add multiple to wishlist response:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [DEBUG] Error adding multiple to wishlist:', {
+        productIds,
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  // NEW: Get wishlist count
+  async getWishlistCount() {
+    console.log('💖 [DEBUG] Getting wishlist count');
+    try {
+      const response = await this.request('/wishlist/count');
+      console.log('✅ [DEBUG] Wishlist count response:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [DEBUG] Error getting wishlist count:', {
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
   // Admin methods - use isAdmin: true
   async adminGetProducts() {
     return this.request('/admin/products', {}, true);

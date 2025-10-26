@@ -60,6 +60,7 @@ ASTRO-MAIN/
 │   │   ├── HomePage.tsx
 │   │   ├── LoginPage.tsx
 │   │   ├── ProductPage.tsx ✅ (Modified)
+│   │   ├── ProductCard.tsx
 │   │   ├── RegisterPage.tsx
 │   │   ├── ShopPage.tsx ✅ (Modified)
 │   │   ├── UserAccountPage.tsx

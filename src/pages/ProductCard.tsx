@@ -14,7 +14,8 @@ interface ProductCardProps {
 export function ProductCard({ product, onNavigate, showWishlist = true }: ProductCardProps) {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
-  const { addToWishlist, removeFromWishlist, isInWishlist, operationLoading } = useWishlist();
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { addToCart } = useCart();
   const { user } = useAuth();
   
@@ -34,6 +35,7 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
     }
     
     try {
+      setWishlistLoading(true);
       if (isInWishlistState) {
         await removeFromWishlist(product._id);
       } else {
@@ -41,13 +43,20 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
       }
     } catch (error) {
       console.error('Error toggling wishlist:', error);
+      // Error is handled in the context, but we can add a toast notification here if needed
+    } finally {
+      setWishlistLoading(false);
     }
   };
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    if (product.totalStock === 0) return;
+    if (product.totalStock === 0) {
+      // You could show a toast notification here
+      console.log('Product is out of stock');
+      return;
+    }
     
     const defaultSize = product.sizes?.find(size => size.stock > 0)?.size || 'M';
     
@@ -59,6 +68,9 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
       size: defaultSize,
       image: product.images[0]?.url || '',
     });
+
+    // You could add a success toast notification here
+    console.log('Product added to cart:', product.name);
   };
 
   const handleProductClick = () => {
@@ -69,6 +81,8 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
     e.stopPropagation();
     // You can implement a quick view modal here
     console.log('Quick view:', product.name);
+    // For now, navigate to product page
+    handleProductClick();
   };
 
   const handleImageLoad = () => {
@@ -89,6 +103,11 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
   const stockStatus = getStockStatus();
   const isAvailable = product.totalStock > 0;
 
+  // Format price with Indian numbering system
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-IN').format(price);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition-all duration-300 border border-gray-100">
       <div className="relative overflow-hidden">
@@ -104,7 +123,7 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
           )}
           
           <img
-            src={imageError ? '/api/placeholder/300/300' : product.images[0]?.url}
+            src={imageError ? '/api/placeholder/300/300' : (product.images[0]?.url || '/api/placeholder/300/300')}
             alt={product.name}
             className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
               imageLoading ? 'opacity-0' : 'opacity-100'
@@ -129,7 +148,7 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
               {showWishlist && (
                 <button
                   onClick={handleWishlistToggle}
-                  disabled={operationLoading}
+                  disabled={wishlistLoading}
                   className={`p-2 rounded-full shadow-md transition-colors ${
                     isInWishlistState
                       ? 'bg-red-600 text-white hover:bg-red-700'
@@ -137,7 +156,7 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                   title={isInWishlistState ? 'Remove from Wishlist' : 'Add to Wishlist'}
                 >
-                  {operationLoading ? (
+                  {wishlistLoading ? (
                     <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                   ) : (
                     <Heart className={`w-4 h-4 ${isInWishlistState ? 'fill-current' : ''}`} />
@@ -184,7 +203,7 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
       <div className="p-4">
         {/* Category */}
         <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">
-          {product.categoryData?.name || 'Fashion'}
+          {product.categoryData?.name || product.category || 'Fashion'}
         </div>
 
         {/* Product Name */}
@@ -224,11 +243,11 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
         <div className="flex items-center justify-between">
           <div className="flex items-baseline space-x-2">
             <span className="text-lg font-bold text-gray-900">
-              ₹{currentPrice}
+              ₹{formatPrice(currentPrice)}
             </span>
             {hasDiscount && (
               <span className="text-sm text-gray-500 line-through">
-                ₹{product.price}
+                ₹{formatPrice(product.price)}
               </span>
             )}
           </div>

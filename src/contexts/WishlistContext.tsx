@@ -138,16 +138,18 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
       setError(null);
       console.log('💖 [CONTEXT] Clearing entire wishlist');
       
-      // Since we don't have a clearWishlist API endpoint yet, remove items one by one
-      // Alternatively, you can implement a bulk delete endpoint in the backend
-      const deletePromises = wishlist.map(item => 
-        apiService.removeFromWishlist(item.productId)
-      );
+      // Use the clearWishlist API endpoint
+      const response = await apiService.request('/wishlist', {
+        method: 'DELETE'
+      });
       
-      await Promise.all(deletePromises);
-      setWishlist([]);
-      console.log('💖 [CONTEXT] Wishlist cleared successfully');
-      return true;
+      if (response.success) {
+        setWishlist([]);
+        console.log('💖 [CONTEXT] Wishlist cleared successfully');
+        return true;
+      } else {
+        throw new Error(response.message || 'Failed to clear wishlist');
+      }
     } catch (error: any) {
       console.error('❌ [CONTEXT] Error clearing wishlist:', error);
       setError(error.message || 'Failed to clear wishlist');
@@ -163,7 +165,32 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
       setError(null);
       console.log('💖 [CONTEXT] Adding multiple products to wishlist:', products.length);
       
-      // Since we don't have a bulk add API endpoint yet, add items one by one
+      // Use the bulk add API endpoint
+      const productIds = products.map(product => product._id);
+      const response = await apiService.request('/wishlist/bulk', {
+        method: 'POST',
+        body: JSON.stringify({ productIds })
+      });
+      
+      if (response.success) {
+        console.log('💖 [CONTEXT] Added multiple products:', response.addedCount, 'successful');
+        
+        // Refresh the wishlist to get the updated state
+        await refreshWishlist();
+        
+        if (response.alreadyExistsCount > 0) {
+          setError(`Added ${response.addedCount} out of ${products.length} products to wishlist (${response.alreadyExistsCount} already existed)`);
+        }
+        
+        return response.addedCount > 0;
+      } else {
+        throw new Error(response.message || 'Failed to add products to wishlist');
+      }
+    } catch (error: any) {
+      console.error('❌ [CONTEXT] Error adding multiple to wishlist:', error);
+      
+      // Fallback to individual requests if bulk endpoint fails
+      console.log('💖 [CONTEXT] Falling back to individual requests');
       const addPromises = products.map(product => 
         apiService.addToWishlist(product._id).catch(err => {
           console.warn('❌ [CONTEXT] Failed to add product:', product._id, err.message);
@@ -174,9 +201,8 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
       const results = await Promise.all(addPromises);
       const successCount = results.filter(result => result?.success).length;
       
-      console.log('💖 [CONTEXT] Added multiple products:', successCount, 'successful');
+      console.log('💖 [CONTEXT] Added multiple products (fallback):', successCount, 'successful');
       
-      // Refresh the wishlist to get the updated state
       await refreshWishlist();
       
       if (successCount < products.length) {
@@ -184,10 +210,6 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
       }
       
       return successCount > 0;
-    } catch (error: any) {
-      console.error('❌ [CONTEXT] Error adding multiple to wishlist:', error);
-      setError(error.message || 'Failed to add products to wishlist');
-      return false;
     } finally {
       setOperationLoading(false);
     }

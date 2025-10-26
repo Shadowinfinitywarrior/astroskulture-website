@@ -1,3 +1,4 @@
+import mongoose from 'mongoose'; // ADD THIS IMPORT
 import Wishlist from '../models/Wishlist.js';
 import Product from '../models/Product.js';
 

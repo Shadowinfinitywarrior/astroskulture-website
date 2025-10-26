@@ -18,6 +18,7 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [sortBy, setSortBy] = useState('featured');
+  const [wishlistLoading, setWishlistLoading] = useState<string | null>(null);
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { user } = useAuth();
@@ -77,6 +78,8 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
           filteredProducts.sort((a, b) => (b.discountPrice || b.price) - (a.discountPrice || a.price));
         } else if (sortBy === 'rating') {
           filteredProducts.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        } else if (sortBy === 'newest') {
+          filteredProducts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         } else if (sortBy === 'featured') {
           // Featured products first, then by creation date
           filteredProducts.sort((a, b) => {
@@ -107,6 +110,9 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
       size: defaultSize,
       image: imageUrl
     });
+
+    // You could add a toast notification here
+    console.log('Added to cart:', product.name);
   };
 
   const handleWishlistToggle = async (product: Product) => {
@@ -116,6 +122,7 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
     }
 
     try {
+      setWishlistLoading(product._id);
       if (isInWishlist(product._id)) {
         await removeFromWishlist(product._id);
       } else {
@@ -123,6 +130,8 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
       }
     } catch (error) {
       console.error('Error toggling wishlist:', error);
+    } finally {
+      setWishlistLoading(null);
     }
   };
 
@@ -170,6 +179,17 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
 
   const getAvailableSizes = (product: Product) => {
     return product.sizes.filter(size => size.stock > 0).map(size => size.size);
+  };
+
+  // Format price with Indian numbering system
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-IN').format(price);
+  };
+
+  const getStockStatus = (product: Product) => {
+    if (product.totalStock === 0) return 'out-of-stock';
+    if (product.totalStock < 10) return 'low-stock';
+    return 'in-stock';
   };
 
   return (
@@ -257,7 +277,7 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                     />
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>₹0</span>
-                      <span>₹{priceRange[1]}</span>
+                      <span>₹{formatPrice(priceRange[1])}</span>
                     </div>
                   </div>
                 </div>
@@ -301,96 +321,117 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.map((product) => (
-                  <div key={product._id} className="bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
-                    <div className="relative overflow-hidden">
-                      <img
-                        src={getProductImage(product)}
-                        alt={product.images[0]?.alt || product.name}
-                        className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer"
-                        onClick={() => handleProductClick(product)}
-                      />
-                      {hasDiscount(product) && (
-                        <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                          {getDiscountPercentage(product)}% OFF
-                        </div>
-                      )}
-                      {product.isFeatured && (
-                        <div className="absolute top-4 right-4 bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                          Featured
-                        </div>
-                      )}
-                      
-                      {/* Wishlist Button */}
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleWishlistToggle(product);
-                        }}
-                        className={`absolute top-16 right-4 p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 ${
-                          isInWishlist(product._id) 
-                            ? 'bg-red-100 text-red-600 opacity-100' 
-                            : 'bg-white text-gray-600 hover:bg-red-50 hover:text-red-600'
-                        }`}
-                      >
-                        <Heart className={`w-5 h-5 ${isInWishlist(product._id) ? 'fill-red-600' : ''}`} />
-                      </button>
-                    </div>
-                    
-                    <div className="p-4">
-                      <h3
-                        onClick={() => handleProductClick(product)}
-                        className="font-semibold text-gray-900 mb-2 cursor-pointer hover:text-red-600 transition-colors line-clamp-2"
-                      >
-                        {product.name}
-                      </h3>
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                        {product.description}
-                      </p>
-                      <div className="flex items-center space-x-1 mb-2">
-                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                        <span className="text-sm font-medium">{(product.rating || 0).toFixed(1)}</span>
-                        <span className="text-sm text-gray-500">({product.reviewCount || 0})</span>
-                      </div>
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          {hasDiscount(product) ? (
-                            <div className="flex items-center space-x-2">
-                              <span className="text-lg font-bold text-red-600">
-                                ₹{getDisplayPrice(product)}
-                              </span>
-                              <span className="text-sm text-gray-500 line-through">
-                                ₹{product.price}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-lg font-bold text-gray-900">₹{getDisplayPrice(product)}</span>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => handleAddToCart(product)}
-                          disabled={product.totalStock === 0}
-                          className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                {products.map((product) => {
+                  const stockStatus = getStockStatus(product);
+                  const isInWishlistState = isInWishlist(product._id);
+                  const isWishlistLoading = wishlistLoading === product._id;
+                  
+                  return (
+                    <div key={product._id} className="bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
+                      <div className="relative overflow-hidden">
+                        <img
+                          src={getProductImage(product)}
+                          alt={product.images[0]?.alt || product.name}
+                          className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer"
+                          onClick={() => handleProductClick(product)}
+                        />
+                        {hasDiscount(product) && (
+                          <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                            {getDiscountPercentage(product)}% OFF
+                          </div>
+                        )}
+                        {product.isFeatured && (
+                          <div className="absolute top-4 right-4 bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                            Featured
+                          </div>
+                        )}
+                        
+                        {/* Stock Status Badge */}
+                        {stockStatus === 'out-of-stock' && (
+                          <div className="absolute top-16 left-4 bg-gray-600 text-white px-2 py-1 rounded text-xs font-semibold">
+                            Out of Stock
+                          </div>
+                        )}
+                        {stockStatus === 'low-stock' && (
+                          <div className="absolute top-16 left-4 bg-orange-500 text-white px-2 py-1 rounded text-xs font-semibold">
+                            Low Stock
+                          </div>
+                        )}
+                        
+                        {/* Wishlist Button */}
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleWishlistToggle(product);
+                          }}
+                          disabled={isWishlistLoading}
+                          className={`absolute top-4 right-4 p-2 rounded-full shadow-md transition-all duration-300 ${
+                            isInWishlistState 
+                              ? 'bg-red-600 text-white hover:bg-red-700' 
+                              : 'bg-white text-gray-600 hover:bg-red-50 hover:text-red-600'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
-                          <ShoppingCart className="w-5 h-5" />
+                          {isWishlistLoading ? (
+                            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <Heart className={`w-5 h-5 ${isInWishlistState ? 'fill-current' : ''}`} />
+                          )}
                         </button>
                       </div>
-                      <div className="flex flex-wrap gap-1 mb-2">
-                        {getAvailableSizes(product).map(size => (
-                          <span key={size} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                            {size}
-                          </span>
-                        ))}
+                      
+                      <div className="p-4">
+                        <h3
+                          onClick={() => handleProductClick(product)}
+                          className="font-semibold text-gray-900 mb-2 cursor-pointer hover:text-red-600 transition-colors line-clamp-2"
+                        >
+                          {product.name}
+                        </h3>
+                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                          {product.description}
+                        </p>
+                        <div className="flex items-center space-x-1 mb-2">
+                          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                          <span className="text-sm font-medium">{(product.rating || 0).toFixed(1)}</span>
+                          <span className="text-sm text-gray-500">({product.reviewCount || 0})</span>
+                        </div>
+                        <div className="flex items-center justify-between mb-2">
+                          <div>
+                            {hasDiscount(product) ? (
+                              <div className="flex items-center space-x-2">
+                                <span className="text-lg font-bold text-red-600">
+                                  ₹{formatPrice(getDisplayPrice(product))}
+                                </span>
+                                <span className="text-sm text-gray-500 line-through">
+                                  ₹{formatPrice(product.price)}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-lg font-bold text-gray-900">₹{formatPrice(getDisplayPrice(product))}</span>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => handleAddToCart(product)}
+                            disabled={product.totalStock === 0}
+                            className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                            title={product.totalStock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                          >
+                            <ShoppingCart className="w-5 h-5" />
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {getAvailableSizes(product).map(size => (
+                            <span key={size} className="text-xs bg-gray-100 px-2 py-1 rounded">
+                              {size}
+                            </span>
+                          ))}
+                        </div>
+                        {product.totalStock > 0 && product.totalStock < 10 && (
+                          <p className="text-orange-600 text-sm">Only {product.totalStock} left in stock</p>
+                        )}
                       </div>
-                      {product.totalStock === 0 && (
-                        <p className="text-red-600 text-sm">Out of Stock</p>
-                      )}
-                      {product.totalStock > 0 && product.totalStock < 10 && (
-                        <p className="text-orange-600 text-sm">Only {product.totalStock} left in stock</p>
-                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
