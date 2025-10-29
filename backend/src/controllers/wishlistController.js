@@ -17,10 +17,10 @@ export const getWishlist = async (req, res) => {
     const wishlist = await Wishlist.find({ userId: req.user._id })
       .populate({
         path: 'productId',
-        select: 'name slug price discountPrice images isActive totalStock rating reviewCount sizes categoryId',
+        select: 'name slug price discountPrice images isActive totalStock rating reviewCount sizes category',
         match: { isActive: true },
         populate: {
-          path: 'categoryId',
+          path: 'category',
           select: 'name slug'
         }
       })
@@ -118,9 +118,9 @@ export const addToWishlist = async (req, res) => {
     // Populate the product details for response
     await wishlistItem.populate({
       path: 'productId',
-      select: 'name slug price discountPrice images rating sizes categoryId',
+      select: 'name slug price discountPrice images rating sizes category',
       populate: {
-        path: 'categoryId',
+        path: 'category',
         select: 'name slug'
       }
     });

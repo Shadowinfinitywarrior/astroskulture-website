@@ -103,10 +103,10 @@ wishlistSchema.statics.getUserWishlist = async function(userId, options = {}) {
   if (populateProducts) {
     query = query.populate({
       path: 'productId',
-      select: 'name slug price discountPrice images isActive totalStock rating reviewCount sizes categoryId',
+      select: 'name slug price discountPrice images isActive totalStock rating reviewCount sizes category',
       match: { isActive: true },
       populate: {
-        path: 'categoryId',
+        path: 'category',
         select: 'name slug'
       }
     });
@@ -198,9 +198,9 @@ wishlistSchema.statics.getWishlistItemsByProducts = async function(userId, produ
 wishlistSchema.methods.getProductDetails = async function() {
   await this.populate({
     path: 'productId',
-    select: 'name slug price discountPrice images isActive totalStock rating reviewCount sizes categoryId',
+    select: 'name slug price discountPrice images isActive totalStock rating reviewCount sizes category',
     populate: {
-      path: 'categoryId',
+      path: 'category',
       select: 'name slug'
     }
   });

@@ -48,26 +48,63 @@ router.post('/products', async (req, res) => {
       req.body.totalStock = req.body.sizes.reduce((total, size) => total + (size.stock || 0), 0);
     }
 
-    const product = new Product(req.body);
-    await product.save();
+    // Validate required fields
+    if (!req.body.name || !req.body.description || !req.body.price || !req.body.category) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: name, description, price, category'
+      });
+    }
 
-    const populatedProduct = await Product.findById(product._id)
-      .populate({
-        path: 'category',
-        select: 'name slug'
-      })
-      .lean();
+    // Validate category exists
+    const category = await Category.findById(req.body.category);
+    if (!category) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid category ID'
+      });
+    }
 
-    res.status(201).json({
-      success: true,
-      data: populatedProduct
-    });
+    // Handle duplicate slug by adding timestamp suffix
+    let slug = req.body.slug || req.body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    const baseSlug = slug;
+    let count = 0;
+    while (true) {
+      try {
+        const product = new Product({
+          ...req.body,
+          slug
+        });
+        await product.save();
+
+        const populatedProduct = await Product.findById(product._id)
+          .populate({
+            path: 'category',
+            select: 'name slug'
+          })
+          .lean();
+
+        return res.status(201).json({
+          success: true,
+          data: populatedProduct
+        });
+      } catch (error) {
+        // If duplicate slug error, retry with modified slug
+        if (error.code === 11000 && error.keyPattern && error.keyPattern.slug) {
+          count++;
+          slug = `${baseSlug}-${count}`;
+          continue;
+        }
+        throw error;
+      }
+    }
   } catch (error) {
-    console.error('Error creating product:', error);
+    console.error('❌ Error creating product:', error);
     res.status(400).json({
       success: false,
       message: 'Error creating product',
-      error: error.message
+      error: error.message,
+      details: error.errors ? Object.keys(error.errors).join(', ') : null
     });
   }
 });
@@ -83,6 +120,17 @@ router.put('/products/:id', async (req, res) => {
     // Calculate totalStock from sizes if provided
     if (req.body.sizes && Array.isArray(req.body.sizes)) {
       req.body.totalStock = req.body.sizes.reduce((total, size) => total + (size.stock || 0), 0);
+    }
+
+    // Validate category exists if provided
+    if (req.body.category) {
+      const category = await Category.findById(req.body.category);
+      if (!category) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid category ID'
+        });
+      }
     }
 
     const product = await Product.findByIdAndUpdate(
