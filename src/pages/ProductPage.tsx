@@ -147,9 +147,9 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
           Back to Shop
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 lg:gap-12">
           {/* Product Images */}
-          <div>
+          <div className="min-w-0">
             <ProductImageGallery 
               images={product.images} 
               productName={product.name} 
@@ -157,24 +157,24 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
           </div>
 
           {/* Product Details */}
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             {/* Category & Brand */}
             <div className="space-y-2">
-              <span className="text-sm text-red-600 font-medium uppercase tracking-wide">
+              <span className="text-xs md:text-sm text-red-600 font-medium uppercase tracking-wide">
                 {categoryName}
               </span>
-              <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
                 {product.name}
               </h1>
             </div>
 
             {/* Rating */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 flex-wrap">
               <div className="flex items-center">
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-5 h-5 ${
+                    className={`w-4 md:w-5 h-4 md:h-5 ${
                       i < Math.floor(product.rating || 0)
                         ? 'text-yellow-400 fill-yellow-400'
                         : 'text-gray-300'
@@ -182,54 +182,54 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                   />
                 ))}
               </div>
-              <span className="text-lg font-medium text-gray-700">{(product.rating || 0).toFixed(1)}</span>
-              <span className="text-gray-500">({product.reviewCount || 0} reviews)</span>
+              <span className="text-sm md:text-lg font-medium text-gray-700">{(product.rating || 0).toFixed(1)}</span>
+              <span className="text-xs md:text-gray-500">{product.reviewCount || 0} reviews</span>
             </div>
 
             {/* Pricing */}
             <div className="space-y-2">
-              <div className="flex items-baseline space-x-3">
-                <span className="text-3xl font-bold text-gray-900">
+              <div className="flex items-baseline space-x-2 md:space-x-3 flex-wrap">
+                <span className="text-2xl md:text-3xl font-bold text-gray-900">
                   ₹{currentPrice}
                 </span>
                 {product.discountPrice && (
                   <>
-                    <span className="text-xl text-gray-500 line-through">
+                    <span className="text-lg md:text-xl text-gray-500 line-through">
                       ₹{product.price}
                     </span>
-                    <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-sm font-semibold">
+                    <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs md:text-sm font-semibold">
                       {discountPercentage}% OFF
                     </span>
                   </>
                 )}
               </div>
-              <p className="text-sm text-gray-600">Inclusive of all taxes</p>
+              <p className="text-xs md:text-sm text-gray-600">Inclusive of all taxes</p>
             </div>
 
             {/* Description */}
             <div className="prose prose-gray">
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-xs md:text-sm lg:text-base text-gray-600 leading-relaxed">
                 {product.description || 'Premium quality product with excellent craftsmanship and attention to detail.'}
               </p>
             </div>
 
             {/* Size Selection */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <label className="block text-sm font-medium text-gray-700">
+            <div className="space-y-3 md:space-y-4">
+              <div className="flex justify-between items-center gap-2">
+                <label className="block text-xs md:text-sm font-medium text-gray-700">
                   Select Size
                 </label>
-                <button className="text-sm text-gray-500 hover:text-gray-700 underline">
+                <button className="text-xs md:text-sm text-gray-500 hover:text-gray-700 underline">
                   Size Guide
                 </button>
               </div>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2 md:gap-3">
                 {product.sizes.map((sizeData) => (
                   <button
                     key={sizeData.size}
                     onClick={() => setSelectedSize(sizeData.size)}
                     disabled={sizeData.stock === 0}
-                    className={`px-6 py-3 border-2 rounded-lg font-medium transition-all min-w-[60px] relative ${
+                    className={`px-3 md:px-6 py-2 md:py-3 border-2 rounded-lg font-medium transition-all min-w-[50px] md:min-w-[60px] relative text-xs md:text-sm ${
                       selectedSize === sizeData.size
                         ? 'border-red-600 bg-red-600 text-white shadow-md'
                         : sizeData.stock > 0
@@ -239,7 +239,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                   >
                     {sizeData.size}
                     {sizeData.stock > 0 && sizeData.stock < 10 && (
-                      <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center text-[10px]">
                         {sizeData.stock}
                       </span>
                     )}
@@ -253,39 +253,39 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
               {product.totalStock > 0 ? (
                 <>
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-green-600 font-medium">
+                  <span className="text-xs md:text-sm text-green-600 font-medium">
                     In Stock ({product.totalStock} available)
                   </span>
                 </>
               ) : (
                 <>
                   <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  <span className="text-red-600 font-medium">Out of Stock</span>
+                  <span className="text-xs md:text-sm text-red-600 font-medium">Out of Stock</span>
                 </>
               )}
             </div>
 
             {/* Action Buttons */}
-            <div className="flex space-x-4">
+            <div className="flex flex-col sm:flex-row gap-2 md:gap-4">
               <button 
                 onClick={handleAddToCart} 
                 disabled={product.totalStock === 0 || !selectedSize}
-                className="flex-1 bg-gray-900 text-white py-4 px-6 rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center font-medium shadow-sm"
+                className="flex-1 bg-gray-900 text-white py-3 md:py-4 px-4 md:px-6 rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center font-medium shadow-sm text-sm md:text-base"
               >
-                <ShoppingCart className="w-5 h-5 mr-2" />
+                <ShoppingCart className="w-4 md:w-5 h-4 md:h-5 mr-1 md:mr-2" />
                 Add to Cart
               </button>
               <button 
                 onClick={handleBuyNow}
                 disabled={product.totalStock === 0 || !selectedSize}
-                className="flex-1 bg-red-600 text-white py-4 px-6 rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium shadow-sm"
+                className="flex-1 bg-red-600 text-white py-3 md:py-4 px-4 md:px-6 rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium shadow-sm text-sm md:text-base"
               >
                 Buy Now
               </button>
               <button 
                 onClick={handleWishlistToggle}
                 disabled={operationLoading}
-                className={`p-4 border-2 rounded-lg transition-colors shadow-sm ${
+                className={`p-3 md:p-4 border-2 rounded-lg transition-colors shadow-sm ${
                   isProductInWishlist
                     ? 'border-red-600 bg-red-50 text-red-600 hover:bg-red-100'
                     : 'border-gray-300 text-gray-600 hover:border-red-600 hover:text-red-600 hover:bg-red-50'
@@ -293,43 +293,43 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                 title={isProductInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
               >
                 {operationLoading ? (
-                  <div className="w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-5 md:w-6 h-5 md:h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
                 ) : (
-                  <Heart className={`w-6 h-6 ${isProductInWishlist ? 'fill-current' : ''}`} />
+                  <Heart className={`w-5 md:w-6 h-5 md:h-6 ${isProductInWishlist ? 'fill-current' : ''}`} />
                 )}
               </button>
             </div>
 
             {/* Wishlist Feedback */}
             {isProductInWishlist && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <p className="text-green-800 text-sm flex items-center">
-                  <Heart className="w-4 h-4 fill-current mr-2" />
+              <div className="bg-green-50 border border-green-200 rounded-lg p-2 md:p-3">
+                <p className="text-green-800 text-xs md:text-sm flex items-center">
+                  <Heart className="w-3 md:w-4 h-3 md:h-4 fill-current mr-2" />
                   This product is in your wishlist
                 </p>
               </div>
             )}
 
             {/* Features */}
-            <div className="space-y-4 border-t border-gray-200 pt-6">
-              <div className="flex items-center space-x-3 text-gray-600">
-                <Truck className="w-5 h-5 text-red-600" />
-                <span className="text-sm">Free delivery on orders above ₹999</span>
+            <div className="space-y-2 md:space-y-4 border-t border-gray-200 pt-4 md:pt-6">
+              <div className="flex items-center space-x-2 md:space-x-3 text-gray-600">
+                <Truck className="w-4 md:w-5 h-4 md:h-5 text-red-600 flex-shrink-0" />
+                <span className="text-xs md:text-sm">Free delivery on orders above ₹999</span>
               </div>
-              <div className="flex items-center space-x-3 text-gray-600">
-                <RefreshCw className="w-5 h-5 text-red-600" />
-                <span className="text-sm">7-day easy return policy</span>
+              <div className="flex items-center space-x-2 md:space-x-3 text-gray-600">
+                <RefreshCw className="w-4 md:w-5 h-4 md:h-5 text-red-600 flex-shrink-0" />
+                <span className="text-xs md:text-sm">7-day easy return policy</span>
               </div>
-              <div className="flex items-center space-x-3 text-gray-600">
-                <Shield className="w-5 h-5 text-red-600" />
-                <span className="text-sm">100% authentic products</span>
+              <div className="flex items-center space-x-2 md:space-x-3 text-gray-600">
+                <Shield className="w-4 md:w-5 h-4 md:h-5 text-red-600 flex-shrink-0" />
+                <span className="text-xs md:text-sm">100% authentic products</span>
               </div>
             </div>
 
             {/* Additional Product Info */}
-            <div className="border-t border-gray-200 pt-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Product Details</h3>
-              <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+            <div className="border-t border-gray-200 pt-4 md:pt-6">
+              <h3 className="font-semibold text-sm md:text-base text-gray-900 mb-3">Product Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 text-xs md:text-sm text-gray-600">
                 <div>
                   <span className="font-medium">Category:</span>{' '}
                   {categoryName}
@@ -344,7 +344,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                 </div>
                 <div>
                   <span className="font-medium">Rating:</span>{' '}
-                  {product.rating?.toFixed(1)}/5 ({product.reviewCount} reviews)
+                  {product.rating?.toFixed(1)}/5 ({product.reviewCount})
                 </div>
               </div>
             </div>

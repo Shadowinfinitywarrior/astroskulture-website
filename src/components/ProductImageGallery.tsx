@@ -56,7 +56,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
       {/* Main Image Container */}
       <div className="relative bg-white rounded-lg overflow-hidden">
         <div 
-          className="relative h-80 md:h-96 lg:h-[500px] cursor-zoom-in"
+          className="relative h-64 sm:h-72 md:h-96 lg:h-[500px] cursor-zoom-in"
           onClick={() => setIsZoomed(!isZoomed)}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
