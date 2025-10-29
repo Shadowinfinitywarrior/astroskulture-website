@@ -39,7 +39,7 @@ export function CartPage({ onNavigate }: CartPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
             {items.map((item) => (
-              <div key={`${item.id}-${item.size}`} className="bg-white rounded-lg shadow-sm p-6">
+              <div key={`${item.productId}-${item.size}`} className="bg-white rounded-lg shadow-sm p-6">
                 <div className="flex items-start space-x-4">
                   <img
                     src={item.image}
@@ -50,37 +50,26 @@ export function CartPage({ onNavigate }: CartPageProps) {
                     <h3 className="font-semibold text-lg mb-1">{item.name}</h3>
                     <p className="text-gray-600 text-sm mb-2">Size: {item.size}</p>
                     <div className="flex items-center space-x-2">
-                      {item.discount_price ? (
-                        <>
-                          <span className="text-lg font-bold text-red-600">
-                            ₹{item.discount_price}
-                          </span>
-                          <span className="text-sm text-gray-500 line-through">
-                            ₹{item.price}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-lg font-bold text-gray-900">₹{item.price}</span>
-                      )}
+                      <span className="text-lg font-bold text-gray-900">₹{item.price}</span>
                     </div>
                   </div>
                   <div className="flex flex-col items-end space-y-3">
                     <button
-                      onClick={() => removeFromCart(item.id, item.size)}
+                      onClick={() => removeFromCart(item.productId, item.size)}
                       className="p-2 hover:bg-red-50 rounded-lg transition-colors text-red-600"
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
                     <div className="flex items-center space-x-2 border-2 border-gray-300 rounded-lg">
                       <button
-                        onClick={() => updateQuantity(item.id, item.size, item.quantity - 1)}
+                        onClick={() => updateQuantity(item.productId, item.size, item.quantity - 1)}
                         className="p-2 hover:bg-gray-100 transition-colors"
                       >
                         <Minus className="w-4 h-4" />
                       </button>
                       <span className="w-8 text-center font-medium">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.id, item.size, item.quantity + 1)}
+                        onClick={() => updateQuantity(item.productId, item.size, item.quantity + 1)}
                         className="p-2 hover:bg-gray-100 transition-colors"
                       >
                         <Plus className="w-4 h-4" />
