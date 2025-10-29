@@ -225,9 +225,76 @@ export function HomePage({ onNavigate }: HomePageProps) {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredProducts.map((product) => (
-                <div key={product._id} className="bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
+            <>
+              {/* Mobile Horizontal Scroll */}
+              <div className="md:hidden overflow-x-auto pb-4 -mx-4 px-4">
+                <div className="flex gap-4 w-max">
+                  {featuredProducts.map((product) => (
+                    <div key={product._id} className="w-64 flex-shrink-0 bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
+                      <div className="relative overflow-hidden">
+                        <img
+                          src={product.images[0]?.url || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}
+                          alt={product.name}
+                          className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer"
+                          onClick={() => onNavigate('product', { slug: product._id })}
+                        />
+                        {product.discountPrice && (
+                          <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                            {Math.round((1 - product.discountPrice / product.price) * 100)}% OFF
+                          </div>
+                        )}
+                        <button className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50">
+                          <Heart className="w-5 h-5 text-red-600" />
+                        </button>
+                      </div>
+                      <div className="p-4">
+                        <h3
+                          onClick={() => onNavigate('product', { slug: product._id })}
+                          className="font-semibold text-gray-900 mb-2 cursor-pointer hover:text-red-600 transition-colors line-clamp-2"
+                        >
+                          {product.name}
+                        </h3>
+                        <div className="flex items-center space-x-1 mb-2">
+                          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                          <span className="text-sm font-medium">{product.rating.toFixed(1)}</span>
+                          <span className="text-sm text-gray-500">({product.reviewCount})</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            {product.discountPrice ? (
+                              <div className="flex items-center space-x-2">
+                                <span className="text-lg font-bold text-red-600">
+                                  ₹{product.discountPrice}
+                                </span>
+                                <span className="text-sm text-gray-500 line-through">
+                                  ₹{product.price}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-lg font-bold text-gray-900">₹{product.price}</span>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => handleAddToCart(product)}
+                            disabled={product.totalStock === 0}
+                            className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <ShoppingCart className="w-5 h-5" />
+                          </button>
+                        </div>
+                        {product.totalStock === 0 && (
+                          <p className="text-red-600 text-sm mt-2">Out of Stock</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Desktop Grid View */}
+              <div className="hidden md:grid grid-cols-2 gap-6">
+                {featuredProducts.map((product) => (
+                  <div key={product._id} className="bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
                   <div className="relative overflow-hidden">
                     <img
                       src={product.images[0]?.url || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}
@@ -285,7 +352,8 @@ export function HomePage({ onNavigate }: HomePageProps) {
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+            </>
           )}
           
           <div className="text-center mt-12">

@@ -320,14 +320,17 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.map((product) => {
-                  const stockStatus = getStockStatus(product);
-                  const isInWishlistState = isInWishlist(product._id);
-                  const isWishlistLoading = wishlistLoading === product._id;
-                  
-                  return (
-                    <div key={product._id} className="bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
+              <>
+                {/* Mobile Horizontal Scroll */}
+                <div className="md:hidden overflow-x-auto pb-4 -mx-4 px-4">
+                  <div className="flex gap-4 w-max">
+                    {products.map((product) => {
+                      const stockStatus = getStockStatus(product);
+                      const isInWishlistState = isInWishlist(product._id);
+                      const isWishlistLoading = wishlistLoading === product._id;
+                      
+                      return (
+                        <div key={product._id} className="w-64 flex-shrink-0 bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
                       <div className="relative overflow-hidden">
                         <img
                           src={getProductImage(product)}
@@ -430,9 +433,134 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                         )}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Desktop Grid View */}
+                <div className="hidden md:grid grid-cols-2 gap-6">
+                  {products.map((product) => {
+                    const stockStatus = getStockStatus(product);
+                    const isInWishlistState = isInWishlist(product._id);
+                    const isWishlistLoading = wishlistLoading === product._id;
+                    
+                    return (
+                      <div key={product._id} className="bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
+                      <div className="relative overflow-hidden">
+                        <img
+                          src={getProductImage(product)}
+                          alt={product.images[0]?.alt || product.name}
+                          className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer"
+                          onClick={() => handleProductClick(product)}
+                        />
+                        {hasDiscount(product) && (
+                          <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                            {getDiscountPercentage(product)}% OFF
+                          </div>
+                        )}
+                        {product.isFeatured && (
+                          <div className="absolute top-4 right-4 bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                            Featured
+                          </div>
+                        )}
+                        
+                        {/* Stock Status Badge */}
+                        {stockStatus === 'out-of-stock' && (
+                          <div className="absolute top-16 left-4 bg-gray-600 text-white px-2 py-1 rounded text-xs font-semibold">
+                            Out of Stock
+                          </div>
+                        )}
+                        {stockStatus === 'low-stock' && (
+                          <div className="absolute top-16 left-4 bg-orange-500 text-white px-2 py-1 rounded text-xs font-semibold">
+                            Low Stock
+                          </div>
+                        )}
+                        
+                        {/* Wishlist Button */}
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleWishlistToggle(product);
+                          }}
+                          disabled={isWishlistLoading}
+                          className={`absolute top-4 right-4 p-2 rounded-full shadow-md transition-colors ${
+                            isInWishlistState
+                              ? 'bg-red-600 text-white hover:bg-red-700'
+                              : 'bg-white text-gray-600 hover:bg-red-50 hover:text-red-600'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                          title={isInWishlistState ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                        >
+                          {isWishlistLoading ? (
+                            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <Heart className={`w-5 h-5 ${isInWishlistState ? 'fill-current' : ''}`} />
+                          )}
+                        </button>
+                      </div>
+                      <div className="p-4">
+                        <h3 
+                          onClick={() => handleProductClick(product)}
+                          className="font-semibold text-gray-900 mb-2 cursor-pointer hover:text-red-600 transition-colors line-clamp-2"
+                        >
+                          {product.name}
+                        </h3>
+                        <div className="flex items-center space-x-1 mb-3">
+                          <div className="flex items-center">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-4 h-4 ${
+                                  i < Math.floor(product.rating || 0)
+                                    ? 'text-yellow-400 fill-yellow-400'
+                                    : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-sm font-medium text-gray-700">{(product.rating || 0).toFixed(1)}</span>
+                          <span className="text-sm text-gray-500">({product.reviewCount || 0})</span>
+                        </div>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-baseline space-x-2">
+                            {hasDiscount(product) ? (
+                              <div className="flex items-center space-x-2">
+                                <span className="text-lg font-bold text-red-600">
+                                  ₹{formatPrice(product.discountPrice!)}
+                                </span>
+                                <span className="text-sm text-gray-500 line-through">
+                                  ₹{formatPrice(product.price)}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-lg font-bold text-gray-900">₹{formatPrice(getDisplayPrice(product))}</span>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => handleAddToCart(product)}
+                            disabled={product.totalStock === 0}
+                            className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                            title={product.totalStock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                          >
+                            <ShoppingCart className="w-5 h-5" />
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {getAvailableSizes(product).map(size => (
+                            <span key={size} className="text-xs bg-gray-100 px-2 py-1 rounded">
+                              {size}
+                            </span>
+                          ))}
+                        </div>
+                        {product.totalStock > 0 && product.totalStock < 10 && (
+                          <p className="text-orange-600 text-sm">Only {product.totalStock} left in stock</p>
+                        )}
+                      </div>
+                    </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
 
             {!loading && products.length === 0 && (
