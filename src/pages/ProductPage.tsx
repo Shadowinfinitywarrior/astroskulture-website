@@ -20,7 +20,6 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
   const { addToWishlist, removeFromWishlist, isInWishlist, operationLoading } = useWishlist();
 
   useEffect(() => {
-    console.log('🔄 [DEBUG] ProductPage received slug:', slug);
     loadProduct();
   }, [slug]);
 
@@ -28,10 +27,8 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
     try {
       setLoading(true);
       setError('');
-      console.log('📦 [DEBUG] Loading product with slug:', slug);
       
       const data = await apiService.getProductBySlug(slug);
-      console.log('📦 [DEBUG] Product API response:', data);
       
       if (data.success && data.data) {
         setProduct(data.data);
@@ -43,13 +40,11 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
         if (availableSizes.length > 0) {
           setSelectedSize(availableSizes[0]);
         }
-        console.log('✅ [DEBUG] Product loaded successfully:', data.data.name);
       } else {
-        console.log('❌ [DEBUG] Product not found in response');
         setError('Product not found');
       }
     } catch (err) {
-      console.error('❌ [DEBUG] Error loading product:', err);
+      console.error('Error loading product:', err);
       setError('Failed to load product');
     } finally {
       setLoading(false);
@@ -90,7 +85,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
         await addToWishlist(product);
       }
     } catch (error) {
-      console.error('❌ [DEBUG] Error toggling wishlist:', error);
+      console.error('Error toggling wishlist:', error);
       // Error is handled in the context
     }
   };

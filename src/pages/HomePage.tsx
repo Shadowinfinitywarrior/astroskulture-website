@@ -51,7 +51,6 @@ export function HomePage({ onNavigate }: HomePageProps) {
       
       // Load featured products
       const productsResponse = await apiService.getProducts({ featured: 'true' });
-      console.log('Products response:', productsResponse); // Debug log
       
       if (productsResponse.success) {
         // The products are in productsResponse.data
@@ -62,7 +61,6 @@ export function HomePage({ onNavigate }: HomePageProps) {
 
       // Load categories
       const categoriesResponse = await apiService.getCategories();
-      console.log('Categories response:', categoriesResponse); // Debug log
       
       if (categoriesResponse.success) {
         setCategories(categoriesResponse.data || []);
