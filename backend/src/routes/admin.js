@@ -37,6 +37,12 @@ router.get('/products', async (req, res) => {
 
 router.post('/products', async (req, res) => {
   try {
+    // Rename categoryId to category for the model
+    if (req.body.categoryId && !req.body.category) {
+      req.body.category = req.body.categoryId;
+      delete req.body.categoryId;
+    }
+    
     // Calculate totalStock from sizes if provided
     if (req.body.sizes && Array.isArray(req.body.sizes)) {
       req.body.totalStock = req.body.sizes.reduce((total, size) => total + (size.stock || 0), 0);
@@ -68,6 +74,12 @@ router.post('/products', async (req, res) => {
 
 router.put('/products/:id', async (req, res) => {
   try {
+    // Rename categoryId to category for the model
+    if (req.body.categoryId && !req.body.category) {
+      req.body.category = req.body.categoryId;
+      delete req.body.categoryId;
+    }
+    
     // Calculate totalStock from sizes if provided
     if (req.body.sizes && Array.isArray(req.body.sizes)) {
       req.body.totalStock = req.body.sizes.reduce((total, size) => total + (size.stock || 0), 0);

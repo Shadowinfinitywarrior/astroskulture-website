@@ -28,14 +28,24 @@ export const getWishlist = async (req, res) => {
 
     // Filter out products that are no longer active or weren't populated
     const validWishlist = wishlist.filter(item => item.productId);
+    
+    // Transform to use 'product' field for frontend compatibility
+    const transformedWishlist = validWishlist.map(item => ({
+      _id: item._id,
+      userId: item.userId,
+      productId: item.productId._id,
+      product: item.productId,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt
+    }));
 
-    console.log('💖 [SERVER] Wishlist found:', validWishlist.length, 'items');
+    console.log('💖 [SERVER] Wishlist found:', transformedWishlist.length, 'items');
 
     res.json({
       success: true,
-      data: validWishlist,
-      count: validWishlist.length,
-      message: validWishlist.length === 0 ? 'Your wishlist is empty' : `Found ${validWishlist.length} items in wishlist`
+      data: transformedWishlist,
+      count: transformedWishlist.length,
+      message: transformedWishlist.length === 0 ? 'Your wishlist is empty' : `Found ${transformedWishlist.length} items in wishlist`
     });
   } catch (error) {
     console.error('❌ Get wishlist error:', error);
@@ -116,11 +126,21 @@ export const addToWishlist = async (req, res) => {
     });
 
     console.log('💖 [SERVER] Product added to wishlist successfully:', wishlistItem._id);
+    
+    // Transform to use 'product' field for frontend compatibility
+    const transformedItem = {
+      _id: wishlistItem._id,
+      userId: wishlistItem.userId,
+      productId: wishlistItem.productId._id,
+      product: wishlistItem.productId,
+      createdAt: wishlistItem.createdAt,
+      updatedAt: wishlistItem.updatedAt
+    };
 
     res.status(201).json({
       success: true,
       message: 'Product added to wishlist successfully',
-      data: wishlistItem
+      data: transformedItem
     });
   } catch (error) {
     console.error('❌ Add to wishlist error:', error);

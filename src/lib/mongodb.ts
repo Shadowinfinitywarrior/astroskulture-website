@@ -9,7 +9,7 @@ console.log('🌍 API Base URL:', API_BASE_URL);
 console.log('🚀 Environment:', import.meta.env.PROD ? 'production' : 'development');
 
 class ApiService {
-  private async request(endpoint: string, options: RequestInit = {}, isAdmin: boolean = false) {
+  async request(endpoint: string, options: RequestInit = {}, isAdmin: boolean = false) {
     // Determine which token to use based on the isAdmin flag
     const token = isAdmin ? localStorage.getItem('adminToken') : localStorage.getItem('token');
     const url = `${API_BASE_URL}${endpoint}`;
