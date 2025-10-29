@@ -142,9 +142,9 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
           Back to Shop
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 lg:gap-12">
           {/* Product Images */}
-          <div className="min-w-0">
+          <div className="min-w-0 order-1 lg:order-1">
             <ProductImageGallery 
               images={product.images} 
               productName={product.name} 
@@ -152,24 +152,24 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
           </div>
 
           {/* Product Details */}
-          <div className="space-y-4 md:space-y-6">
+          <div className="space-y-3 md:space-y-4 lg:space-y-6 order-2 lg:order-2">
             {/* Category & Brand */}
-            <div className="space-y-2">
-              <span className="text-xs md:text-sm text-red-600 font-medium uppercase tracking-wide">
+            <div className="space-y-1 md:space-y-2">
+              <span className="text-xs text-red-600 font-medium uppercase tracking-wide">
                 {categoryName}
               </span>
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
+              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
                 {product.name}
               </h1>
             </div>
 
             {/* Rating */}
-            <div className="flex items-center space-x-2 flex-wrap">
+            <div className="flex items-center space-x-1 md:space-x-2 flex-wrap">
               <div className="flex items-center">
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-4 md:w-5 h-4 md:h-5 ${
+                    className={`w-3.5 md:w-4 h-3.5 md:h-4 ${
                       i < Math.floor(product.rating || 0)
                         ? 'text-yellow-400 fill-yellow-400'
                         : 'text-gray-300'
@@ -177,28 +177,28 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                   />
                 ))}
               </div>
-              <span className="text-sm md:text-lg font-medium text-gray-700">{(product.rating || 0).toFixed(1)}</span>
-              <span className="text-xs md:text-gray-500">{product.reviewCount || 0} reviews</span>
+              <span className="text-xs md:text-sm font-medium text-gray-700">{(product.rating || 0).toFixed(1)}</span>
+              <span className="text-xs text-gray-500">({product.reviewCount || 0})</span>
             </div>
 
             {/* Pricing */}
-            <div className="space-y-2">
-              <div className="flex items-baseline space-x-2 md:space-x-3 flex-wrap">
-                <span className="text-2xl md:text-3xl font-bold text-gray-900">
+            <div className="space-y-1 md:space-y-2">
+              <div className="flex items-baseline space-x-1.5 md:space-x-2 flex-wrap">
+                <span className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
                   ₹{currentPrice}
                 </span>
                 {product.discountPrice && (
                   <>
-                    <span className="text-lg md:text-xl text-gray-500 line-through">
+                    <span className="text-base md:text-lg text-gray-500 line-through">
                       ₹{product.price}
                     </span>
-                    <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs md:text-sm font-semibold">
+                    <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded text-xs font-semibold">
                       {discountPercentage}% OFF
                     </span>
                   </>
                 )}
               </div>
-              <p className="text-xs md:text-sm text-gray-600">Inclusive of all taxes</p>
+              <p className="text-xs text-gray-600">Inclusive of all taxes</p>
             </div>
 
             {/* Description */}
@@ -209,22 +209,22 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
             </div>
 
             {/* Size Selection */}
-            <div className="space-y-3 md:space-y-4">
+            <div className="space-y-2 md:space-y-3">
               <div className="flex justify-between items-center gap-2">
                 <label className="block text-xs md:text-sm font-medium text-gray-700">
                   Select Size
                 </label>
-                <button className="text-xs md:text-sm text-gray-500 hover:text-gray-700 underline">
+                <button className="text-xs text-gray-500 hover:text-gray-700 underline">
                   Size Guide
                 </button>
               </div>
-              <div className="flex flex-wrap gap-2 md:gap-3">
+              <div className="flex flex-wrap gap-1 md:gap-2">
                 {product.sizes.map((sizeData) => (
                   <button
                     key={sizeData.size}
                     onClick={() => setSelectedSize(sizeData.size)}
                     disabled={sizeData.stock === 0}
-                    className={`px-3 md:px-6 py-2 md:py-3 border-2 rounded-lg font-medium transition-all min-w-[50px] md:min-w-[60px] relative text-xs md:text-sm ${
+                    className={`px-2 sm:px-3 md:px-6 py-1.5 sm:py-2 md:py-3 border-2 rounded-lg font-medium transition-all min-w-[44px] sm:min-w-[50px] md:min-w-[60px] relative text-xs md:text-sm ${
                       selectedSize === sizeData.size
                         ? 'border-red-600 bg-red-600 text-white shadow-md'
                         : sizeData.stock > 0
@@ -244,43 +244,44 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
             </div>
 
             {/* Stock Status */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1.5 md:space-x-2">
               {product.totalStock > 0 ? (
                 <>
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-xs md:text-sm text-green-600 font-medium">
-                    In Stock ({product.totalStock} available)
+                  <span className="text-xs text-green-600 font-medium">
+                    In Stock ({product.totalStock})
                   </span>
                 </>
               ) : (
                 <>
                   <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  <span className="text-xs md:text-sm text-red-600 font-medium">Out of Stock</span>
+                  <span className="text-xs text-red-600 font-medium">Out of Stock</span>
                 </>
               )}
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-2 md:gap-4">
+            <div className="flex flex-col sm:flex-row gap-2 md:gap-4 items-center">
               <button 
                 onClick={handleAddToCart} 
                 disabled={product.totalStock === 0 || !selectedSize}
-                className="flex-1 bg-gray-900 text-white py-3 md:py-4 px-4 md:px-6 rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center font-medium shadow-sm text-sm md:text-base"
+                className="w-full sm:flex-1 bg-gray-900 text-white py-3 md:py-4 px-4 md:px-6 rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center font-medium shadow-sm text-sm md:text-base"
               >
                 <ShoppingCart className="w-4 md:w-5 h-4 md:h-5 mr-1 md:mr-2" />
-                Add to Cart
+                <span className="hidden xs:inline">Add to Cart</span>
+                <span className="inline xs:hidden">Add</span>
               </button>
               <button 
                 onClick={handleBuyNow}
                 disabled={product.totalStock === 0 || !selectedSize}
-                className="flex-1 bg-red-600 text-white py-3 md:py-4 px-4 md:px-6 rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium shadow-sm text-sm md:text-base"
+                className="w-full sm:flex-1 bg-red-600 text-white py-3 md:py-4 px-4 md:px-6 rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium shadow-sm text-sm md:text-base"
               >
                 Buy Now
               </button>
               <button 
                 onClick={handleWishlistToggle}
                 disabled={operationLoading}
-                className={`p-3 md:p-4 border-2 rounded-lg transition-colors shadow-sm ${
+                className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 md:h-auto md:w-auto md:px-4 md:py-3 border-2 rounded-lg transition-colors shadow-sm flex items-center justify-center ${
                   isProductInWishlist
                     ? 'border-red-600 bg-red-50 text-red-600 hover:bg-red-100'
                     : 'border-gray-300 text-gray-600 hover:border-red-600 hover:text-red-600 hover:bg-red-50'
@@ -288,9 +289,9 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                 title={isProductInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
               >
                 {operationLoading ? (
-                  <div className="w-5 md:w-6 h-5 md:h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
                 ) : (
-                  <Heart className={`w-5 md:w-6 h-5 md:h-6 ${isProductInWishlist ? 'fill-current' : ''}`} />
+                  <Heart className={`w-5 h-5 md:w-6 md:h-6 ${isProductInWishlist ? 'fill-current' : ''}`} />
                 )}
               </button>
             </div>
@@ -306,7 +307,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
             )}
 
             {/* Features */}
-            <div className="space-y-2 md:space-y-4 border-t border-gray-200 pt-4 md:pt-6">
+            <div className="space-y-2 md:space-y-3 border-t border-gray-200 pt-3 md:pt-4">
               <div className="flex items-center space-x-2 md:space-x-3 text-gray-600">
                 <Truck className="w-4 md:w-5 h-4 md:h-5 text-red-600 flex-shrink-0" />
                 <span className="text-xs md:text-sm">Free delivery on orders above ₹999</span>
@@ -322,9 +323,9 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
             </div>
 
             {/* Additional Product Info */}
-            <div className="border-t border-gray-200 pt-4 md:pt-6">
-              <h3 className="font-semibold text-sm md:text-base text-gray-900 mb-3">Product Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 text-xs md:text-sm text-gray-600">
+            <div className="border-t border-gray-200 pt-3 md:pt-4">
+              <h3 className="font-semibold text-sm md:text-base text-gray-900 mb-2 md:mb-3">Product Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3 text-xs md:text-sm text-gray-600">
                 <div>
                   <span className="font-medium">Category:</span>{' '}
                   {categoryName}
