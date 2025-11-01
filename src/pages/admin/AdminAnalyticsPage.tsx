@@ -85,8 +85,14 @@ export default function AdminAnalyticsPage({ onNavigate }: AdminAnalyticsPagePro
     const fetchAnalytics = async () => {
       try {
         setLoading(true);
-        const apiUrl = import.meta.env.VITE_API_URL || 'https://astroskulture-website.onrender.com/api';
+        const apiUrl = import.meta.env.VITE_API_BASE_URL || 
+          (import.meta.env.PROD 
+            ? 'https://astroskulture-website.onrender.com/api'
+            : 'http://localhost:5000/api'
+          );
         const token = localStorage.getItem('adminToken');
+        
+        console.log('📊 Fetching analytics from:', apiUrl, 'with dateRange:', dateRange);
         
         const response = await fetch(`${apiUrl}/analytics?dateRange=${dateRange}`, {
           headers: {
@@ -100,6 +106,7 @@ export default function AdminAnalyticsPage({ onNavigate }: AdminAnalyticsPagePro
         }
 
         const data = await response.json();
+        console.log('📊 Analytics data received:', data);
         if (data.success && data.data && Array.isArray(data.data)) {
           setAnalyticsData(data.data);
         }
@@ -118,8 +125,14 @@ export default function AdminAnalyticsPage({ onNavigate }: AdminAnalyticsPagePro
   const handleRefresh = async () => {
     try {
       setLoading(true);
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://astroskulture-website.onrender.com/api';
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || 
+        (import.meta.env.PROD 
+          ? 'https://astroskulture-website.onrender.com/api'
+          : 'http://localhost:5000/api'
+        );
       const token = localStorage.getItem('adminToken');
+      
+      console.log('🔄 Refreshing analytics from:', apiUrl);
       
       const response = await fetch(`${apiUrl}/analytics?dateRange=${dateRange}`, {
         headers: {
@@ -133,6 +146,7 @@ export default function AdminAnalyticsPage({ onNavigate }: AdminAnalyticsPagePro
       }
 
       const data = await response.json();
+      console.log('🔄 Refreshed analytics data:', data);
       if (data.success && data.data && Array.isArray(data.data)) {
         setAnalyticsData(data.data);
       }

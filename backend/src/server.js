@@ -30,6 +30,7 @@ import adminRoutes from './routes/admin.js';
 import wishlistRoutes from './routes/wishlist.js'; // ADDED WISHLIST ROUTES
 import blogRoutes from './routes/blogs.js'; // ADDED BLOG ROUTES
 import bannerRoutes from './routes/banners.js'; // ADDED BANNER ROUTES
+import analyticsRoutes from './routes/analytics.js'; // ADDED ANALYTICS ROUTES
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -148,6 +149,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/wishlist', wishlistRoutes); // ADDED WISHLIST ROUTES
 app.use('/api/blogs', blogRoutes); // ADDED BLOG ROUTES
 app.use('/api/banners', bannerRoutes); // ADDED BANNER ROUTES
+app.use('/api/analytics', analyticsRoutes); // ADDED ANALYTICS ROUTES
 
 // Serve static files from React build in production
 if (process.env.NODE_ENV === 'production') {
@@ -286,6 +288,9 @@ app.get('/api', (req, res) => {
         remove: 'DELETE /api/wishlist/:productId',
         check: 'GET /api/wishlist/check/:productId'
       },
+      analytics: { // ADDED ANALYTICS ENDPOINTS
+        get: 'GET /api/analytics?dateRange={7days|24hours|30days|90days}'
+      },
       blogs: { // ADDED BLOG ENDPOINTS
         list: 'GET /api/blogs',
         get: 'GET /api/blogs/:slug',
@@ -339,6 +344,7 @@ app.use('*', (req, res) => {
       '/api/wishlist', // ADDED WISHLIST ROUTE
       '/api/blogs', // ADDED BLOG ROUTE
       '/api/banners', // ADDED BANNER ROUTE
+      '/api/analytics', // ADDED ANALYTICS ROUTE
       '/api/health'
     ]
   });
@@ -369,6 +375,7 @@ app.listen(PORT, () => {
   console.log('   WISHLIST   /api/wishlist'); // ADDED WISHLIST ROUTE
   console.log('   BLOGS      /api/blogs'); // ADDED BLOG ROUTE
   console.log('   BANNERS    /api/banners'); // ADDED BANNER ROUTE
+  console.log('   ANALYTICS  /api/analytics'); // ADDED ANALYTICS ROUTE
   console.log('═'.repeat(60));
   console.log('🔐 Protected Routes (require JWT):');
   console.log('   • /api/orders/*');
@@ -378,6 +385,7 @@ app.listen(PORT, () => {
   console.log('   • /api/wishlist/*'); // ADDED WISHLIST PROTECTED ROUTES
   console.log('   • /api/blogs (POST/PUT/DELETE)'); // ADDED BLOG PROTECTED ROUTES
   console.log('   • /api/banners (POST/PUT/DELETE)'); // ADDED BANNER PROTECTED ROUTES
+  console.log('   • /api/analytics/* (admin only)'); // ADDED ANALYTICS PROTECTED ROUTES
   console.log('═'.repeat(60));
   
   // Additional production info
