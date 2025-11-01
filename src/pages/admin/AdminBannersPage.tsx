@@ -24,13 +24,18 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
+    title: 'New Banner',
+    displayText: 'Special Offer',
     discountPercentage: 10,
     textColor: '#ffffff',
     backgroundColor: '#dc2626',
     displayOrder: 0,
     isActive: true,
     animationType: 'slide' as const,
-    animationSpeed: 'normal' as const
+    animationSpeed: 'normal' as const,
+    description: '',
+    link: '',
+    imageUrl: ''
   });
   const [animationPreview, setAnimationPreview] = useState(false);
   const [error, setError] = useState('');
@@ -68,13 +73,18 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
 
   const handleEdit = (banner: Banner) => {
     setFormData({
+      title: (banner as any).title || 'Banner',
+      displayText: (banner as any).displayText || 'Special Offer',
       discountPercentage: banner.discountPercentage,
       textColor: banner.textColor || '#ffffff',
       backgroundColor: banner.backgroundColor || '#dc2626',
       displayOrder: banner.displayOrder,
       isActive: banner.isActive,
       animationType: banner.animationType || 'slide',
-      animationSpeed: banner.animationSpeed || 'normal'
+      animationSpeed: banner.animationSpeed || 'normal',
+      description: (banner as any).description || '',
+      link: (banner as any).link || '',
+      imageUrl: (banner as any).imageUrl || ''
     });
     setEditingId(banner._id);
     setShowForm(true);
@@ -111,13 +121,18 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
       }
 
       setFormData({
+        title: 'New Banner',
+        displayText: 'Special Offer',
         discountPercentage: 10,
         textColor: '#ffffff',
         backgroundColor: '#dc2626',
         displayOrder: 0,
         isActive: true,
         animationType: 'slide',
-        animationSpeed: 'normal'
+        animationSpeed: 'normal',
+        description: '',
+        link: '',
+        imageUrl: ''
       });
       setShowForm(false);
       loadBanners();
@@ -149,13 +164,18 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
     setEditingId(null);
     setAnimationPreview(false);
     setFormData({
+      title: 'New Banner',
+      displayText: 'Special Offer',
       discountPercentage: 10,
       textColor: '#ffffff',
       backgroundColor: '#dc2626',
       displayOrder: 0,
       isActive: true,
       animationType: 'slide',
-      animationSpeed: 'normal'
+      animationSpeed: 'normal',
+      description: '',
+      link: '',
+      imageUrl: ''
     });
     setError('');
   };
@@ -202,13 +222,46 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
           </div>
         )}
 
-        {/* Form */}
+        {/* Form Modal - Mobile Responsive */}
         {showForm && (
-          <div className="bg-white rounded-lg shadow-md p-6 border border-slate-200">
-            <h2 className="text-xl font-semibold mb-4">
-              {editingId ? 'Edit Banner' : 'New Banner'}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+            <div className="bg-white rounded-t-lg sm:rounded-lg p-4 sm:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <h2 className="text-xl sm:text-2xl font-semibold mb-4">
+                {editingId ? 'Edit Banner' : 'New Banner'}
+              </h2>
+              <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Title *
+                  </label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={(formData as any).title}
+                    onChange={handleInputChange}
+                    placeholder="Banner title"
+                    required
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Display Text *
+                  </label>
+                  <input
+                    type="text"
+                    name="displayText"
+                    value={(formData as any).displayText}
+                    onChange={handleInputChange}
+                    placeholder="Text to display on banner"
+                    required
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-slate-900"
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -245,19 +298,19 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Background Color
                   </label>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-col sm:flex-row">
                     <input
                       type="color"
                       name="backgroundColor"
                       value={formData.backgroundColor}
                       onChange={handleInputChange}
-                      className="w-12 h-10 border border-slate-300 rounded-lg cursor-pointer"
+                      className="w-full sm:w-16 h-10 border border-slate-300 rounded-lg cursor-pointer"
                     />
                     <input
                       type="text"
                       value={formData.backgroundColor}
                       readOnly
-                      className="flex-1 px-4 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-600"
+                      className="flex-1 px-3 sm:px-4 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-600 text-sm"
                     />
                   </div>
                 </div>
@@ -266,19 +319,19 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Text Color
                   </label>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-col sm:flex-row">
                     <input
                       type="color"
                       name="textColor"
                       value={formData.textColor}
                       onChange={handleInputChange}
-                      className="w-12 h-10 border border-slate-300 rounded-lg cursor-pointer"
+                      className="w-full sm:w-16 h-10 border border-slate-300 rounded-lg cursor-pointer"
                     />
                     <input
                       type="text"
                       value={formData.textColor}
                       readOnly
-                      className="flex-1 px-4 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-600"
+                      className="flex-1 px-3 sm:px-4 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-600 text-sm"
                     />
                   </div>
                 </div>
@@ -358,10 +411,10 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
                 </div>
               </div>
 
-              <div className="flex gap-2 pt-4">
+              <div className="flex flex-col-reverse sm:flex-row gap-2 pt-4">
                 <button
                   type="submit"
-                  className="flex items-center gap-2 bg-slate-900 text-white px-6 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+                  className="flex items-center justify-center gap-2 bg-slate-900 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-slate-800 transition-colors w-full sm:w-auto"
                 >
                   <Save className="w-4 h-4" />
                   {editingId ? 'Update' : 'Create'}
@@ -369,13 +422,14 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="flex items-center gap-2 bg-slate-200 text-slate-900 px-6 py-2 rounded-lg hover:bg-slate-300 transition-colors"
+                  className="flex items-center justify-center gap-2 bg-slate-200 text-slate-900 px-4 sm:px-6 py-2 rounded-lg hover:bg-slate-300 transition-colors w-full sm:w-auto"
                 >
                   <X className="w-4 h-4" />
                   Cancel
                 </button>
               </div>
             </form>
+            </div>
           </div>
         )}
 

@@ -70,14 +70,24 @@ export default function AdminLayout({ children, currentPage, onNavigate }: Admin
                 }}
               />
             </div>
-            <h1 className="text-xl font-bold text-slate-900">Admin Panel</h1>
+            <h1 className="text-sm font-bold text-slate-900">Admin</h1>
           </div>
-          <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 rounded-lg hover:bg-slate-100"
-          >
-            {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          <div className="flex items-center space-x-1 sm:space-x-2">
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+              title="Toggle menu"
+            >
+              {isSidebarOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
+            </button>
+            <button
+              onClick={handleLogout}
+              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium text-sm sm:text-base"
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
+          </div>
         </div>
       </div>
 

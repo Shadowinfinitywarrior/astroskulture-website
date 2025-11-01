@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { BarChart3, TrendingUp, Eye, Users, Download, Calendar } from 'lucide-react';
+import { BarChart3, TrendingUp, Eye, Users, Download, Calendar, RefreshCw } from 'lucide-react';
+import { apiService } from '../../lib/mongodb';
 
 interface PageViewData {
   pageId: string;
@@ -76,6 +77,72 @@ export default function AdminAnalyticsPage({ onNavigate }: AdminAnalyticsPagePro
 
   const [dateRange, setDateRange] = useState('7days');
   const [selectedPages, setSelectedPages] = useState<string[]>(['home', 'shop', 'products']);
+  const [loading, setLoading] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState(new Date());
+
+  // Fetch real-time analytics data from backend
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        setLoading(true);
+        const apiUrl = import.meta.env.VITE_API_URL || 'https://astroskulture-website.onrender.com/api';
+        const token = localStorage.getItem('adminToken');
+        
+        const response = await fetch(`${apiUrl}/analytics?dateRange=${dateRange}`, {
+          headers: {
+            'Authorization': `Bearer ${token || ''}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.success && data.data && Array.isArray(data.data)) {
+          setAnalyticsData(data.data);
+        }
+      } catch (error) {
+        console.error('❌ Analytics fetch failed:', error);
+        // Don't set fallback data - show real error
+      } finally {
+        setLoading(false);
+        setLastRefreshed(new Date());
+      }
+    };
+
+    fetchAnalytics();
+  }, [dateRange]);
+
+  const handleRefresh = async () => {
+    try {
+      setLoading(true);
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://astroskulture-website.onrender.com/api';
+      const token = localStorage.getItem('adminToken');
+      
+      const response = await fetch(`${apiUrl}/analytics?dateRange=${dateRange}`, {
+        headers: {
+          'Authorization': `Bearer ${token || ''}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success && data.data && Array.isArray(data.data)) {
+        setAnalyticsData(data.data);
+      }
+    } catch (error) {
+      console.error('❌ Refresh failed:', error);
+    } finally {
+      setLastRefreshed(new Date());
+      setLoading(false);
+    }
+  };
 
   const totalViews = analyticsData.reduce((sum, page) => sum + page.views, 0);
   const totalVisitors = analyticsData.reduce((sum, page) => sum + page.uniqueVisitors, 0);
@@ -131,7 +198,10 @@ export default function AdminAnalyticsPage({ onNavigate }: AdminAnalyticsPagePro
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Analytics & Statistics</h1>
-            <p className="text-slate-600 text-sm mt-1">Track page views and visitor engagement</p>
+            <div className="flex flex-col gap-1">
+              <p className="text-slate-600 text-sm mt-1">Track page views and visitor engagement</p>
+              <p className="text-xs text-slate-500">Last updated: {lastRefreshed.toLocaleTimeString()}</p>
+            </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <select
@@ -144,6 +214,15 @@ export default function AdminAnalyticsPage({ onNavigate }: AdminAnalyticsPagePro
               <option value="90days">Last 90 Days</option>
               <option value="1year">Last Year</option>
             </select>
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="flex items-center justify-center gap-2 bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Refresh data"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
             <button
               onClick={exportToCSV}
               className="flex items-center justify-center gap-2 bg-slate-900 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors text-sm whitespace-nowrap"

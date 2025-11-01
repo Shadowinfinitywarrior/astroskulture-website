@@ -420,22 +420,22 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
 
   return (
     <AdminLayout currentPage="products" onNavigate={onNavigate}>
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-slate-900">Products</h1>
-          <div className="flex space-x-3">
+      <div className="max-w-7xl mx-auto px-2 sm:px-0">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Products</h1>
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <button
               onClick={fetchProducts}
-              className="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors"
+              className="flex-1 sm:flex-none bg-slate-100 text-slate-700 px-3 sm:px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors text-sm sm:text-base"
             >
               Refresh
             </button>
             <button
               onClick={() => openModal()}
-              className="flex items-center space-x-2 bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+              className="flex-1 sm:flex-none flex items-center justify-center space-x-2 bg-slate-900 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors text-sm sm:text-base"
             >
-              <Plus className="w-5 h-5" />
-              <span>Add Product</span>
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span>Add</span>
             </button>
           </div>
         </div>
@@ -452,90 +452,91 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
               </button>
             </div>
           ) : (
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Product
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Price
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Stock
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Images
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Featured
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-slate-200">
-                {products.map((product) => (
-                  <tr key={product._id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <img
-                          src={product.images[0]?.url || '/placeholder-image.jpg'}
-                          alt={product.name}
-                          className="w-12 h-12 rounded object-cover"
-                        />
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-slate-900">{product.name}</div>
-                          <div className="text-sm text-slate-500">{product.slug}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-slate-900">₹{product.discountPrice || product.price}</div>
-                      {product.discountPrice && (
-                        <div className="text-sm text-slate-500 line-through">₹{product.price}</div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                      {product.totalStock}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex -space-x-2">
-                        {product.images.slice(0, 3).map((image, index) => (
+            <div className="overflow-x-auto">
+              <table className="w-full divide-y divide-slate-200">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Product
+                    </th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Price
+                    </th>
+                    <th className="hidden md:table-cell px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Stock
+                    </th>
+                    <th className="hidden lg:table-cell px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Images
+                    </th>
+                    <th className="hidden md:table-cell px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Featured
+                    </th>
+                    <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-slate-200">
+                  {products.map((product) => (
+                    <tr key={product._id}>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2 sm:gap-4">
                           <img
-                            key={index}
-                            src={image.url || '/placeholder-image.jpg'}
-                            alt=""
-                            className="w-8 h-8 rounded border-2 border-white object-cover"
+                            src={product.images[0]?.url || '/placeholder-image.jpg'}
+                            alt={product.name}
+                            className="w-8 h-8 sm:w-12 sm:h-12 rounded object-cover"
                           />
-                        ))}
-                        {product.images.length > 3 && (
-                          <div className="w-8 h-8 rounded bg-slate-100 border-2 border-white flex items-center justify-center text-xs text-slate-500">
-                            +{product.images.length - 3}
+                          <div className="min-w-0">
+                            <div className="text-xs sm:text-sm font-medium text-slate-900 truncate">{product.name}</div>
+                            <div className="hidden sm:block text-xs text-slate-500 truncate">{product.slug}</div>
                           </div>
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                        <div className="text-xs sm:text-sm text-slate-900">₹{(product.discountPrice || product.price).toLocaleString()}</div>
+                        {product.discountPrice && (
+                          <div className="text-xs text-slate-500 line-through">₹{product.price.toLocaleString()}</div>
                         )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                      {product.isFeatured ? '✓' : ''}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => openModal(product)}
-                        className="text-slate-600 hover:text-slate-900 mr-3 p-1 rounded hover:bg-slate-100 transition-colors"
-                        title="Edit product"
-                      >
-                        <Edit className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(product._id)}
-                        className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors"
-                        title="Delete product"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </td>
+                      </td>
+                      <td className="hidden md:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-slate-900">
+                        {product.totalStock}
+                      </td>
+                      <td className="hidden lg:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                        <div className="flex -space-x-2">
+                          {product.images.slice(0, 2).map((image, index) => (
+                            <img
+                              key={index}
+                              src={image.url || '/placeholder-image.jpg'}
+                              alt=""
+                              className="w-6 h-6 sm:w-8 sm:h-8 rounded border-2 border-white object-cover"
+                            />
+                          ))}
+                          {product.images.length > 2 && (
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded bg-slate-100 border-2 border-white flex items-center justify-center text-xs text-slate-500">
+                              +{product.images.length - 2}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="hidden md:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-slate-900">
+                        {product.isFeatured ? '✓' : ''}
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-sm font-medium space-x-1">
+                        <button
+                          onClick={() => openModal(product)}
+                          className="text-slate-600 hover:text-slate-900 p-1 rounded hover:bg-slate-100 transition-colors inline-block"
+                          title="Edit product"
+                        >
+                          <Edit className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(product._id)}
+                          className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors inline-block"
+                          title="Delete product"
+                        >
+                          <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </button>
+                      </td>
                   </tr>
                 ))}
               </tbody>
@@ -546,8 +547,8 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
 
       {/* Product Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-white rounded-t-lg sm:rounded-lg p-4 sm:p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-slate-900">
                 {editingProduct ? 'Edit Product' : 'Add Product'}
@@ -654,14 +655,14 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                 </div>
                 <div className="space-y-3">
                   {formData.images.map((image, index) => (
-                    <div key={index} className="flex space-x-3">
+                    <div key={index} className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                       <div className="flex-1">
                         <input
                           type="url"
                           placeholder="Image URL"
                           value={image.url}
                           onChange={(e) => updateImageField(index, 'url', e.target.value)}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm"
                           required
                         />
                       </div>
@@ -671,14 +672,14 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                           placeholder="Alt text"
                           value={image.alt}
                           onChange={(e) => updateImageField(index, 'alt', e.target.value)}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm"
                         />
                       </div>
                       {formData.images.length > 1 && (
                         <button
                           type="button"
                           onClick={() => removeImageField(index)}
-                          className="px-3 py-2 text-red-600 hover:text-red-800"
+                          className="px-3 py-2 text-red-600 hover:text-red-800 sm:self-start"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -709,8 +710,8 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-4">
-                <div className="flex items-center space-x-4">
+              <div className="flex flex-col space-y-4 sm:space-y-0 pt-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
                   <div className="flex items-center">
                     <input
                       type="checkbox"
@@ -737,18 +738,18 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                   </div>
                 </div>
 
-                <div className="flex space-x-3">
+                <div className="flex flex-col-reverse sm:flex-row space-y-2 sm:space-y-0 space-y-reverse sm:space-x-3 sm:justify-end">
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors"
+                    className="w-full sm:w-auto px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors text-sm sm:text-base"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
-                    disabled={categories.length === 0} // Disable if no categories
+                    className="w-full sm:w-auto px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm sm:text-base disabled:opacity-50"
+                    disabled={categories.length === 0}
                   >
                     {editingProduct ? 'Update' : 'Create'}
                   </button>

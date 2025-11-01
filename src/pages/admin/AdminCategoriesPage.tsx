@@ -159,13 +159,14 @@ export default function AdminCategoriesPage({ onNavigate }: AdminCategoriesPageP
           </div>
         )}
 
-        {/* Form */}
+        {/* Form Modal - Mobile Responsive */}
         {showForm && (
-          <div className="bg-white rounded-lg shadow-md p-6 border border-slate-200">
-            <h2 className="text-xl font-semibold mb-4">
-              {editingId ? 'Edit Category' : 'New Category'}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+            <div className="bg-white rounded-t-lg sm:rounded-lg p-4 sm:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <h2 className="text-xl sm:text-2xl font-semibold mb-4">
+                {editingId ? 'Edit Category' : 'New Category'}
+              </h2>
+              <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   Category Name *
@@ -222,10 +223,10 @@ export default function AdminCategoriesPage({ onNavigate }: AdminCategoriesPageP
                 />
               </div>
 
-              <div className="flex gap-2 pt-4">
+              <div className="flex flex-col-reverse sm:flex-row gap-2 pt-4">
                 <button
                   type="submit"
-                  className="flex items-center gap-2 bg-slate-900 text-white px-6 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+                  className="flex items-center justify-center gap-2 bg-slate-900 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-slate-800 transition-colors w-full sm:w-auto"
                 >
                   <Save className="w-4 h-4" />
                   {editingId ? 'Update' : 'Create'}
@@ -233,13 +234,14 @@ export default function AdminCategoriesPage({ onNavigate }: AdminCategoriesPageP
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="flex items-center gap-2 bg-slate-200 text-slate-900 px-6 py-2 rounded-lg hover:bg-slate-300 transition-colors"
+                  className="flex items-center justify-center gap-2 bg-slate-200 text-slate-900 px-4 sm:px-6 py-2 rounded-lg hover:bg-slate-300 transition-colors w-full sm:w-auto"
                 >
                   <X className="w-4 h-4" />
                   Cancel
                 </button>
               </div>
             </form>
+            </div>
           </div>
         )}
 
