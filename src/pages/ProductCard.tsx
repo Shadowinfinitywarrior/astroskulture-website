@@ -134,7 +134,7 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
           
           {/* Overlay with quick actions */}
           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300">
-            <div className="absolute top-3 right-3 flex flex-col space-y-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="absolute top-3 right-3 flex flex-col space-y-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
               {/* Quick View Button */}
               <button
                 onClick={handleQuickView}
@@ -166,24 +166,35 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
             </div>
           </div>
 
-          {/* Discount Badge */}
-          {hasDiscount && (
-            <div className="absolute top-3 left-3 bg-red-600 text-white px-2 py-1 rounded text-xs font-semibold shadow-sm">
-              {discountPercentage}% OFF
-            </div>
-          )}
+          {/* Top Left Badges Container - Stacked */}
+          <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
+            {/* Featured Badge */}
+            {product.isFeatured && (
+              <div className="bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                ⭐ Featured
+              </div>
+            )}
 
-          {/* Stock Status Badge */}
-          {stockStatus === 'out-of-stock' && (
-            <div className="absolute top-3 left-3 bg-gray-600 text-white px-2 py-1 rounded text-xs font-semibold">
-              Out of Stock
-            </div>
-          )}
-          {stockStatus === 'low-stock' && (
-            <div className="absolute top-3 left-3 bg-orange-500 text-white px-2 py-1 rounded text-xs font-semibold">
-              Low Stock
-            </div>
-          )}
+            {/* Discount Badge */}
+            {hasDiscount && (
+              <div className="bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+                <span>🔥</span>
+                <span>{discountPercentage}% OFF</span>
+              </div>
+            )}
+
+            {/* Stock Status Badge */}
+            {stockStatus === 'out-of-stock' && (
+              <div className="bg-gray-700 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                Out of Stock
+              </div>
+            )}
+            {stockStatus === 'low-stock' && (
+              <div className="bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                Only {product.totalStock} left
+              </div>
+            )}
+          </div>
 
           {/* Add to Cart Overlay */}
           <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-95 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 p-3">
@@ -240,22 +251,13 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
         )}
 
         {/* Price */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-baseline space-x-2">
-            <span className="text-lg font-bold text-gray-900">
-              ₹{formatPrice(currentPrice)}
-            </span>
-            {hasDiscount && (
-              <span className="text-sm text-gray-500 line-through">
-                ₹{formatPrice(product.price)}
-              </span>
-            )}
-          </div>
-          
-          {/* Stock Indicator */}
-          {stockStatus === 'low-stock' && product.totalStock > 0 && (
-            <span className="text-xs text-orange-600 font-medium">
-              Only {product.totalStock} left
+        <div className="flex items-baseline space-x-2">
+          <span className="text-lg font-bold text-gray-900">
+            ₹{formatPrice(currentPrice)}
+          </span>
+          {hasDiscount && (
+            <span className="text-sm text-gray-500 line-through">
+              ₹{formatPrice(product.price)}
             </span>
           )}
         </div>
@@ -298,13 +300,6 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
           </div>
         )}
       </div>
-
-      {/* Featured Badge */}
-      {product.isFeatured && (
-        <div className="absolute top-3 right-3 bg-yellow-400 text-yellow-900 px-2 py-1 rounded text-xs font-semibold">
-          Featured
-        </div>
-      )}
     </div>
   );
 }
