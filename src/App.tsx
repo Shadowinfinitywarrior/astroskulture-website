@@ -22,6 +22,7 @@ import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
 import AdminBannersPage from './pages/admin/AdminBannersPage';
 import AdminBlogPage from './pages/admin/AdminBlogPage';
+import AdminAnalyticsPage from './pages/admin/AdminAnalyticsPage';
 import UserAccountPage from './pages/UserAccountPage';
 import UserOrdersPage from './pages/UserOrdersPage';
 
@@ -49,6 +50,8 @@ function AppContent() {
         setCurrentPage('admin-banners');
       } else if (path === '/admin/blogs') {
         setCurrentPage('admin-blogs');
+      } else if (path === '/admin/analytics') {
+        setCurrentPage('admin-analytics');
       } else {
         setCurrentPage('admin-dashboard');
       }
@@ -70,6 +73,7 @@ function AppContent() {
         'admin-categories': '/admin/categories',
         'admin-banners': '/admin/banners',
         'admin-blogs': '/admin/blogs',
+        'admin-analytics': '/admin/analytics',
       };
       window.history.pushState({}, '', routes[page] || '/admin');
     }
@@ -164,6 +168,8 @@ function AdminRoutes({ currentPage, onNavigate }: { currentPage: string; onNavig
       return <AdminBannersPage onNavigate={onNavigate} />;
     case 'admin-blogs':
       return <AdminBlogPage onNavigate={onNavigate} />;
+    case 'admin-analytics':
+      return <AdminAnalyticsPage onNavigate={onNavigate} />;
     case 'admin-dashboard':
     default:
       return <AdminDashboardPage onNavigate={onNavigate} />;

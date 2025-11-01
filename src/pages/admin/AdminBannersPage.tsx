@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { Plus, Edit, Trash2, Save, X, Eye, EyeOff } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Eye, EyeOff, Play } from 'lucide-react';
 import { apiService } from '../../lib/mongodb';
 
 interface Banner {
@@ -10,6 +10,8 @@ interface Banner {
   backgroundColor?: string;
   displayOrder: number;
   isActive: boolean;
+  animationType?: 'slide' | 'fade' | 'bounce' | 'none';
+  animationSpeed?: 'slow' | 'normal' | 'fast';
 }
 
 interface AdminBannersPageProps {
@@ -26,8 +28,11 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
     textColor: '#ffffff',
     backgroundColor: '#dc2626',
     displayOrder: 0,
-    isActive: true
+    isActive: true,
+    animationType: 'slide' as const,
+    animationSpeed: 'normal' as const
   });
+  const [animationPreview, setAnimationPreview] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -67,7 +72,9 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
       textColor: banner.textColor || '#ffffff',
       backgroundColor: banner.backgroundColor || '#dc2626',
       displayOrder: banner.displayOrder,
-      isActive: banner.isActive
+      isActive: banner.isActive,
+      animationType: banner.animationType || 'slide',
+      animationSpeed: banner.animationSpeed || 'normal'
     });
     setEditingId(banner._id);
     setShowForm(true);
@@ -108,7 +115,9 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
         textColor: '#ffffff',
         backgroundColor: '#dc2626',
         displayOrder: 0,
-        isActive: true
+        isActive: true,
+        animationType: 'slide',
+        animationSpeed: 'normal'
       });
       setShowForm(false);
       loadBanners();
@@ -138,14 +147,33 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
   const handleCancel = () => {
     setShowForm(false);
     setEditingId(null);
+    setAnimationPreview(false);
     setFormData({
       discountPercentage: 10,
       textColor: '#ffffff',
       backgroundColor: '#dc2626',
       displayOrder: 0,
-      isActive: true
+      isActive: true,
+      animationType: 'slide',
+      animationSpeed: 'normal'
     });
     setError('');
+  };
+
+  const getAnimationClass = (type: string, speed: string) => {
+    const speedMap = { slow: '3s', normal: '2s', fast: '1s' };
+    const animDuration = speedMap[speed as keyof typeof speedMap] || '2s';
+    
+    switch (type) {
+      case 'slide':
+        return `animate-slide-${speed}`;
+      case 'fade':
+        return `animate-fade-${speed}`;
+      case 'bounce':
+        return `animate-bounce-${speed}`;
+      default:
+        return '';
+    }
   };
 
   return (
@@ -256,6 +284,41 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Animation Type
+                  </label>
+                  <select
+                    name="animationType"
+                    value={formData.animationType}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-slate-900"
+                  >
+                    <option value="none">None</option>
+                    <option value="slide">Slide Left/Right</option>
+                    <option value="fade">Fade In/Out</option>
+                    <option value="bounce">Bounce</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Animation Speed
+                  </label>
+                  <select
+                    name="animationSpeed"
+                    value={formData.animationSpeed}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-slate-900"
+                  >
+                    <option value="slow">Slow (3s)</option>
+                    <option value="normal">Normal (2s)</option>
+                    <option value="fast">Fast (1s)</option>
+                  </select>
+                </div>
+              </div>
+
               <div>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -270,13 +333,29 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
               </div>
 
               {/* Preview */}
-              <div className="mt-6 p-4 rounded-lg" style={{ backgroundColor: formData.backgroundColor }}>
-                <p
-                  className="text-center font-bold text-sm md:text-base"
-                  style={{ color: formData.textColor }}
+              <div className="mt-6 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-slate-700">Preview</label>
+                  <button
+                    type="button"
+                    onClick={() => setAnimationPreview(!animationPreview)}
+                    className="flex items-center gap-2 text-sm bg-slate-500 hover:bg-slate-600 text-white px-3 py-1.5 rounded transition-colors"
+                  >
+                    <Play className="w-3 h-3" />
+                    {animationPreview ? 'Stop' : 'Play'} Animation
+                  </button>
+                </div>
+                <div 
+                  className={`p-4 rounded-lg overflow-hidden ${animationPreview && formData.animationType !== 'none' ? getAnimationClass(formData.animationType, formData.animationSpeed) : ''}`}
+                  style={{ backgroundColor: formData.backgroundColor }}
                 >
-                  ✨ Special Offer: Get {formData.discountPercentage}% OFF on your order today!
-                </p>
+                  <p
+                    className="text-center font-bold text-sm md:text-base"
+                    style={{ color: formData.textColor }}
+                  >
+                    ✨ Special Offer: Get {formData.discountPercentage}% OFF on your order today!
+                  </p>
+                </div>
               </div>
 
               <div className="flex gap-2 pt-4">
@@ -336,7 +415,7 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
                       >
                         ✨ Special Offer: Get {banner.discountPercentage}% OFF on your order today!
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                         <div>
                           <span className="text-slate-600">Discount:</span>
                           <p className="font-semibold text-slate-900">{banner.discountPercentage}%</p>
@@ -344,6 +423,10 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
                         <div>
                           <span className="text-slate-600">Order:</span>
                           <p className="font-semibold text-slate-900">{banner.displayOrder}</p>
+                        </div>
+                        <div>
+                          <span className="text-slate-600">Animation:</span>
+                          <p className="font-semibold text-slate-900 capitalize">{banner.animationType || 'None'}</p>
                         </div>
                         <div>
                           <span className="text-slate-600">Status:</span>
