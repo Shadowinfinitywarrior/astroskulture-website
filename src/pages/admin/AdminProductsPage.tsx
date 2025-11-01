@@ -541,6 +541,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>
