@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ShoppingCart, Heart, Star, ArrowRight } from 'lucide-react';
+import { ShoppingCart, Heart, Star, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { apiService } from '../lib/mongodb';
 
@@ -30,6 +30,15 @@ interface Category {
   description?: string;
 }
 
+interface Banner {
+  _id: string;
+  discountPercentage: number;
+  textColor?: string;
+  backgroundColor?: string;
+  displayOrder: number;
+  isActive: boolean;
+}
+
 interface HomePageProps {
   onNavigate: (page: string, params?: any) => void;
 }
@@ -37,12 +46,23 @@ interface HomePageProps {
 export function HomePage({ onNavigate }: HomePageProps) {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [categoryScrollPos, setCategoryScrollPos] = useState(0);
+  const [bannerAnimatePos, setBannerAnimatePos] = useState(0);
   const { addToCart } = useCart();
 
   useEffect(() => {
     loadData();
+  }, []);
+
+  // Animate banner text movement
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBannerAnimatePos((prev) => (prev + 1) % 100);
+    }, 50);
+    return () => clearInterval(interval);
   }, []);
 
   const loadData = async () => {
@@ -66,6 +86,17 @@ export function HomePage({ onNavigate }: HomePageProps) {
         setCategories(categoriesResponse.data || []);
       } else {
         throw new Error(categoriesResponse.message || 'Failed to load categories');
+      }
+
+      // Load banners
+      try {
+        const bannersResponse = await apiService.getBanners();
+        if (bannersResponse.success) {
+          const activeBanners = (bannersResponse.data || []).filter((b: Banner) => b.isActive);
+          setBanners(activeBanners.sort((a, b) => a.displayOrder - b.displayOrder));
+        }
+      } catch (bannerError) {
+        console.warn('Failed to load banners:', bannerError);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -159,16 +190,41 @@ export function HomePage({ onNavigate }: HomePageProps) {
         </div>
       </section>
 
-      {/* Special Offer Banner */}
-      <section className="py-3 md:py-4 bg-red-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="font-medium text-xs md:text-sm">
-            ✨ Special Offer: Get 20% OFF on orders above ₹2000
-          </p>
-        </div>
-      </section>
+      {/* Dynamic Banners Section */}
+      {banners.length > 0 && (
+        <section className="py-2 md:py-3 overflow-hidden">
+          {banners.map((banner) => (
+            <div
+              key={banner._id}
+              className="relative py-2 md:py-3 text-white overflow-hidden"
+              style={{
+                backgroundColor: banner.backgroundColor || '#dc2626',
+                color: banner.textColor || '#ffffff',
+              }}
+            >
+              <div className="relative whitespace-nowrap animate-scroll-text">
+                <p className="font-bold text-xs md:text-sm inline-block pr-8">
+                  ✨ Special Offer: Get {banner.discountPercentage}% OFF on your order today!
+                </p>
+                <p className="font-bold text-xs md:text-sm inline-block pr-8">
+                  ✨ Special Offer: Get {banner.discountPercentage}% OFF on your order today!
+                </p>
+              </div>
+              <style>{`
+                @keyframes scroll-text {
+                  0% { transform: translateX(0); }
+                  100% { transform: translateX(-50%); }
+                }
+                .animate-scroll-text {
+                  animation: scroll-text 15s linear infinite;
+                }
+              `}</style>
+            </div>
+          ))}
+        </section>
+      )}
 
-      {/* Categories Section */}
+      {/* Categories Section - Horizontal Carousel */}
       <section className="py-8 md:py-16">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-8 md:mb-12">
@@ -177,12 +233,14 @@ export function HomePage({ onNavigate }: HomePageProps) {
             </h2>
             <p className="text-xs md:text-sm text-gray-600">Explore our diverse range of premium products</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+          
+          {/* Desktop Grid */}
+          <div className="hidden md:grid grid-cols-4 gap-6">
             {categories.map((category) => (
               <button
                 key={category._id}
                 onClick={() => onNavigate('shop', { category: category.slug })}
-                className="group relative h-32 md:h-48 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                className="group relative h-48 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105"
               >
                 <img
                   src={category.imageUrl || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}
@@ -190,14 +248,66 @@ export function HomePage({ onNavigate }: HomePageProps) {
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
-                  <div className="p-2 md:p-4 w-full">
-                    <h3 className="text-white font-semibold text-xs md:text-lg line-clamp-2">
+                  <div className="p-4 w-full">
+                    <h3 className="text-white font-semibold text-lg line-clamp-2">
                       {category.name}
                     </h3>
                   </div>
                 </div>
               </button>
             ))}
+          </div>
+
+          {/* Mobile Horizontal Scroll */}
+          <div className="md:hidden relative">
+            <div
+              id="categoryScroll"
+              className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 scroll-smooth"
+              style={{ scrollBehavior: 'smooth' }}
+            >
+              {categories.map((category) => (
+                <button
+                  key={category._id}
+                  onClick={() => onNavigate('shop', { category: category.slug })}
+                  className="group relative h-32 w-40 flex-shrink-0 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
+                >
+                  <img
+                    src={category.imageUrl || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}
+                    alt={category.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
+                    <div className="p-2 w-full">
+                      <h3 className="text-white font-semibold text-xs line-clamp-2">
+                        {category.name}
+                      </h3>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+            {categories.length > 3 && (
+              <div className="flex gap-2 justify-center mt-4">
+                <button
+                  onClick={() => {
+                    const element = document.getElementById('categoryScroll');
+                    if (element) element.scrollBy({ left: -300, behavior: 'smooth' });
+                  }}
+                  className="p-2 rounded-full bg-red-600 text-white hover:bg-red-700"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => {
+                    const element = document.getElementById('categoryScroll');
+                    if (element) element.scrollBy({ left: 300, behavior: 'smooth' });
+                  }}
+                  className="p-2 rounded-full bg-red-600 text-white hover:bg-red-700"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -1,6 +1,6 @@
 import { ReactNode, useState } from 'react';
 import { useAdminAuth } from '../../contexts/AdminAuthContext';
-import { LogOut, Package, ShoppingCart, Users, Home, Menu, X } from 'lucide-react';
+import { LogOut, Package, ShoppingCart, Users, Home, Menu, X, Grid3x3, Banners, BookOpen } from 'lucide-react';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -17,6 +17,9 @@ export default function AdminLayout({ children, currentPage, onNavigate }: Admin
     { name: 'Products', icon: Package, page: 'products', target: 'admin-products' },
     { name: 'Orders', icon: ShoppingCart, page: 'orders', target: 'admin-orders' },
     { name: 'Users', icon: Users, page: 'users', target: 'admin-users' },
+    { name: 'Categories', icon: Grid3x3, page: 'categories', target: 'admin-categories' },
+    { name: 'Banners', icon: Banners, page: 'banners', target: 'admin-banners' },
+    { name: 'Blogs', icon: BookOpen, page: 'blogs', target: 'admin-blogs' },
   ];
 
   const handleLogout = () => {

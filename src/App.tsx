@@ -13,10 +13,15 @@ import { CheckoutPage } from './pages/CheckoutPage';
 import { WishlistPage } from './pages/WishlistPage';
 import LoginPage from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { BlogPage } from './pages/BlogPage';
+import { BlogDetailPage } from './pages/BlogDetailPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
 import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
+import AdminBannersPage from './pages/admin/AdminBannersPage';
+import AdminBlogPage from './pages/admin/AdminBlogPage';
 import UserAccountPage from './pages/UserAccountPage';
 import UserOrdersPage from './pages/UserOrdersPage';
 
@@ -38,6 +43,12 @@ function AppContent() {
         setCurrentPage('admin-orders');
       } else if (path === '/admin/users') {
         setCurrentPage('admin-users');
+      } else if (path === '/admin/categories') {
+        setCurrentPage('admin-categories');
+      } else if (path === '/admin/banners') {
+        setCurrentPage('admin-banners');
+      } else if (path === '/admin/blogs') {
+        setCurrentPage('admin-blogs');
       } else {
         setCurrentPage('admin-dashboard');
       }
@@ -56,6 +67,9 @@ function AppContent() {
         'admin-products': '/admin/products',
         'admin-orders': '/admin/orders',
         'admin-users': '/admin/users',
+        'admin-categories': '/admin/categories',
+        'admin-banners': '/admin/banners',
+        'admin-blogs': '/admin/blogs',
       };
       window.history.pushState({}, '', routes[page] || '/admin');
     }
@@ -80,6 +94,10 @@ function AppContent() {
         return <CheckoutPage onNavigate={handleNavigate} />;
       case 'wishlist':
         return <WishlistPage onNavigate={handleNavigate} />;
+      case 'blog':
+        return <BlogPage onNavigate={handleNavigate} />;
+      case 'blog-detail':
+        return <BlogDetailPage slug={pageParams.slug || ''} onNavigate={handleNavigate} />;
       case 'login':
         return <LoginPage onNavigate={handleNavigate} />;
       case 'register':
@@ -140,6 +158,12 @@ function AdminRoutes({ currentPage, onNavigate }: { currentPage: string; onNavig
       return <AdminOrdersPage onNavigate={onNavigate} />;
     case 'admin-users':
       return <AdminUsersPage onNavigate={onNavigate} />;
+    case 'admin-categories':
+      return <AdminCategoriesPage onNavigate={onNavigate} />;
+    case 'admin-banners':
+      return <AdminBannersPage onNavigate={onNavigate} />;
+    case 'admin-blogs':
+      return <AdminBlogPage onNavigate={onNavigate} />;
     case 'admin-dashboard':
     default:
       return <AdminDashboardPage onNavigate={onNavigate} />;

@@ -342,6 +342,93 @@ class ApiService {
   async getCategoriesWithCounts() {
     return this.request('/products/categories/with-counts');
   }
+
+  // Category methods - admin
+  async adminGetAllCategories() {
+    return this.request('/admin/categories', {}, true);
+  }
+
+  async adminCreateCategory(categoryData: any) {
+    return this.request('/admin/categories', {
+      method: 'POST',
+      body: JSON.stringify(categoryData),
+    }, true);
+  }
+
+  async adminUpdateCategory(id: string, categoryData: any) {
+    return this.request(`/admin/categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(categoryData),
+    }, true);
+  }
+
+  async adminDeleteCategory(id: string) {
+    return this.request(`/admin/categories/${id}`, {
+      method: 'DELETE',
+    }, true);
+  }
+
+  // Blog methods
+  async getBlogs() {
+    return this.request('/blogs');
+  }
+
+  async getBlog(slug: string) {
+    return this.request(`/blogs/${slug}`);
+  }
+
+  async adminGetAllBlogs() {
+    return this.request('/blogs/admin/all', {}, true);
+  }
+
+  async adminCreateBlog(blogData: any) {
+    return this.request('/blogs', {
+      method: 'POST',
+      body: JSON.stringify(blogData),
+    }, true);
+  }
+
+  async adminUpdateBlog(id: string, blogData: any) {
+    return this.request(`/blogs/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(blogData),
+    }, true);
+  }
+
+  async adminDeleteBlog(id: string) {
+    return this.request(`/blogs/${id}`, {
+      method: 'DELETE',
+    }, true);
+  }
+
+  // Banner methods
+  async getBanners() {
+    return this.request('/banners');
+  }
+
+  async adminGetAllBanners() {
+    return this.request('/banners/admin/all', {}, true);
+  }
+
+  async adminCreateBanner(bannerData: any) {
+    return this.request('/banners', {
+      method: 'POST',
+      body: JSON.stringify(bannerData),
+    }, true);
+  }
+
+  async adminUpdateBanner(id: string, bannerData: any) {
+    return this.request(`/banners/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(bannerData),
+    }, true);
+  }
+
+  async adminDeleteBanner(id: string) {
+    return this.request(`/banners/${id}`, {
+      method: 'DELETE',
+    }, true);
+  }
 }
 
 export const apiService = new ApiService();

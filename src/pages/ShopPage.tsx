@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ShoppingCart, Heart, Star, Search, SlidersHorizontal } from 'lucide-react';
+import { ShoppingCart, Heart, Star, Search, SlidersHorizontal, X } from 'lucide-react';
 import { apiService } from '../lib/mongodb';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -19,6 +19,7 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [sortBy, setSortBy] = useState('featured');
   const [wishlistLoading, setWishlistLoading] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { user } = useAuth();
@@ -203,10 +204,37 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
 
       <div className="max-w-7xl mx-auto px-4 pb-16">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Filters Sidebar */}
-          <aside className="w-full md:w-64 space-y-6">
+          {/* Mobile Filter Toggle Button */}
+          <div className="md:hidden mb-4">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="w-full flex items-center justify-center gap-2 bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 transition-colors font-semibold"
+            >
+              <SlidersHorizontal className="w-5 h-5" />
+              {showFilters ? 'Hide Filters' : 'Show Filters'}
+            </button>
+          </div>
+
+          {/* Filters Sidebar - Hidden on Mobile, Shown on Desktop */}
+          <aside className={`${showFilters ? 'block' : 'hidden'} md:block w-full md:w-64 space-y-6`}>
+            {/* Mobile Header with Close Button */}
+            {showFilters && (
+              <div className="md:hidden flex items-center justify-between mb-4 bg-white p-4 rounded-lg shadow-sm">
+                <h3 className="font-semibold text-lg flex items-center">
+                  <SlidersHorizontal className="w-5 h-5 mr-2" />
+                  Filters
+                </h3>
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="p-1 hover:bg-gray-100 rounded"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            )}
+
             <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="font-semibold text-lg mb-4 flex items-center">
+              <h3 className="font-semibold text-lg mb-4 flex items-center hidden md:flex">
                 <SlidersHorizontal className="w-5 h-5 mr-2" />
                 Filters
               </h3>
@@ -321,125 +349,8 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
               </div>
             ) : (
               <>
-                {/* Mobile Horizontal Scroll */}
-                <div className="md:hidden overflow-x-auto pb-4 -mx-4 px-4">
-                  <div className="flex gap-4 w-max">
-                    {products.map((product) => {
-                      const stockStatus = getStockStatus(product);
-                      const isInWishlistState = isInWishlist(product._id);
-                      const isWishlistLoading = wishlistLoading === product._id;
-                      
-                      return (
-                        <div key={product._id} className="w-64 flex-shrink-0 bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
-                      <div className="relative overflow-hidden">
-                        <img
-                          src={getProductImage(product)}
-                          alt={product.images[0]?.alt || product.name}
-                          className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer"
-                          onClick={() => handleProductClick(product)}
-                        />
-                        {hasDiscount(product) && (
-                          <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                            {getDiscountPercentage(product)}% OFF
-                          </div>
-                        )}
-                        {product.isFeatured && (
-                          <div className="absolute top-4 right-4 bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                            Featured
-                          </div>
-                        )}
-                        
-                        {/* Stock Status Badge */}
-                        {stockStatus === 'out-of-stock' && (
-                          <div className="absolute top-16 left-4 bg-gray-600 text-white px-2 py-1 rounded text-xs font-semibold">
-                            Out of Stock
-                          </div>
-                        )}
-                        {stockStatus === 'low-stock' && (
-                          <div className="absolute top-16 left-4 bg-orange-500 text-white px-2 py-1 rounded text-xs font-semibold">
-                            Low Stock
-                          </div>
-                        )}
-                        
-                        {/* Wishlist Button */}
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleWishlistToggle(product);
-                          }}
-                          disabled={isWishlistLoading}
-                          className={`absolute top-4 right-4 p-2 rounded-full shadow-md transition-all duration-300 ${
-                            isInWishlistState 
-                              ? 'bg-red-600 text-white hover:bg-red-700' 
-                              : 'bg-white text-gray-600 hover:bg-red-50 hover:text-red-600'
-                          } disabled:opacity-50 disabled:cursor-not-allowed`}
-                        >
-                          {isWishlistLoading ? (
-                            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                          ) : (
-                            <Heart className={`w-5 h-5 ${isInWishlistState ? 'fill-current' : ''}`} />
-                          )}
-                        </button>
-                      </div>
-                      
-                      <div className="p-4">
-                        <h3
-                          onClick={() => handleProductClick(product)}
-                          className="font-semibold text-gray-900 mb-2 cursor-pointer hover:text-red-600 transition-colors line-clamp-2"
-                        >
-                          {product.name}
-                        </h3>
-                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                          {product.description}
-                        </p>
-                        <div className="flex items-center space-x-1 mb-2">
-                          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                          <span className="text-sm font-medium">{(product.rating || 0).toFixed(1)}</span>
-                          <span className="text-sm text-gray-500">({product.reviewCount || 0})</span>
-                        </div>
-                        <div className="flex items-center justify-between mb-2">
-                          <div>
-                            {hasDiscount(product) ? (
-                              <div className="flex items-center space-x-2">
-                                <span className="text-lg font-bold text-red-600">
-                                  ₹{formatPrice(getDisplayPrice(product))}
-                                </span>
-                                <span className="text-sm text-gray-500 line-through">
-                                  ₹{formatPrice(product.price)}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-lg font-bold text-gray-900">₹{formatPrice(getDisplayPrice(product))}</span>
-                            )}
-                          </div>
-                          <button
-                            onClick={() => handleAddToCart(product)}
-                            disabled={product.totalStock === 0}
-                            className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                            title={product.totalStock === 0 ? 'Out of Stock' : 'Add to Cart'}
-                          >
-                            <ShoppingCart className="w-5 h-5" />
-                          </button>
-                        </div>
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {getAvailableSizes(product).map(size => (
-                            <span key={size} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                              {size}
-                            </span>
-                          ))}
-                        </div>
-                        {product.totalStock > 0 && product.totalStock < 10 && (
-                          <p className="text-orange-600 text-sm">Only {product.totalStock} left in stock</p>
-                        )}
-                      </div>
-                    </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Desktop Grid View */}
-                <div className="hidden md:grid grid-cols-2 gap-6">
+                {/* Mobile & Desktop Grid - 2 columns mobile, 3 columns desktop */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                   {products.map((product) => {
                     const stockStatus = getStockStatus(product);
                     const isInWishlistState = isInWishlist(product._id);

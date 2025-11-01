@@ -1,0 +1,405 @@
+import { useState, useEffect } from 'react';
+import AdminLayout from '../../components/admin/AdminLayout';
+import { Plus, Edit, Trash2, Save, X, Eye, EyeOff } from 'lucide-react';
+import { apiService } from '../../lib/mongodb';
+
+interface Banner {
+  _id: string;
+  discountPercentage: number;
+  textColor?: string;
+  backgroundColor?: string;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+interface AdminBannersPageProps {
+  onNavigate: (page: string) => void;
+}
+
+export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) {
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    discountPercentage: 10,
+    textColor: '#ffffff',
+    backgroundColor: '#dc2626',
+    displayOrder: 0,
+    isActive: true
+  });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    loadBanners();
+  }, []);
+
+  const loadBanners = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.adminGetAllBanners();
+      
+      if (response.success) {
+        setBanners(response.data || []);
+      } else {
+        setError('Failed to load banners');
+      }
+    } catch (err) {
+      setError('Error loading banners');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'number' ? parseInt(value) : type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+    }));
+  };
+
+  const handleEdit = (banner: Banner) => {
+    setFormData({
+      discountPercentage: banner.discountPercentage,
+      textColor: banner.textColor || '#ffffff',
+      backgroundColor: banner.backgroundColor || '#dc2626',
+      displayOrder: banner.displayOrder,
+      isActive: banner.isActive
+    });
+    setEditingId(banner._id);
+    setShowForm(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setError('');
+      setSuccess('');
+
+      if (formData.discountPercentage < 1 || formData.discountPercentage > 100) {
+        setError('Discount percentage must be between 1 and 100');
+        return;
+      }
+
+      if (editingId) {
+        // Update banner
+        const response = await apiService.adminUpdateBanner(editingId, formData);
+        if (response.success) {
+          setSuccess('Banner updated successfully!');
+          setEditingId(null);
+        } else {
+          setError(response.message || 'Failed to update banner');
+        }
+      } else {
+        // Create new banner
+        const response = await apiService.adminCreateBanner(formData);
+        if (response.success) {
+          setSuccess('Banner created successfully!');
+        } else {
+          setError(response.message || 'Failed to create banner');
+        }
+      }
+
+      setFormData({
+        discountPercentage: 10,
+        textColor: '#ffffff',
+        backgroundColor: '#dc2626',
+        displayOrder: 0,
+        isActive: true
+      });
+      setShowForm(false);
+      loadBanners();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error saving banner');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this banner?')) return;
+
+    try {
+      setError('');
+      const response = await apiService.adminDeleteBanner(id);
+      
+      if (response.success) {
+        setSuccess('Banner deleted successfully!');
+        loadBanners();
+      } else {
+        setError(response.message || 'Failed to delete banner');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error deleting banner');
+    }
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setFormData({
+      discountPercentage: 10,
+      textColor: '#ffffff',
+      backgroundColor: '#dc2626',
+      displayOrder: 0,
+      isActive: true
+    });
+    setError('');
+  };
+
+  return (
+    <AdminLayout currentPage="banners" onNavigate={onNavigate}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-slate-900">Banner Management</h1>
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            Add Banner
+          </button>
+        </div>
+
+        {/* Alert Messages */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800">
+            {success}
+          </div>
+        )}
+
+        {/* Form */}
+        {showForm && (
+          <div className="bg-white rounded-lg shadow-md p-6 border border-slate-200">
+            <h2 className="text-xl font-semibold mb-4">
+              {editingId ? 'Edit Banner' : 'New Banner'}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Discount Percentage (%) *
+                  </label>
+                  <input
+                    type="number"
+                    name="discountPercentage"
+                    value={formData.discountPercentage}
+                    onChange={handleInputChange}
+                    min="1"
+                    max="100"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Display Order
+                  </label>
+                  <input
+                    type="number"
+                    name="displayOrder"
+                    value={formData.displayOrder}
+                    onChange={handleInputChange}
+                    min="0"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-slate-900"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Background Color
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      name="backgroundColor"
+                      value={formData.backgroundColor}
+                      onChange={handleInputChange}
+                      className="w-12 h-10 border border-slate-300 rounded-lg cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={formData.backgroundColor}
+                      readOnly
+                      className="flex-1 px-4 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-600"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Text Color
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      name="textColor"
+                      value={formData.textColor}
+                      onChange={handleInputChange}
+                      className="w-12 h-10 border border-slate-300 rounded-lg cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={formData.textColor}
+                      readOnly
+                      className="flex-1 px-4 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-600"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="isActive"
+                    checked={formData.isActive}
+                    onChange={handleInputChange}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm font-medium text-slate-700">Active</span>
+                </label>
+              </div>
+
+              {/* Preview */}
+              <div className="mt-6 p-4 rounded-lg" style={{ backgroundColor: formData.backgroundColor }}>
+                <p
+                  className="text-center font-bold text-sm md:text-base"
+                  style={{ color: formData.textColor }}
+                >
+                  ✨ Special Offer: Get {formData.discountPercentage}% OFF on your order today!
+                </p>
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <button
+                  type="submit"
+                  className="flex items-center gap-2 bg-slate-900 text-white px-6 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+                >
+                  <Save className="w-4 h-4" />
+                  {editingId ? 'Update' : 'Create'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="flex items-center gap-2 bg-slate-200 text-slate-900 px-6 py-2 rounded-lg hover:bg-slate-300 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Banners List */}
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
+          </div>
+        ) : banners.length === 0 ? (
+          <div className="bg-slate-50 rounded-lg p-12 text-center">
+            <p className="text-slate-600 mb-4">No banners found</p>
+            <button
+              onClick={() => setShowForm(true)}
+              className="bg-slate-900 text-white px-6 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+            >
+              Create First Banner
+            </button>
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {banners
+              .sort((a, b) => a.displayOrder - b.displayOrder)
+              .map((banner) => (
+                <div
+                  key={banner._id}
+                  className="bg-white rounded-lg shadow-md p-6 border border-slate-200"
+                  style={{ borderLeftColor: banner.backgroundColor || '#dc2626', borderLeftWidth: '4px' }}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <div
+                        className="p-4 rounded text-center font-bold text-sm md:text-base mb-3"
+                        style={{
+                          backgroundColor: banner.backgroundColor || '#dc2626',
+                          color: banner.textColor || '#ffffff'
+                        }}
+                      >
+                        ✨ Special Offer: Get {banner.discountPercentage}% OFF on your order today!
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <span className="text-slate-600">Discount:</span>
+                          <p className="font-semibold text-slate-900">{banner.discountPercentage}%</p>
+                        </div>
+                        <div>
+                          <span className="text-slate-600">Order:</span>
+                          <p className="font-semibold text-slate-900">{banner.displayOrder}</p>
+                        </div>
+                        <div>
+                          <span className="text-slate-600">Status:</span>
+                          <p className="font-semibold flex items-center gap-1">
+                            {banner.isActive ? (
+                              <>
+                                <Eye className="w-4 h-4" />
+                                <span className="text-green-600">Active</span>
+                              </>
+                            ) : (
+                              <>
+                                <EyeOff className="w-4 h-4" />
+                                <span className="text-slate-600">Inactive</span>
+                              </>
+                            )}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-slate-600">Colors:</span>
+                          <div className="flex gap-2">
+                            <div
+                              className="w-5 h-5 rounded border border-slate-300"
+                              style={{ backgroundColor: banner.backgroundColor || '#dc2626' }}
+                              title="Background"
+                            />
+                            <div
+                              className="w-5 h-5 rounded border border-slate-300"
+                              style={{ backgroundColor: banner.textColor || '#ffffff' }}
+                              title="Text"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 flex-col">
+                      <button
+                        onClick={() => handleEdit(banner)}
+                        className="flex items-center gap-1 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition-colors text-sm whitespace-nowrap"
+                      >
+                        <Edit className="w-4 h-4" />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(banner._id)}
+                        className="flex items-center gap-1 bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700 transition-colors text-sm whitespace-nowrap"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
+      </div>
+    </AdminLayout>
+  );
+}

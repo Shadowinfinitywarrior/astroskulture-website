@@ -28,6 +28,8 @@ import userRoutes from './routes/users.js';
 import categoryRoutes from './routes/categories.js';
 import adminRoutes from './routes/admin.js';
 import wishlistRoutes from './routes/wishlist.js'; // ADDED WISHLIST ROUTES
+import blogRoutes from './routes/blogs.js'; // ADDED BLOG ROUTES
+import bannerRoutes from './routes/banners.js'; // ADDED BANNER ROUTES
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -144,6 +146,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/wishlist', wishlistRoutes); // ADDED WISHLIST ROUTES
+app.use('/api/blogs', blogRoutes); // ADDED BLOG ROUTES
+app.use('/api/banners', bannerRoutes); // ADDED BANNER ROUTES
 
 // Serve static files from React build in production
 if (process.env.NODE_ENV === 'production') {
@@ -281,6 +285,21 @@ app.get('/api', (req, res) => {
         add: 'POST /api/wishlist',
         remove: 'DELETE /api/wishlist/:productId',
         check: 'GET /api/wishlist/check/:productId'
+      },
+      blogs: { // ADDED BLOG ENDPOINTS
+        list: 'GET /api/blogs',
+        get: 'GET /api/blogs/:slug',
+        create: 'POST /api/blogs',
+        update: 'PUT /api/blogs/:id',
+        delete: 'DELETE /api/blogs/:id',
+        adminAll: 'GET /api/blogs/admin/all'
+      },
+      banners: { // ADDED BANNER ENDPOINTS
+        list: 'GET /api/banners',
+        adminAll: 'GET /api/banners/admin/all',
+        create: 'POST /api/banners',
+        update: 'PUT /api/banners/:id',
+        delete: 'DELETE /api/banners/:id'
       }
     },
     authentication: {
@@ -318,6 +337,8 @@ app.use('*', (req, res) => {
       '/api/categories',
       '/api/admin',
       '/api/wishlist', // ADDED WISHLIST ROUTE
+      '/api/blogs', // ADDED BLOG ROUTE
+      '/api/banners', // ADDED BANNER ROUTE
       '/api/health'
     ]
   });
@@ -346,6 +367,8 @@ app.listen(PORT, () => {
   console.log('   CATEGORIES /api/categories');
   console.log('   ADMIN      /api/admin');
   console.log('   WISHLIST   /api/wishlist'); // ADDED WISHLIST ROUTE
+  console.log('   BLOGS      /api/blogs'); // ADDED BLOG ROUTE
+  console.log('   BANNERS    /api/banners'); // ADDED BANNER ROUTE
   console.log('═'.repeat(60));
   console.log('🔐 Protected Routes (require JWT):');
   console.log('   • /api/orders/*');
@@ -353,6 +376,8 @@ app.listen(PORT, () => {
   console.log('   • /api/users/address');
   console.log('   • /api/admin/*');
   console.log('   • /api/wishlist/*'); // ADDED WISHLIST PROTECTED ROUTES
+  console.log('   • /api/blogs (POST/PUT/DELETE)'); // ADDED BLOG PROTECTED ROUTES
+  console.log('   • /api/banners (POST/PUT/DELETE)'); // ADDED BANNER PROTECTED ROUTES
   console.log('═'.repeat(60));
   
   // Additional production info

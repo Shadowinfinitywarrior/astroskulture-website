@@ -81,6 +81,16 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
               Shop
             </button>
             <button
+              onClick={() => handleNavigation('blog')}
+              className={`font-medium transition-colors ${
+                currentPage === 'blog' || currentPage === 'blog-detail'
+                  ? 'text-red-600'
+                  : 'text-gray-700 hover:text-red-600'
+              }`}
+            >
+              Blog
+            </button>
+            <button
               onClick={() => handleNavigation('categories')}
               className={`font-medium transition-colors ${
                 currentPage === 'categories'
@@ -253,6 +263,12 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
               className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
             >
               Shop
+            </button>
+            <button
+              onClick={() => handleNavigation('blog')}
+              className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+            >
+              Blog
             </button>
             <button
               onClick={() => handleNavigation('categories')}
