@@ -38,23 +38,24 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Logo */}
           <button
             onClick={() => handleNavigation('home')}
-            className="flex items-center space-x-2 group"
+            className="flex items-center space-x-1 sm:space-x-2 group"
           >
             {/* Circular Logo */}
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-red-600 flex items-center justify-center bg-white">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-red-600 flex items-center justify-center bg-white flex-shrink-0">
               <img 
                 src="/logo.png" 
                 alt="Astros Kulture Logo" 
-                className="w-8 h-8 object-contain"
+                className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
               />
             </div>
-            <span className="text-xl font-bold text-gray-900 group-hover:text-red-600 transition-colors">
-              ASTROSKULTURE
+            <span className="text-base sm:text-lg md:text-xl font-bold text-gray-900 group-hover:text-red-600 transition-colors truncate">
+              <span className="sm:hidden">ASTRO</span>
+              <span className="hidden sm:inline">ASTROSKULTURE</span>
             </span>
           </button>
 
@@ -103,25 +104,25 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
           </div>
 
           {/* User Actions */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1 sm:space-x-4">
             {/* Search */}
             <button 
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors"
               title="Search"
             >
-              <Search className="w-5 h-5 text-gray-700" />
+              <Search className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
             </button>
 
             {/* Wishlist */}
             {user && (
               <button
                 onClick={() => handleNavigation('wishlist')}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors relative"
+                className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors relative"
                 title="Wishlist"
               >
-                <Heart className="w-5 h-5 text-gray-700" />
+                <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
                 {wishlistCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
+                  <span className="absolute -top-0.5 -right-0.5 bg-red-600 text-white text-xs w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center font-medium text-xs">
                     {wishlistCount > 99 ? '99+' : wishlistCount}
                   </span>
                 )}
@@ -131,12 +132,12 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
             {/* Cart */}
             <button
               onClick={() => handleNavigation('cart')}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors relative"
+              className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors relative"
               title="Shopping Cart"
             >
-              <ShoppingCart className="w-5 h-5 text-gray-700" />
+              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
+                <span className="absolute -top-0.5 -right-0.5 bg-red-600 text-white text-xs w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center font-medium text-xs">
                   {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
@@ -146,10 +147,10 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
             <div className="relative">
               <button 
                 onClick={handleUserMenuClick}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors flex items-center space-x-1"
+                className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors flex items-center space-x-1"
                 title="User Menu"
               >
-                <User className="w-5 h-5 text-gray-700" />
+                <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
               </button>
               
               {isUserMenuOpen && (
@@ -235,13 +236,13 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="md:hidden p-1.5 hover:bg-gray-100 rounded-full transition-colors"
               title="Menu"
             >
               {isMenuOpen ? (
-                <X className="w-5 h-5 text-gray-700" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
               ) : (
-                <Menu className="w-5 h-5 text-gray-700" />
+                <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
               )}
             </button>
           </div>
@@ -250,29 +251,29 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden border-t border-gray-200 bg-white">
-          <div className="px-4 py-4 space-y-1">
+        <div className="md:hidden border-t border-gray-200 bg-white max-h-[calc(100vh-70px)] overflow-y-auto">
+          <div className="px-3 py-2 space-y-1">
             <button
               onClick={() => handleNavigation('home')}
-              className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+              className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
             >
               Home
             </button>
             <button
               onClick={() => handleNavigation('shop')}
-              className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+              className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
             >
               Shop
             </button>
             <button
               onClick={() => handleNavigation('blog')}
-              className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+              className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
             >
               Blog
             </button>
             <button
               onClick={() => handleNavigation('categories')}
-              className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+              className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
             >
               Categories
             </button>
@@ -283,19 +284,19 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
                 <div className="border-t border-gray-200 my-2"></div>
                 <button
                   onClick={() => handleNavigation('account')}
-                  className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+                  className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
                 >
                   My Account
                 </button>
                 <button
                   onClick={() => handleNavigation('orders')}
-                  className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+                  className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
                 >
                   My Orders
                 </button>
                 <button
                   onClick={() => handleNavigation('wishlist')}
-                  className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium flex items-center justify-between"
+                  className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium flex items-center justify-between"
                 >
                   <span>My Wishlist</span>
                   {wishlistCount > 0 && (
@@ -307,7 +308,7 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
                 {isAdmin && (
                   <button
                     onClick={() => handleNavigation('admin-dashboard')}
-                    className="block w-full text-left px-4 py-3 text-purple-700 hover:bg-purple-50 rounded-lg transition-colors font-medium"
+                    className="block w-full text-left px-3 py-2 text-sm text-purple-700 hover:bg-purple-50 rounded-lg transition-colors font-medium"
                   >
                     Admin Dashboard
                   </button>
@@ -321,13 +322,13 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
                 <div className="border-t border-gray-200 my-2"></div>
                 <button
                   onClick={() => handleNavigation('login')}
-                  className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+                  className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
                 >
                   Sign In
                 </button>
                 <button
                   onClick={() => handleNavigation('register')}
-                  className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+                  className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
                 >
                   Create Account
                 </button>

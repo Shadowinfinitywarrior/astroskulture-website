@@ -195,25 +195,20 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm py-8 mb-8">
-        <div className="max-w-7xl mx-auto px-4">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">Shop All Products</h1>
-          <p className="text-gray-600">Discover our complete collection</p>
-        </div>
+      <div className="max-w-7xl mx-auto px-4 py-4">
+        {/* Mobile Filter Toggle Button - Small at Top Left */}
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="md:hidden flex items-center justify-center gap-2 bg-red-600 text-white py-2 px-3 rounded-lg hover:bg-red-700 transition-colors font-semibold text-sm mb-4"
+          title={showFilters ? 'Hide Filters' : 'Show Filters'}
+        >
+          <SlidersHorizontal className="w-4 h-4" />
+          {showFilters ? 'Hide' : 'Filters'}
+        </button>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 pb-16">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Mobile Filter Toggle Button */}
-          <div className="md:hidden mb-4">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="w-full flex items-center justify-center gap-2 bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 transition-colors font-semibold"
-            >
-              <SlidersHorizontal className="w-5 h-5" />
-              {showFilters ? 'Hide Filters' : 'Show Filters'}
-            </button>
-          </div>
 
           {/* Filters Sidebar - Hidden on Mobile, Shown on Desktop */}
           <aside className={`${showFilters ? 'block' : 'hidden'} md:block w-full md:w-64 space-y-6`}>
@@ -323,25 +318,6 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
 
           {/* Products Grid */}
           <main className="flex-1">
-            <div className="bg-white p-4 rounded-lg shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <p className="text-gray-600">
-                Showing <span className="font-semibold">{products.length}</span> products
-                {selectedCategory && (
-                  <> in <span className="font-semibold">{categories.find(c => c.slug === selectedCategory)?.name}</span></>
-                )}
-              </p>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-red-600"
-              >
-                <option value="featured">Featured</option>
-                <option value="price_low">Price: Low to High</option>
-                <option value="price_high">Price: High to Low</option>
-                <option value="rating">Highest Rated</option>
-                <option value="newest">Newest First</option>
-              </select>
-            </div>
 
             {loading ? (
               <div className="flex justify-center items-center h-64">
@@ -357,12 +333,12 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                     const isWishlistLoading = wishlistLoading === product._id;
                     
                     return (
-                      <div key={product._id} className="bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
-                      <div className="relative overflow-hidden">
+                      <div key={product._id} className="bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition-shadow h-full flex flex-col">
+                      <div className="relative overflow-hidden flex-shrink-0">
                         <img
                           src={getProductImage(product)}
                           alt={product.images[0]?.alt || product.name}
-                          className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer"
+                          className="w-full h-48 md:h-72 object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer"
                           onClick={() => handleProductClick(product)}
                         />
                         {hasDiscount(product) && (
@@ -409,19 +385,19 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                           )}
                         </button>
                       </div>
-                      <div className="p-4">
+                      <div className="p-3 md:p-4 flex flex-col flex-grow">
                         <h3 
                           onClick={() => handleProductClick(product)}
-                          className="font-semibold text-gray-900 mb-2 cursor-pointer hover:text-red-600 transition-colors line-clamp-2"
+                          className="font-semibold text-sm md:text-base text-gray-900 mb-2 cursor-pointer hover:text-red-600 transition-colors line-clamp-2"
                         >
                           {product.name}
                         </h3>
-                        <div className="flex items-center space-x-1 mb-3">
+                        <div className="flex items-center space-x-1 mb-2">
                           <div className="flex items-center">
                             {[...Array(5)].map((_, i) => (
                               <Star
                                 key={i}
-                                className={`w-4 h-4 ${
+                                className={`w-3 h-3 md:w-4 md:h-4 ${
                                   i < Math.floor(product.rating || 0)
                                     ? 'text-yellow-400 fill-yellow-400'
                                     : 'text-gray-300'
@@ -429,43 +405,44 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                               />
                             ))}
                           </div>
-                          <span className="text-sm font-medium text-gray-700">{(product.rating || 0).toFixed(1)}</span>
-                          <span className="text-sm text-gray-500">({product.reviewCount || 0})</span>
+                          <span className="text-xs md:text-sm font-medium text-gray-700">{(product.rating || 0).toFixed(1)}</span>
+                          <span className="text-xs md:text-sm text-gray-500">({product.reviewCount || 0})</span>
                         </div>
-                        <div className="flex items-center justify-between mb-3">
+                        <div className="flex-grow mb-3">
                           <div className="flex items-baseline space-x-2">
                             {hasDiscount(product) ? (
                               <div className="flex items-center space-x-2">
-                                <span className="text-lg font-bold text-red-600">
+                                <span className="text-base md:text-lg font-bold text-red-600">
                                   ₹{formatPrice(product.discountPrice!)}
                                 </span>
-                                <span className="text-sm text-gray-500 line-through">
+                                <span className="text-xs md:text-sm text-gray-500 line-through">
                                   ₹{formatPrice(product.price)}
                                 </span>
                               </div>
                             ) : (
-                              <span className="text-lg font-bold text-gray-900">₹{formatPrice(getDisplayPrice(product))}</span>
+                              <span className="text-base md:text-lg font-bold text-gray-900">₹{formatPrice(getDisplayPrice(product))}</span>
                             )}
                           </div>
-                          <button
-                            onClick={() => handleAddToCart(product)}
-                            disabled={product.totalStock === 0}
-                            className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                            title={product.totalStock === 0 ? 'Out of Stock' : 'Add to Cart'}
-                          >
-                            <ShoppingCart className="w-5 h-5" />
-                          </button>
                         </div>
                         <div className="flex flex-wrap gap-1 mb-2">
-                          {getAvailableSizes(product).map(size => (
-                            <span key={size} className="text-xs bg-gray-100 px-2 py-1 rounded">
+                          {getAvailableSizes(product).slice(0, 3).map(size => (
+                            <span key={size} className="text-xs bg-gray-100 px-2 py-0.5 rounded">
                               {size}
                             </span>
                           ))}
                         </div>
                         {product.totalStock > 0 && product.totalStock < 10 && (
-                          <p className="text-orange-600 text-sm">Only {product.totalStock} left in stock</p>
+                          <p className="text-orange-600 text-xs mb-2">Only {product.totalStock} left</p>
                         )}
+                        <button
+                          onClick={() => handleAddToCart(product)}
+                          disabled={product.totalStock === 0}
+                          className="w-full p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium text-sm"
+                          title={product.totalStock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                        >
+                          <ShoppingCart className="w-4 h-4 inline mr-1" />
+                          Add to Cart
+                        </button>
                       </div>
                     </div>
                     );
