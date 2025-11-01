@@ -43,19 +43,18 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
           {/* Logo */}
           <button
             onClick={() => handleNavigation('home')}
-            className="flex items-center space-x-1 sm:space-x-2 group"
+            className="flex items-center gap-1 sm:gap-2 group min-w-0"
           >
             {/* Circular Logo */}
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-red-600 flex items-center justify-center bg-white flex-shrink-0">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden border-2 border-red-600 flex items-center justify-center bg-white flex-shrink-0">
               <img 
                 src="/logo.png" 
                 alt="Astros Kulture Logo" 
-                className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
+                className="w-6 h-6 sm:w-7 sm:h-7 object-contain"
               />
             </div>
-            <span className="text-base sm:text-lg md:text-xl font-bold text-gray-900 group-hover:text-red-600 transition-colors truncate">
-              <span className="sm:hidden">ASTRO</span>
-              <span className="hidden sm:inline">ASTROSKULTURE</span>
+            <span className="text-xs sm:text-sm md:text-base font-bold text-gray-900 group-hover:text-red-600 transition-colors truncate">
+              ASTROSKULTURE
             </span>
           </button>
 
@@ -104,7 +103,7 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
           </div>
 
           {/* User Actions */}
-          <div className="flex items-center space-x-1 sm:space-x-4">
+          <div className="flex items-center gap-0.5 sm:gap-2">
             {/* Search */}
             <button 
               className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors"

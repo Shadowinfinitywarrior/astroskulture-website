@@ -341,37 +341,41 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                           className="w-full h-48 md:h-72 object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer"
                           onClick={() => handleProductClick(product)}
                         />
-                        {hasDiscount(product) && (
-                          <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                            {getDiscountPercentage(product)}% OFF
-                          </div>
-                        )}
-                        {product.isFeatured && (
-                          <div className="absolute top-4 right-4 bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                            Featured
-                          </div>
-                        )}
                         
-                        {/* Stock Status Badge */}
-                        {stockStatus === 'out-of-stock' && (
-                          <div className="absolute top-16 left-4 bg-gray-600 text-white px-2 py-1 rounded text-xs font-semibold">
-                            Out of Stock
-                          </div>
-                        )}
-                        {stockStatus === 'low-stock' && (
-                          <div className="absolute top-16 left-4 bg-orange-500 text-white px-2 py-1 rounded text-xs font-semibold">
-                            Low Stock
-                          </div>
-                        )}
+                        {/* Top Left Badge - Priority: Discount > Featured > Stock */}
+                        <div className="absolute top-2 left-2">
+                          {hasDiscount(product) ? (
+                            <div className="flex items-center gap-1">
+                              <div className="bg-red-600 text-white px-2.5 py-1 rounded-full text-xs sm:text-sm font-bold">
+                                {getDiscountPercentage(product)}%
+                              </div>
+                              <div className="bg-yellow-400 text-gray-900 px-2.5 py-1 rounded-full text-xs sm:text-sm font-bold">
+                                Featured
+                              </div>
+                            </div>
+                          ) : product.isFeatured ? (
+                            <div className="bg-yellow-400 text-gray-900 px-2.5 py-1 rounded-full text-xs sm:text-sm font-bold">
+                              Featured
+                            </div>
+                          ) : stockStatus === 'out-of-stock' ? (
+                            <div className="bg-gray-600 text-white px-2.5 py-1 rounded text-xs font-semibold">
+                              Out of Stock
+                            </div>
+                          ) : stockStatus === 'low-stock' ? (
+                            <div className="bg-orange-500 text-white px-2.5 py-1 rounded text-xs font-semibold">
+                              Low Stock
+                            </div>
+                          ) : null}
+                        </div>
                         
-                        {/* Wishlist Button */}
+                        {/* Top Right - Wishlist Button */}
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             handleWishlistToggle(product);
                           }}
                           disabled={isWishlistLoading}
-                          className={`absolute top-4 right-4 p-2 rounded-full shadow-md transition-colors ${
+                          className={`absolute top-2 right-2 p-2 rounded-full shadow-md transition-colors ${
                             isInWishlistState
                               ? 'bg-red-600 text-white hover:bg-red-700'
                               : 'bg-white text-gray-600 hover:bg-red-50 hover:text-red-600'
@@ -379,9 +383,9 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                           title={isInWishlistState ? 'Remove from Wishlist' : 'Add to Wishlist'}
                         >
                           {isWishlistLoading ? (
-                            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                            <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                           ) : (
-                            <Heart className={`w-5 h-5 ${isInWishlistState ? 'fill-current' : ''}`} />
+                            <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${isInWishlistState ? 'fill-current' : ''}`} />
                           )}
                         </button>
                       </div>
@@ -409,6 +413,13 @@ export function ShopPage({ onNavigate }: ShopPageProps) {
                           <span className="text-xs md:text-sm text-gray-500">({product.reviewCount || 0})</span>
                         </div>
                         <div className="flex-grow mb-3">
+                          {hasDiscount(product) && (
+                            <div className="flex items-center gap-1 mb-1">
+                              <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded font-semibold">
+                                ✓ Offer Price
+                              </span>
+                            </div>
+                          )}
                           <div className="flex items-baseline space-x-2">
                             {hasDiscount(product) ? (
                               <div className="flex items-center space-x-2">
