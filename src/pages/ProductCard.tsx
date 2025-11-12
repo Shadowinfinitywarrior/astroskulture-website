@@ -128,6 +128,8 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
             className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
               imageLoading ? 'opacity-0' : 'opacity-100'
             }`}
+            loading="lazy"
+            decoding="async"
             onLoad={handleImageLoad}
             onError={handleImageError}
           />

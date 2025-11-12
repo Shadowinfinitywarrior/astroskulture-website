@@ -68,6 +68,8 @@ function ProductCard({ product, onNavigate }: {
           alt={product.name}
           className="w-full h-48 md:h-64 object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
           onClick={() => onNavigate('product', { slug: product.slug || product._id })}
+          loading="lazy"
+          decoding="async"
         />
         
         {/* Bestseller Badge */}
@@ -268,7 +270,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
               <span className="text-lg md:text-2xl font-bold">ASTROS KULTURE</span>
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 leading-tight">
-              Everyday Hype
+              Streetwear From Another Universe
             </h1>
             <p className="text-sm md:text-lg mb-6 md:mb-8 text-gray-100 leading-relaxed">
               Step into Astros - where oversized meets attitude. A signature drop of oversized tees, customized tees, and premium cotton t-shirts built for all-day comfort and bold self-expression. Clean fits, premium fabric, and quality that speaks loud - Astros is more than style, it's a statement.
@@ -348,6 +350,8 @@ export function HomePage({ onNavigate }: HomePageProps) {
                   src={category.imageUrl || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}
                   alt={category.name}
                   className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
                   <div className="p-4 w-full">
@@ -377,6 +381,8 @@ export function HomePage({ onNavigate }: HomePageProps) {
                     src={category.imageUrl || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}
                     alt={category.name}
                     className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
                     <div className="p-2 w-full">
