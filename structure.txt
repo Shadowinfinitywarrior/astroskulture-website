@@ -1,0 +1,87 @@
+ASTRO-MAIN/
+├── 📁 backend/
+│   ├── 📁 src/
+│   │   ├── 📁 controllers/
+│   │   │   ├── authController.js
+│   │   │   ├── orderController.js
+│   │   │   ├── productController.js
+│   │   │   ├── userController.js
+│   │   │   └── wishlistController.js ✅
+│   │   ├── 📁 middleware/
+│   │   │   └── auth.js
+│   │   ├── 📁 models/
+│   │   │   ├── Admin.js
+│   │   │   ├── Category.js
+│   │   │   ├── Order.js
+│   │   │   ├── Payment.js
+│   │   │   ├── Product.js
+│   │   │   ├── Review.js
+│   │   │   ├── User.js
+│   │   │   └── Wishlist.js ✅
+│   │   ├── 📁 routes/
+│   │   │   ├── admin.js
+│   │   │   ├── auth.js
+│   │   │   ├── categories.js
+│   │   │   ├── orders.js
+│   │   │   ├── products.js
+│   │   │   ├── users.js
+│   │   │   └── wishlist.js ✅
+│   │   ├── 📁 scripts/
+│   │   │   └── seedData.js
+│   │   └── server.js
+│   ├── .env
+│   ├── package.json
+│   └── package-lock.json
+│
+├── 📁 src/
+│   ├── 📁 components/
+│   │   └── 📁 admin/
+│   │       ├── AdminLayout.tsx
+│   │       ├── Footer.tsx
+│   │       ├── Navbar.tsx
+│   │       └── ProductImageGallery.tsx
+│   ├── 📁 contexts/
+│   │   ├── AdminAuthContext.tsx
+│   │   ├── AuthContext.tsx
+│   │   ├── CartContext.tsx
+│   │   └── WishlistContext.tsx ✅
+│   ├── 📁 lib/
+│   │   ├── index.ts
+│   │   ├── mongodb.ts ✅ (Modified)
+│   │   └── types.ts ✅ (Modified)
+│   ├── 📁 pages/
+│   │   ├── 📁 admin/
+│   │   │   ├── AdminDashboardPage.tsx
+│   │   │   ├── AdminOrdersPage.tsx
+│   │   │   ├── AdminProductsPage.tsx
+│   │   │   └── AdminUsersPage.tsx
+│   │   ├── CartPage.tsx
+│   │   ├── CheckoutPage.tsx
+│   │   ├── HomePage.tsx
+│   │   ├── LoginPage.tsx
+│   │   ├── ProductPage.tsx ✅ (Modified)
+│   │   ├── ProductCard.tsx
+│   │   ├── RegisterPage.tsx
+│   │   ├── ShopPage.tsx ✅ (Modified)
+│   │   ├── UserAccountPage.tsx
+│   │   ├── UserOrdersPage.tsx
+│   │   └── WishlistPage.tsx ✅
+│   ├── App.tsx ✅ (Modified)
+│   ├── index.css
+│   ├── main.tsx
+│   └── vite-env.d.ts
+│
+├── .env.production
+├── .gitignore
+├── eslint.config.js
+├── index.html
+├── package.json
+├── package-lock.json
+├── postcss.config.js
+├── README.md
+├── structure.txt
+├── tailwind.config.js
+├── tsconfig.json
+├── tsconfig.app.json
+├── tsconfig.node.json
+└── vite.config.ts
