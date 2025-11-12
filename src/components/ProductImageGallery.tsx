@@ -67,6 +67,8 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
             className={`w-full h-full object-contain transition-transform duration-300 ${
               isZoomed ? 'scale-150 cursor-zoom-out' : 'scale-100'
             }`}
+            loading="lazy"
+            decoding="async"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.src = '/placeholder-image.jpg';
@@ -137,6 +139,8 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
                   src={image.url}
                   alt={image.alt || `${productName} thumbnail ${index + 1}`}
                   className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = '/placeholder-image.jpg';

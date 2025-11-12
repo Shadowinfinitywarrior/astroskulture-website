@@ -37,6 +37,7 @@ interface NavigationParams {
 function AppContent() {
   const [currentPage, setCurrentPage] = useState('home');
   const [pageParams, setPageParams] = useState<NavigationParams>({});
+  const [navigationHistory, setNavigationHistory] = useState<Array<{ page: string; params: NavigationParams }>>([]);
 
   useEffect(() => {
     const path = window.location.pathname;
@@ -61,8 +62,23 @@ function AppContent() {
     }
   }, []);
 
+  useEffect(() => {
+    const handlePopstate = () => {
+      if (navigationHistory.length > 0) {
+        const previousEntry = navigationHistory[navigationHistory.length - 1];
+        setCurrentPage(previousEntry.page);
+        setPageParams(previousEntry.params);
+        setNavigationHistory(prev => prev.slice(0, -1));
+      }
+    };
+
+    window.addEventListener('popstate', handlePopstate);
+    return () => window.removeEventListener('popstate', handlePopstate);
+  }, [navigationHistory]);
+
   const handleNavigate = (page: string, params?: NavigationParams) => {
     console.log('🔄 Navigation:', page, params);
+    setNavigationHistory(prev => [...prev, { page: currentPage, params: pageParams }]);
     setCurrentPage(page);
     setPageParams(params || {});
     window.scrollTo(0, 0);
@@ -78,7 +94,9 @@ function AppContent() {
         'admin-blogs': '/admin/blogs',
         'admin-analytics': '/admin/analytics',
       };
-      window.history.pushState({}, '', routes[page] || '/admin');
+      window.history.pushState({ page, params }, '', routes[page] || '/admin');
+    } else {
+      window.history.pushState({ page, params }, '', '/');
     }
   };
 

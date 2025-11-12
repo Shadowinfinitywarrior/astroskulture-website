@@ -66,7 +66,7 @@ export function LoadingSpinner({ fullScreen = false, size = 'md' }: LoadingSpinn
             width: config.orbitSize,
             height: config.orbitSize,
             borderRadius: '50%',
-            animation: 'spin-orbit 12s infinite linear'
+            animation: 'spin-orbit 5s infinite linear'
           }}
         >
           {/* Rocket - Positioned on orbit path */}
@@ -75,9 +75,10 @@ export function LoadingSpinner({ fullScreen = false, size = 'md' }: LoadingSpinn
             style={{
               right: '0',
               top: '50%',
-              transform: 'translateY(-50%)',
+              transform: 'translateY(-50%) rotate(0deg)',
               transformOrigin: 'center',
-              filter: 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.4))'
+              filter: 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.4))',
+              animation: 'counter-rotate 5s infinite linear'
             }}
           >
             <svg width="32" height="52" viewBox="0 0 32 52" style={{ filter: 'drop-shadow(0 0 4px rgba(239, 68, 68, 0.5))' }}>
@@ -269,6 +270,15 @@ export function LoadingSpinner({ fullScreen = false, size = 'md' }: LoadingSpinn
           }
           100% {
             transform: rotate(360deg);
+          }
+        }
+
+        @keyframes counter-rotate {
+          0% {
+            transform: translateY(-50%) rotate(0deg);
+          }
+          100% {
+            transform: translateY(-50%) rotate(-360deg);
           }
         }
 

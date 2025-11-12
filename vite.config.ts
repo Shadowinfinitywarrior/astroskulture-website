@@ -46,15 +46,23 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'dist', // Build to dist folder in root
-    sourcemap: false, // Disable source maps in production
-    emptyOutDir: true, // Clear dist folder before build
-    minify: 'terser', // Minify for production
+    outDir: 'dist',
+    sourcemap: false,
+    emptyOutDir: true,
+    minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true, // Remove console logs in production
+        drop_console: true,
       },
     },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor': ['react', 'react-dom', 'react-router-dom'],
+        },
+      },
+    },
+    assetsInlineLimit: 4096,
   },
   optimizeDeps: {
     exclude: ['lucide-react'],
