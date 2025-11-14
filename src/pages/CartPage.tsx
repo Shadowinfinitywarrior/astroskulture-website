@@ -10,7 +10,7 @@ export function CartPage({ onNavigate }: CartPageProps) {
 
   const subtotal = cartTotal;
   const gst = subtotal * 0.18;
-  const shipping = subtotal > 999 ? 0 : 50;
+  const shipping = subtotal > 999 ? 0 : 69;
   const total = subtotal + gst + shipping;
 
   if (items.length === 0) {

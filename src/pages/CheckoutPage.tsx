@@ -89,8 +89,8 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
         })),
         subtotal: cartTotal,
         tax: Math.round(cartTotal * 0.18), // 18% GST
-        shipping: cartTotal > 999 ? 0 : 50, // Free shipping above ₹999
-        total: cartTotal + Math.round(cartTotal * 0.18) + (cartTotal > 999 ? 0 : 50),
+        shipping: cartTotal > 999 ? 0 : 69, // Free shipping above ₹999
+        total: cartTotal + Math.round(cartTotal * 0.18) + (cartTotal > 999 ? 0 : 69),
         shippingAddress: {
           fullName: formData.fullName,
           address: formData.address,
@@ -139,7 +139,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
     }
   };
 
-  const shippingCost = cartTotal > 999 ? 0 : 50;
+  const shippingCost = cartTotal > 999 ? 0 : 69;
   const tax = Math.round(cartTotal * 0.18);
   const finalTotal = cartTotal + tax + shippingCost;
 

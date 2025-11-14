@@ -13,7 +13,7 @@ router.use(authenticateAdmin);
 // Admin products routes
 router.get('/products', async (req, res) => {
   try {
-    const products = await Product.find()
+    const products = await Product.find({ isActive: true })
       .populate({
         path: 'category',
         select: 'name slug'
@@ -167,11 +167,7 @@ router.put('/products/:id', async (req, res) => {
 
 router.delete('/products/:id', async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      { isActive: false, updatedAt: Date.now() },
-      { new: true }
-    );
+    const product = await Product.findByIdAndDelete(req.params.id);
 
     if (!product) {
       return res.status(404).json({
@@ -397,7 +393,6 @@ router.post('/users', async (req, res) => {
 
     // Return user without password
     const userWithoutPassword = await User.findById(user._id).select('-password');
-    
     res.status(201).json({
       success: true,
       data: userWithoutPassword
