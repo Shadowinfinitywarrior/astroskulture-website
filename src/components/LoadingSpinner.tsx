@@ -75,7 +75,7 @@ export function LoadingSpinner({ fullScreen = false, size = 'md' }: LoadingSpinn
             style={{
               right: '0',
               top: '50%',
-              transform: 'translateY(-50%) rotate(0deg)',
+              transform: 'translateY(-50%) rotate(-90deg)',
               transformOrigin: 'center',
               filter: 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.4))',
               animation: 'counter-rotate 5s infinite linear'
@@ -275,10 +275,10 @@ export function LoadingSpinner({ fullScreen = false, size = 'md' }: LoadingSpinn
 
         @keyframes counter-rotate {
           0% {
-            transform: translateY(50%) rotate(0deg);
+            transform: translateY(-50%) rotate(-90deg);
           }
           100% {
-            transform: translateY(50%) rotate(-360deg);
+            transform: translateY(-50%) rotate(270deg);
           }
         }
 

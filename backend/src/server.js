@@ -16,6 +16,8 @@ const __dirname = path.dirname(__filename);
 console.log('🔧 Environment Variables Check:');
 console.log('MONGODB_URI:', process.env.MONGODB_URI ? '✓ Loaded' : '✗ MISSING');
 console.log('JWT_SECRET:', process.env.JWT_SECRET ? '✓ Loaded' : '✗ MISSING');
+console.log('RAZORPAY_KEY_ID:', process.env.RAZORPAY_KEY_ID ? '✓ Loaded' : '✗ MISSING');
+console.log('RAZORPAY_SECRET_KEY:', process.env.RAZORPAY_SECRET_KEY ? '✓ Loaded' : '✗ MISSING');
 console.log('PORT:', process.env.PORT || '5000 (default)');
 console.log('NODE_ENV:', process.env.NODE_ENV || 'development (default)');
 console.log('CLIENT_URL:', process.env.CLIENT_URL || 'Not set');
@@ -32,6 +34,7 @@ import blogRoutes from './routes/blogs.js'; // ADDED BLOG ROUTES
 import bannerRoutes from './routes/banners.js'; // ADDED BANNER ROUTES
 import analyticsRoutes from './routes/analytics.js'; // ADDED ANALYTICS ROUTES
 import reviewRoutes from './routes/reviews.js'; // ADDED REVIEW ROUTES
+import paymentRoutes from './routes/payments.js'; // ADDED PAYMENT ROUTES
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -154,6 +157,7 @@ app.use('/api/blogs', blogRoutes); // ADDED BLOG ROUTES
 app.use('/api/reviews', reviewRoutes); // ADDED REVIEW ROUTES
 app.use('/api/banners', bannerRoutes); // ADDED BANNER ROUTES
 app.use('/api/analytics', analyticsRoutes); // ADDED ANALYTICS ROUTES
+app.use('/api/payments', paymentRoutes); // ADDED PAYMENT ROUTES
 
 // Serve static files from React build in production
 if (process.env.NODE_ENV === 'production') {
@@ -219,7 +223,8 @@ app.get('/api/health', (req, res) => {
       users: '/api/users',
       categories: '/api/categories',
       admin: '/api/admin',
-      wishlist: '/api/wishlist' // ADDED WISHLIST ROUTE
+      wishlist: '/api/wishlist', // ADDED WISHLIST ROUTE
+      payments: '/api/payments' // ADDED PAYMENT ROUTE
     }
   });
 });
@@ -309,6 +314,12 @@ app.get('/api', (req, res) => {
         create: 'POST /api/banners',
         update: 'PUT /api/banners/:id',
         delete: 'DELETE /api/banners/:id'
+      },
+      payments: { // ADDED PAYMENT ENDPOINTS
+        createOrder: 'POST /api/payments/create-order',
+        verify: 'POST /api/payments/verify',
+        handleFailure: 'POST /api/payments/failure',
+        getDetails: 'GET /api/payments/details/:paymentId'
       }
     },
     authentication: {
@@ -349,6 +360,7 @@ app.use('*', (req, res) => {
       '/api/blogs', // ADDED BLOG ROUTE
       '/api/banners', // ADDED BANNER ROUTE
       '/api/analytics', // ADDED ANALYTICS ROUTE
+      '/api/payments', // ADDED PAYMENT ROUTE
       '/api/health'
     ]
   });
@@ -380,6 +392,7 @@ app.listen(PORT, () => {
   console.log('   BLOGS      /api/blogs'); // ADDED BLOG ROUTE
   console.log('   BANNERS    /api/banners'); // ADDED BANNER ROUTE
   console.log('   ANALYTICS  /api/analytics'); // ADDED ANALYTICS ROUTE
+  console.log('   PAYMENTS   /api/payments'); // ADDED PAYMENT ROUTE
   console.log('═'.repeat(60));
   console.log('🔐 Protected Routes (require JWT):');
   console.log('   • /api/orders/*');
@@ -390,6 +403,7 @@ app.listen(PORT, () => {
   console.log('   • /api/blogs (POST/PUT/DELETE)'); // ADDED BLOG PROTECTED ROUTES
   console.log('   • /api/banners (POST/PUT/DELETE)'); // ADDED BANNER PROTECTED ROUTES
   console.log('   • /api/analytics/* (admin only)'); // ADDED ANALYTICS PROTECTED ROUTES
+  console.log('   • /api/payments/*'); // ADDED PAYMENT PROTECTED ROUTES
   console.log('═'.repeat(60));
   
   // Additional production info
