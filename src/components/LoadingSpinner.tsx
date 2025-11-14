@@ -275,28 +275,28 @@ export function LoadingSpinner({ fullScreen = false, size = 'md' }: LoadingSpinn
 
         @keyframes counter-rotate {
           0% {
-            transform: translateY(-50%) rotate(0deg);
+            transform: translateY(50%) rotate(0deg);
           }
           100% {
-            transform: translateY(-50%) rotate(-360deg);
+            transform: translateY(50%) rotate(-360deg);
           }
         }
 
         @keyframes flame-flicker-enhanced {
           0% {
-            transform: translateX(-50%) scaleY(0.85) scaleX(0.9);
+            transform: translateX(50%) scaleY(0.85) scaleX(0.9);
             opacity: 1;
           }
           40% {
-            transform: translateX(-50%) scaleY(1.2) scaleX(1.05);
+            transform: translateX(50%) scaleY(1.2) scaleX(1.05);
             opacity: 0.95;
           }
           70% {
-            transform: translateX(-50%) scaleY(1.4) scaleX(1.15);
+            transform: translateX(50%) scaleY(1.4) scaleX(1.15);
             opacity: 0.9;
           }
           100% {
-            transform: translateX(-50%) scaleY(1.1) scaleX(0.95);
+            transform: translateX(50%) scaleY(1.1) scaleX(0.95);
             opacity: 0.8;
           }
         }
