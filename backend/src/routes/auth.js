@@ -307,6 +307,13 @@ router.post('/register', async (req, res) => {
       });
     }
 
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters'
+      });
+    }
+
     if (!dateOfBirth || !securityQuestion || !securityAnswer) {
       return res.status(400).json({
         success: false,
@@ -314,7 +321,7 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -323,13 +330,13 @@ router.post('/register', async (req, res) => {
     }
 
     const user = new User({
-      email,
+      email: email.toLowerCase().trim(),
       password,
-      fullName,
-      phone,
-      dateOfBirth,
-      securityQuestion,
-      securityAnswer
+      fullName: fullName.trim(),
+      phone: phone ? phone.trim() : '',
+      dateOfBirth: new Date(dateOfBirth),
+      securityQuestion: securityQuestion.trim(),
+      securityAnswer: securityAnswer.toLowerCase().trim()
     });
 
     await user.save();
@@ -358,9 +365,21 @@ router.post('/register', async (req, res) => {
     });
   } catch (error) {
     console.error('User registration error:', error);
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email already registered'
+      });
+    }
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        message: Object.values(error.errors).map(e => e.message).join(', ')
+      });
+    }
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: 'Server error: ' + error.message
     });
   }
 });
