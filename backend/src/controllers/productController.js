@@ -21,10 +21,23 @@ export const getAllProducts = async (req, res) => {
     
     // Filter by category slug
     if (category && category !== 'all') {
-      const categoryDoc = await Category.findOne({ slug: category, isActive: true });
+      // Normalize the category slug (handle spaces and special characters)
+      const normalizedSlug = category.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      
+      console.log('🔍 Searching for category:', { original: category, normalized: normalizedSlug });
+      
+      // Try exact match first, then normalized match
+      let categoryDoc = await Category.findOne({ slug: category, isActive: true });
+      
+      if (!categoryDoc && category !== normalizedSlug) {
+        categoryDoc = await Category.findOne({ slug: normalizedSlug, isActive: true });
+      }
+      
       if (categoryDoc) {
+        console.log('✅ Found category:', categoryDoc.name, 'ID:', categoryDoc._id);
         query.category = categoryDoc._id;
       } else {
+        console.log('❌ Category not found:', category);
         // If category not found, return empty results
         return res.json({
           success: true,
