@@ -1,6 +1,7 @@
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import Order from '../models/Order.js';
+import Product from '../models/Product.js';
 
 const validateRazorpayConfig = () => {
   if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_SECRET_KEY) {
@@ -98,31 +99,7 @@ export const verifyPayment = async (req, res) => {
       });
     }
 
-    const body = `${razorpayOrderId}|${razorpayPaymentId}`;
-    const expectedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_SECRET_KEY)
-      .update(body)
-      .digest('hex');
-
-    if (expectedSignature !== razorpaySignature) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid payment signature'
-      });
-    }
-
-    const order = await Order.findByIdAndUpdate(
-      orderId,
-      {
-        paymentStatus: 'paid',
-        paymentId: razorpayPaymentId,
-        updatedAt: Date.now()
-      },
-      { new: true }
-    )
-      .populate('userId', 'email fullName phone')
-      .populate('items.productId', 'name images');
-
+    const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -130,10 +107,69 @@ export const verifyPayment = async (req, res) => {
       });
     }
 
+    if (order.paymentStatus === 'paid') {
+      return res.status(400).json({
+        success: false,
+        message: 'Payment already processed for this order'
+      });
+    }
+
+    const body = `${razorpayOrderId}|${razorpayPaymentId}`;
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_SECRET_KEY)
+      .update(body)
+      .digest('hex');
+
+    if (expectedSignature !== razorpaySignature) {
+      console.warn('❌ Invalid signature for order:', orderId);
+      console.warn('Expected:', expectedSignature);
+      console.warn('Received:', razorpaySignature);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment signature - payment verification failed'
+      });
+    }
+
+    const razorpay = getRazorpayInstance();
+    const paymentDetails = await razorpay.payments.fetch(razorpayPaymentId);
+
+    if (paymentDetails.amount !== Math.round(order.total * 100)) {
+      console.error('❌ Amount mismatch for order:', orderId);
+      console.error('Expected:', order.total * 100);
+      console.error('Received:', paymentDetails.amount);
+      return res.status(400).json({
+        success: false,
+        message: 'Payment amount does not match order total'
+      });
+    }
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      orderId,
+      {
+        paymentStatus: 'paid',
+        paymentId: razorpayPaymentId,
+        razorpayOrderId: razorpayOrderId,
+        status: 'processing',
+        updatedAt: Date.now()
+      },
+      { new: true }
+    )
+      .populate('userId', 'email fullName phone')
+      .populate('items.productId', 'name images');
+
+    if (!updatedOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found after update'
+      });
+    }
+
+    console.log('✅ Payment verified successfully for order:', orderId);
+
     res.json({
       success: true,
       message: 'Payment verified successfully',
-      data: order
+      data: updatedOrder
     });
   } catch (error) {
     console.error('Error verifying payment:', error);
@@ -156,16 +192,8 @@ export const handlePaymentFailure = async (req, res) => {
       });
     }
 
-    const order = await Order.findByIdAndUpdate(
-      orderId,
-      {
-        paymentStatus: 'failed',
-        paymentId: razorpayPaymentId || null,
-        updatedAt: Date.now()
-      },
-      { new: true }
-    );
-
+    const order = await Order.findById(orderId);
+    
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -173,10 +201,44 @@ export const handlePaymentFailure = async (req, res) => {
       });
     }
 
+    if (order.paymentStatus === 'paid') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot mark as failed - payment already processed'
+      });
+    }
+
+    await Order.findByIdAndUpdate(
+      orderId,
+      {
+        paymentStatus: 'failed',
+        paymentId: razorpayPaymentId || null,
+        status: 'cancelled',
+        updatedAt: Date.now()
+      },
+      { new: true }
+    );
+
+    console.log('❌ Payment failure recorded for order:', orderId, 'Reason:', reason);
+
+    for (const item of order.items) {
+      const product = await Product.findById(item.productId);
+      if (product) {
+        const sizeIndex = product.sizes?.findIndex(s => s.size === item.size);
+        if (sizeIndex !== -1) {
+          product.sizes[sizeIndex].stock += item.quantity;
+          await product.save();
+          console.log(`✅ Restored stock for ${product.name} (size: ${item.size}): +${item.quantity}`);
+        }
+      }
+    }
+
+    const updatedOrder = await Order.findById(orderId);
+
     res.json({
       success: true,
-      message: 'Payment failure recorded',
-      data: order
+      message: 'Payment failure recorded and stock restored',
+      data: updatedOrder
     });
   } catch (error) {
     console.error('Error handling payment failure:', error);
@@ -190,75 +252,118 @@ export const handlePaymentFailure = async (req, res) => {
 
 export const handlePaymentWebhook = async (req, res) => {
   try {
-    const { payload } = req.body;
-    
-    if (!payload) {
-      return res.status(400).json({
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_SECRET_KEY;
+    const signature = req.headers['x-razorpay-signature'];
+    const body = req.rawBody || JSON.stringify(req.body);
+
+    if (!signature || !webhookSecret) {
+      console.warn('❌ Missing webhook signature or secret');
+      return res.status(401).json({
         success: false,
-        message: 'Webhook payload is required'
+        message: 'Invalid webhook'
       });
     }
 
-    const event = payload.payment?.entity || {};
-    const razorpayOrderId = event.order_id;
-    const razorpayPaymentId = event.id;
-    const razorpaySignature = req.headers['x-razorpay-signature'];
+    const expectedSignature = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(body)
+      .digest('hex');
+
+    if (expectedSignature !== signature) {
+      console.warn('❌ Invalid webhook signature - mismatch');
+      console.warn('Expected:', expectedSignature);
+      console.warn('Received:', signature);
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid webhook signature'
+      });
+    }
+
+    const { event, payload } = req.body;
+
+    if (!event || !payload) {
+      console.warn('❌ Webhook missing event or payload');
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid webhook payload'
+      });
+    }
+
+    const paymentEntity = payload.payment?.entity;
+
+    if (!paymentEntity) {
+      console.warn('❌ Webhook missing payment entity');
+      return res.status(400).json({
+        success: false,
+        message: 'Missing payment details'
+      });
+    }
+
+    const razorpayOrderId = paymentEntity.order_id;
+    const razorpayPaymentId = paymentEntity.id;
+    const paymentStatusRaw = paymentEntity.status;
 
     if (!razorpayOrderId || !razorpayPaymentId) {
-      console.warn('Incomplete webhook data:', { razorpayOrderId, razorpayPaymentId });
+      console.warn('❌ Incomplete webhook payment data:', { razorpayOrderId, razorpayPaymentId });
       return res.status(400).json({
         success: false,
         message: 'Incomplete payment data'
       });
     }
 
-    const body = razorpayOrderId + '|' + razorpayPaymentId;
-    const expectedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_SECRET_KEY)
-      .update(body)
-      .digest('hex');
+    let paymentStatus = 'pending';
+    if (paymentStatusRaw === 'captured' || event === 'payment.authorized') {
+      paymentStatus = 'paid';
+    } else if (paymentStatusRaw === 'failed' || event === 'payment.failed') {
+      paymentStatus = 'failed';
+    }
 
-    if (expectedSignature !== razorpaySignature) {
-      console.warn('Invalid webhook signature');
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid webhook signature'
+    const order = await Order.findOne({ razorpayOrderId });
+    
+    if (!order) {
+      console.warn('⚠️  Order not found for webhook:', razorpayOrderId);
+      return res.status(200).json({
+        success: true,
+        message: 'Webhook received - order not found in DB (might sync later)'
       });
     }
 
-    const paymentStatus = event.status === 'captured' ? 'paid' : event.status === 'failed' ? 'failed' : 'pending';
+    if (order.paymentStatus === 'paid' && paymentStatus === 'paid') {
+      console.log('ℹ️  Duplicate webhook received for paid order:', razorpayOrderId);
+      return res.status(200).json({
+        success: true,
+        message: 'Webhook already processed'
+      });
+    }
 
-    const order = await Order.findOneAndUpdate(
-      { 'razorpayOrderId': razorpayOrderId },
+    const updatedOrder = await Order.findOneAndUpdate(
+      { razorpayOrderId },
       {
         paymentStatus,
         paymentId: razorpayPaymentId,
+        status: paymentStatus === 'paid' ? 'processing' : 'pending',
         updatedAt: Date.now()
       },
       { new: true }
-    );
-
-    if (!order) {
-      console.warn('Order not found for webhook:', razorpayOrderId);
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found'
-      });
-    }
+    )
+      .populate('userId', 'email fullName')
+      .populate('items.productId', 'name');
 
     console.log('✅ Webhook processed successfully:', {
-      orderId: order._id,
+      event,
+      orderId: updatedOrder._id,
       paymentId: razorpayPaymentId,
-      status: paymentStatus
+      paymentStatus,
+      orderStatus: updatedOrder.status
     });
 
-    res.json({
+    res.status(200).json({
       success: true,
       message: 'Webhook processed successfully',
-      data: order
+      data: updatedOrder
     });
   } catch (error) {
-    console.error('Error processing webhook:', error);
+    console.error('❌ Error processing webhook:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to process webhook',

@@ -60,11 +60,27 @@ app.use(cors({
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-razorpay-signature']
 }));
 
 app.use(express.json({ limit: '10mb' })); // Increased limit for image uploads
 app.use(express.urlencoded({ extended: true }));
+
+app.use((req, res, next) => {
+  if (req.path === '/api/payments/webhook') {
+    let data = '';
+    req.on('data', chunk => {
+      data += chunk;
+    });
+    req.on('end', () => {
+      req.rawBody = data;
+      req.body = JSON.parse(data);
+      next();
+    });
+  } else {
+    next();
+  }
+});
 
 // MongoDB connection with comprehensive error handling
 const MONGODB_URI = process.env.MONGODB_URI;

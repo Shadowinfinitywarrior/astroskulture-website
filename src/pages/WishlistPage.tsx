@@ -290,7 +290,7 @@ export function WishlistPage({ onNavigate }: WishlistPageProps) {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             {wishlist.map((item) => {
               const stockStatus = getStockStatus(item);
               const isAvailable = isProductAvailable(item);
@@ -302,7 +302,7 @@ export function WishlistPage({ onNavigate }: WishlistPageProps) {
                     <img
                       src={getProductImage(item)}
                       alt={productName}
-                      className="w-full h-64 object-cover cursor-pointer transition-transform group-hover:scale-105"
+                      className="w-full h-48 md:h-72 object-cover cursor-pointer transition-transform group-hover:scale-105"
                       onClick={() => handleProductClick(item.product?.slug)}
                     />
                     
@@ -343,10 +343,10 @@ export function WishlistPage({ onNavigate }: WishlistPageProps) {
                     )}
                   </div>
                   
-                  <div className="p-4">
+                  <div className="p-3 md:p-4">
                     {/* Product name */}
                     <h3
-                      className="font-semibold text-gray-900 mb-2 cursor-pointer hover:text-red-600 transition-colors line-clamp-2"
+                      className="font-semibold text-sm md:text-base text-gray-900 mb-2 cursor-pointer hover:text-red-600 transition-colors line-clamp-2"
                       onClick={() => handleProductClick(item.product?.slug)}
                       title={productName}
                     >
@@ -368,11 +368,11 @@ export function WishlistPage({ onNavigate }: WishlistPageProps) {
 
                     {/* Price */}
                     <div className="flex items-center space-x-2 mb-4">
-                      <span className="text-lg font-bold text-gray-900">
+                      <span className="text-base md:text-lg font-bold text-gray-900">
                         ₹{formatPrice(getProductPrice(item))}
                       </span>
                       {hasDiscount(item) && (
-                        <span className="text-sm text-gray-500 line-through">
+                        <span className="text-xs md:text-sm text-gray-500 line-through">
                           ₹{formatPrice(getOriginalPrice(item))}
                         </span>
                       )}

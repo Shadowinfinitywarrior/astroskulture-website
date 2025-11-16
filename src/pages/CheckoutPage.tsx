@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../contexts/AuthContext";
 import { apiService } from "../lib/mongodb";
-import type { Address } from "../lib/types";
 
 interface CheckoutForm {
   email: string;
@@ -48,7 +47,7 @@ declare global {
   }
 }
 
-export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => void }) {
+export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params?: any) => void }) {
   const { items, clearCart, cartTotal } = useCart();
   const { user, addAddress } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -138,38 +137,34 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
 
       const orderId = localStorage.getItem('currentOrderId');
       if (!orderId) {
-        throw new Error('Order ID not found');
+        throw new Error('Order ID not found. Please refresh and try again.');
       }
 
-      const verifyResponse = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/payments/verify`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify({
-            orderId,
-            razorpayPaymentId: response.razorpay_payment_id,
-            razorpayOrderId: response.razorpay_order_id,
-            razorpaySignature: response.razorpay_signature
-          })
-        }
-      );
+      if (!response.razorpay_payment_id || !response.razorpay_order_id || !response.razorpay_signature) {
+        throw new Error('Invalid payment response from Razorpay');
+      }
 
-      const result = await verifyResponse.json();
+      console.log('🔄 Verifying payment...', { orderId, paymentId: response.razorpay_payment_id });
 
-      if (result.success) {
+      const verifyResult = await apiService.verifyPayment({
+        orderId,
+        razorpayPaymentId: response.razorpay_payment_id,
+        razorpayOrderId: response.razorpay_order_id,
+        razorpaySignature: response.razorpay_signature
+      });
+
+      if (verifyResult.success) {
+        console.log('✅ Payment verified successfully');
         localStorage.removeItem('currentOrderId');
         clearCart();
-        onNavigate(`/order-confirmation/${orderId}`);
+        onNavigate('order-confirmation', { orderId });
       } else {
-        throw new Error(result.message || 'Payment verification failed');
+        throw new Error(verifyResult.message || 'Payment verification failed on server');
       }
     } catch (err) {
-      console.error('Payment verification error:', err);
-      setError(err instanceof Error ? err.message : 'Payment verification failed');
+      console.error('❌ Payment verification error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Payment verification failed. Please contact support.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -177,29 +172,34 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
 
   const handlePaymentFailure = async (error: any) => {
     try {
+      console.error('❌ Payment failed:', error);
       const orderId = localStorage.getItem('currentOrderId');
       if (orderId) {
-        await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/payments/failure`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({
-              orderId,
-              razorpayPaymentId: error?.razorpay_payment_id || null,
-              reason: error?.reason || 'Unknown error'
-            })
-          }
-        );
+        await apiService.recordPaymentFailure({
+          orderId,
+          razorpayPaymentId: error?.razorpay_payment_id || null,
+          reason: error?.reason || error?.description || 'Unknown error'
+        });
         localStorage.removeItem('currentOrderId');
       }
     } catch (err) {
       console.error('Error recording payment failure:', err);
     }
-    setError('Payment failed. Please try again.');
+    setError(error?.description || 'Payment failed. Please try again.');
+  };
+
+  const validateForm = (): string | null => {
+    if (!formData.fullName?.trim()) return 'Full name is required';
+    if (!formData.email?.trim()) return 'Email is required';
+    if (!formData.phone?.trim()) return 'Phone number is required';
+    if (!/^\d{10}$/.test(formData.phone)) return 'Phone number must be 10 digits';
+    if (!formData.address?.trim()) return 'Street address is required';
+    if (!formData.city?.trim()) return 'City is required';
+    if (!formData.state?.trim()) return 'State is required';
+    if (!formData.postalCode?.trim()) return 'Postal code is required';
+    if (!/^\d{6}$/.test(formData.postalCode)) return 'Postal code must be 6 digits';
+    if (!formData.country?.trim()) return 'Country is required';
+    return null;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -208,9 +208,18 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
     setError("");
 
     try {
+      const validationError = validateForm();
+      if (validationError) {
+        throw new Error(validationError);
+      }
+
       if (!razorpayKeyId) {
         throw new Error('Razorpay is not configured. Please contact support.');
       }
+
+      const tax = Math.round(cartTotal * 0.18);
+      const shipping = cartTotal > 999 ? 0 : 69;
+      const total = cartTotal + tax + shipping;
 
       const orderData = {
         items: items.map(item => ({
@@ -221,9 +230,9 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
           size: item.size
         })),
         subtotal: cartTotal,
-        tax: Math.round(cartTotal * 0.18),
-        shipping: cartTotal > 999 ? 0 : 69,
-        total: cartTotal + Math.round(cartTotal * 0.18) + (cartTotal > 999 ? 0 : 69),
+        tax,
+        shipping,
+        total,
         shippingAddress: {
           fullName: formData.fullName,
           flatHouseNumber: formData.flatHouseNumber,
@@ -239,6 +248,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
         paymentStatus: 'pending' as const
       };
 
+      console.log('📦 Creating order...');
       const orderResponse = await apiService.createOrder(orderData);
 
       if (!orderResponse.success) {
@@ -247,28 +257,20 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
 
       const orderId = orderResponse.data._id;
       localStorage.setItem('currentOrderId', orderId);
+      console.log('✅ Order created:', orderId);
 
-      const paymentOrderResponse = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/payments/create-order`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify({
-            orderId,
-            amount: orderResponse.data.total,
-            currency: 'INR'
-          })
-        }
-      );
-
-      const paymentOrderData = await paymentOrderResponse.json();
+      console.log('🔗 Creating Razorpay payment order...');
+      const paymentOrderData = await apiService.createPaymentOrder({
+        orderId,
+        amount: total,
+        currency: 'INR'
+      });
 
       if (!paymentOrderData.success) {
         throw new Error(paymentOrderData.message || 'Failed to create payment order');
       }
+
+      console.log('✅ Payment order created:', paymentOrderData.data.id);
 
       const options: RazorpayCheckout = {
         key_id: razorpayKeyId,
@@ -315,7 +317,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
             isDefault: user.addresses.length === 0
           } as any);
         } catch (addrError) {
-          console.error('Failed to save address:', addrError);
+          console.warn('Failed to save address:', addrError);
         }
       }
     } catch (err) {

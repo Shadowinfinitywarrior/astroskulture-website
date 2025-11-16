@@ -27,11 +27,13 @@ import AdminBlogPage from './pages/admin/AdminBlogPage';
 import AdminAnalyticsPage from './pages/admin/AdminAnalyticsPage';
 import UserAccountPage from './pages/UserAccountPage';
 import UserOrdersPage from './pages/UserOrdersPage';
+import { OrderConfirmationPage } from './pages/OrderConfirmationPage';
 
 interface NavigationParams {
   slug?: string;
   buyNow?: boolean;
   category?: string;
+  orderId?: string;
 }
 
 function AppContent() {
@@ -95,6 +97,10 @@ function AppContent() {
       setCurrentPage('account');
     } else if (path === '/orders') {
       setCurrentPage('orders');
+    } else if (path.startsWith('/order-confirmation/')) {
+      const orderId = path.replace('/order-confirmation/', '');
+      setCurrentPage('order-confirmation');
+      setPageParams({ orderId });
     }
   }, []);
 
@@ -147,6 +153,7 @@ function AppContent() {
         'forgot-password': '/forgot-password',
         'account': '/account',
         'orders': '/orders',
+        'order-confirmation': `/order-confirmation/${params?.orderId}`,
       };
       
       let url = routes[page] || '/';
@@ -192,6 +199,8 @@ function AppContent() {
         return <UserAccountPage onNavigate={handleNavigate} />;
       case 'orders':
         return <UserOrdersPage onNavigate={handleNavigate} />;
+      case 'order-confirmation':
+        return <OrderConfirmationPage orderId={pageParams.orderId || ''} onNavigate={handleNavigate} />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }
