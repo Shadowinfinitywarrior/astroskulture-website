@@ -38,13 +38,10 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
     
     loadCategories();
     
-    // Set up interval to refresh data every 30 seconds to catch admin updates
-    const refreshInterval = setInterval(() => {
-      loadCategories();
-      loadProducts();
-    }, 30000);
+    // Don't auto-refresh - it causes filtering issues
+    // Users can manually refresh if needed
     
-    return () => clearInterval(refreshInterval);
+    return () => {};
   }, [initialCategory]);
 
   useEffect(() => {
