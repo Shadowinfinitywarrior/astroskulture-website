@@ -41,6 +41,8 @@ function AppContent() {
 
   useEffect(() => {
     const path = window.location.pathname;
+    const searchParams = new URLSearchParams(window.location.search);
+    
     if (path.startsWith('/admin')) {
       if (path === '/admin/products') {
         setCurrentPage('admin-products');
@@ -59,6 +61,40 @@ function AppContent() {
       } else {
         setCurrentPage('admin-dashboard');
       }
+    } else if (path === '/shop') {
+      setCurrentPage('shop');
+      const category = searchParams.get('category');
+      if (category) {
+        setPageParams({ category });
+      }
+    } else if (path === '/categories') {
+      setCurrentPage('categories');
+    } else if (path.startsWith('/product/')) {
+      const slug = path.replace('/product/', '');
+      setCurrentPage('product');
+      setPageParams({ slug });
+    } else if (path === '/cart') {
+      setCurrentPage('cart');
+    } else if (path === '/checkout') {
+      setCurrentPage('checkout');
+    } else if (path === '/wishlist') {
+      setCurrentPage('wishlist');
+    } else if (path === '/blog') {
+      setCurrentPage('blog');
+    } else if (path.startsWith('/blog/')) {
+      const slug = path.replace('/blog/', '');
+      setCurrentPage('blog-detail');
+      setPageParams({ slug });
+    } else if (path === '/login') {
+      setCurrentPage('login');
+    } else if (path === '/register') {
+      setCurrentPage('register');
+    } else if (path === '/forgot-password') {
+      setCurrentPage('forgot-password');
+    } else if (path === '/account') {
+      setCurrentPage('account');
+    } else if (path === '/orders') {
+      setCurrentPage('orders');
     }
   }, []);
 
@@ -96,7 +132,29 @@ function AppContent() {
       };
       window.history.pushState({ page, params }, '', routes[page] || '/admin');
     } else {
-      window.history.pushState({ page, params }, '', '/');
+      const routes: Record<string, string> = {
+        'home': '/',
+        'shop': '/shop',
+        'categories': '/categories',
+        'product': `/product/${params?.slug}`,
+        'cart': '/cart',
+        'checkout': '/checkout',
+        'wishlist': '/wishlist',
+        'blog': '/blog',
+        'blog-detail': `/blog/${params?.slug}`,
+        'login': '/login',
+        'register': '/register',
+        'forgot-password': '/forgot-password',
+        'account': '/account',
+        'orders': '/orders',
+      };
+      
+      let url = routes[page] || '/';
+      if (params?.category && page === 'shop') {
+        url += `?category=${encodeURIComponent(params.category)}`;
+      }
+      
+      window.history.pushState({ page, params }, '', url);
     }
   };
 
