@@ -31,6 +31,9 @@ export interface Product {
   categoryData?: Category; // Populated category data
   price: number;
   discountPrice?: number;
+  gstPercentage?: number;
+  shippingFee?: number;
+  freeShippingAbove?: number;
   images: ProductImage[];
   sizes: ProductSize[];
   totalStock: number;
@@ -138,6 +141,10 @@ export interface CartItem {
   product?: Product;
   name: string;
   price: number;
+  discountPrice?: number;
+  gstPercentage?: number;
+  shippingFee?: number;
+  freeShippingAbove?: number;
   quantity: number;
   size: string;
   image: string;
@@ -297,14 +304,13 @@ export interface WishlistContextType {
 
 export interface CartContextType {
   items: CartItem[];
-  total: number;
-  itemCount: number;
-  addToCart: (item: Omit<CartItem, 'product'>) => void;
+  cartTotal: number;
+  cartCount: number;
+  addToCart: (item: Omit<CartItem, 'quantity'>) => void;
   removeFromCart: (productId: string, size: string) => void;
   updateQuantity: (productId: string, size: string, quantity: number) => void;
   clearCart: () => void;
-  getItemCount: () => number;
-  getTotalPrice: () => number;
+  getItemQuantity: (productId: string, size: string) => number;
 }
 
 export interface AuthContextType {

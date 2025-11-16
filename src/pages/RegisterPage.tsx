@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Star, Mail, Lock, User, Calendar, HelpCircle } from 'lucide-react';
+import { Mail, Lock, User, Calendar, HelpCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight, Calendar, User } from 'lucide-react';
+import { ArrowRight, Calendar } from 'lucide-react';
 import { apiService } from '../lib/mongodb';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 

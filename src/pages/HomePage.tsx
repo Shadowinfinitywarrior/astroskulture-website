@@ -268,7 +268,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
       if (isInWishlist(product._id)) {
         await removeFromWishlist(product._id);
       } else {
-        await addToWishlist(product);
+        await addToWishlist(product as any);
       }
     } catch (error) {
       console.error('Error toggling wishlist:', error);

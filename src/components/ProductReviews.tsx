@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Star, User, Loader } from 'lucide-react';
-import { apiService } from '../lib/mongodb';
 import { useAuth } from '../contexts/AuthContext';
 
 interface Review {

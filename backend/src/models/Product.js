@@ -25,6 +25,22 @@ const productSchema = new mongoose.Schema({
     type: Number,
     min: 0
   },
+  gstPercentage: {
+    type: Number,
+    default: 18,
+    min: 0,
+    max: 100
+  },
+  shippingFee: {
+    type: Number,
+    default: 69,
+    min: 0
+  },
+  freeShippingAbove: {
+    type: Number,
+    default: 999,
+    min: 0
+  },
   images: [{
     url: String,
     alt: String

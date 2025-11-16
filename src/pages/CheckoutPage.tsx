@@ -217,8 +217,21 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
         throw new Error('Razorpay is not configured. Please contact support.');
       }
 
-      const tax = Math.round(cartTotal * 0.18);
-      const shipping = cartTotal > 999 ? 0 : 69;
+      let tax = 0;
+      let shipping = 0;
+      
+      if (items.length > 0) {
+        const gstPercentage = items[0].gstPercentage || 18;
+        const freeShippingAbove = items[0].freeShippingAbove || 999;
+        const shippingFee = items[0].shippingFee || 69;
+        
+        tax = Math.round(cartTotal * (gstPercentage / 100));
+        shipping = cartTotal >= freeShippingAbove ? 0 : shippingFee;
+      } else {
+        tax = Math.round(cartTotal * 0.18);
+        shipping = cartTotal > 999 ? 0 : 69;
+      }
+      
       const total = cartTotal + tax + shipping;
 
       const orderData = {
@@ -329,8 +342,21 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
     }
   };
 
-  const shippingCost = cartTotal > 999 ? 0 : 69;
-  const tax = Math.round(cartTotal * 0.18);
+  let shippingCost = 0;
+  let tax = 0;
+  
+  if (items.length > 0) {
+    const gstPercentage = items[0].gstPercentage || 18;
+    const freeShippingAbove = items[0].freeShippingAbove || 999;
+    const shippingFee = items[0].shippingFee || 69;
+    
+    tax = Math.round(cartTotal * (gstPercentage / 100));
+    shippingCost = cartTotal >= freeShippingAbove ? 0 : shippingFee;
+  } else {
+    tax = Math.round(cartTotal * 0.18);
+    shippingCost = cartTotal > 999 ? 0 : 69;
+  }
+  
   const finalTotal = cartTotal + tax + shippingCost;
 
   if (items.length === 0) {

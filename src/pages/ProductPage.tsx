@@ -65,8 +65,11 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
     addToCart({
       productId: product._id,
       name: product.name,
-      price: product.discountPrice || product.price,
-      quantity: 1,
+      price: product.price,
+      discountPrice: product.discountPrice,
+      gstPercentage: product.gstPercentage || 18,
+      shippingFee: product.shippingFee || 69,
+      freeShippingAbove: product.freeShippingAbove || 999,
       size: selectedSize,
       image: product.images[0]?.url || '',
     });
@@ -112,17 +115,13 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
     );
   }
 
-  const availableSizes = product.sizes
-    .filter(size => size.stock > 0)
-    .map(size => size.size);
-
   const currentPrice = product.discountPrice || product.price;
   const discountPercentage = product.discountPrice 
     ? Math.round((1 - product.discountPrice / product.price) * 100)
     : 0;
 
   // Get category name - handle both category and categoryData
-  const categoryName = product.categoryData?.name || product.category?.name || 'Astros Kulture';
+  const categoryName = product.categoryData?.name || 'Astros Kulture';
   const isProductInWishlist = isInWishlist(product._id);
 
   return (

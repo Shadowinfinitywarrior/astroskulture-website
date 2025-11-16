@@ -9,6 +9,9 @@ interface Product {
   description: string;
   price: number;
   discountPrice?: number;
+  gstPercentage?: number;
+  shippingFee?: number;
+  freeShippingAbove?: number;
   categoryId: string;
   images: Array<{ url: string; alt?: string }>;
   sizes: Array<{ size: string; stock: number }>;
@@ -46,6 +49,9 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
     description: '',
     price: 0,
     discountPrice: 0,
+    gstPercentage: 18,
+    shippingFee: 69,
+    freeShippingAbove: 999,
     categoryId: '',
     images: [{ url: '', alt: '' }],
     sizes: [
@@ -209,6 +215,9 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         description: formData.description.trim(),
         price: price,
         discountPrice: discountPrice,
+        gstPercentage: Number(formData.gstPercentage) || 18,
+        shippingFee: Number(formData.shippingFee) || 69,
+        freeShippingAbove: Number(formData.freeShippingAbove) || 999,
         categoryId: formData.categoryId.trim(),
         images: validImages,
         sizes: formData.sizes.map(size => ({
@@ -320,8 +329,11 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         description: product.description,
         price: product.price,
         discountPrice: product.discountPrice || 0,
+        gstPercentage: product.gstPercentage || 18,
+        shippingFee: product.shippingFee || 69,
+        freeShippingAbove: product.freeShippingAbove || 999,
         categoryId: product.categoryId,
-        images: product.images.length > 0 ? product.images : [{ url: '', alt: '' }],
+        images: (product.images.length > 0 ? product.images : [{ url: '', alt: '' }]) as any,
         sizes: product.sizes,
         isFeatured: product.isFeatured,
         isActive: product.isActive,
@@ -333,6 +345,9 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         description: '',
         price: 0,
         discountPrice: 0,
+        gstPercentage: 18,
+        shippingFee: 69,
+        freeShippingAbove: 999,
         categoryId: '',
         images: [{ url: '', alt: '' }],
         sizes: [
@@ -636,6 +651,43 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                     min="0"
                     value={formData.discountPrice}
                     onChange={(e) => setFormData({ ...formData, discountPrice: Number(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">GST Percentage (%)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    value={formData.gstPercentage}
+                    onChange={(e) => setFormData({ ...formData, gstPercentage: Number(e.target.value) || 18 })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Shipping Fee (₹)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.shippingFee}
+                    onChange={(e) => setFormData({ ...formData, shippingFee: Number(e.target.value) || 69 })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Free Shipping Above (₹)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.freeShippingAbove}
+                    onChange={(e) => setFormData({ ...formData, freeShippingAbove: Number(e.target.value) || 999 })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                   />
                 </div>

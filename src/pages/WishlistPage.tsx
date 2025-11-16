@@ -80,7 +80,6 @@ export function WishlistPage({ onNavigate }: WishlistPageProps) {
         productId: item.product._id,
         name: item.product.name,
         price: item.product.discountPrice || item.product.price,
-        quantity: 1,
         size: defaultSize,
         image: item.product.images[0]?.url || '',
       });

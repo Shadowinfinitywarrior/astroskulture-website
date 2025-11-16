@@ -45,17 +45,18 @@ class ApiService {
         try {
           const data = await response.json();
           throw new Error(data.message || `API request failed: ${response.status}`);
-        } catch (parseError) {
+        } catch (_parseError) {
           throw new Error(`API request failed: ${response.status} ${response.statusText}`);
         }
       }
 
       return await response.json();
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       console.error('❌ API request error:', {
         endpoint,
         url,
-        error: error.message
+        error: errorMessage
       });
       throw error;
     }
@@ -121,9 +122,10 @@ class ApiService {
       console.log('✅ [DEBUG] Product by slug response:', response);
       return response;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       console.error('❌ [DEBUG] Error fetching product by slug:', {
         slug,
-        error: error.message
+        error: errorMessage
       });
       throw error;
     }
@@ -151,8 +153,9 @@ class ApiService {
       console.log('✅ [DEBUG] Wishlist response:', response);
       return response;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       console.error('❌ [DEBUG] Error fetching wishlist:', {
-        error: error.message
+        error: errorMessage
       });
       throw error;
     }
@@ -168,9 +171,10 @@ class ApiService {
       console.log('✅ [DEBUG] Add to wishlist response:', response);
       return response;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       console.error('❌ [DEBUG] Error adding to wishlist:', {
         productId,
-        error: error.message
+        error: errorMessage
       });
       throw error;
     }
@@ -185,9 +189,10 @@ class ApiService {
       console.log('✅ [DEBUG] Remove from wishlist response:', response);
       return response;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       console.error('❌ [DEBUG] Error removing from wishlist:', {
         productId,
-        error: error.message
+        error: errorMessage
       });
       throw error;
     }
@@ -200,9 +205,10 @@ class ApiService {
       console.log('✅ [DEBUG] Wishlist status response:', response);
       return response;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       console.error('❌ [DEBUG] Error checking wishlist status:', {
         productId,
-        error: error.message
+        error: errorMessage
       });
       throw error;
     }
@@ -218,8 +224,9 @@ class ApiService {
       console.log('✅ [DEBUG] Clear wishlist response:', response);
       return response;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       console.error('❌ [DEBUG] Error clearing wishlist:', {
-        error: error.message
+        error: errorMessage
       });
       throw error;
     }
@@ -236,9 +243,10 @@ class ApiService {
       console.log('✅ [DEBUG] Add multiple to wishlist response:', response);
       return response;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       console.error('❌ [DEBUG] Error adding multiple to wishlist:', {
         productIds,
-        error: error.message
+        error: errorMessage
       });
       throw error;
     }
@@ -252,8 +260,9 @@ class ApiService {
       console.log('✅ [DEBUG] Wishlist count response:', response);
       return response;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       console.error('❌ [DEBUG] Error getting wishlist count:', {
-        error: error.message
+        error: errorMessage
       });
       throw error;
     }
