@@ -8,6 +8,9 @@ interface CheckoutForm {
   email: string;
   fullName: string;
   phone: string;
+  flatHouseNumber: string;
+  areaStreetSector: string;
+  landmark: string;
   address: string;
   city: string;
   state: string;
@@ -57,6 +60,9 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
     email: user?.email || "",
     fullName: user?.fullName || "",
     phone: user?.phone || "",
+    flatHouseNumber: "",
+    areaStreetSector: "",
+    landmark: "",
     address: "",
     city: "",
     state: "",
@@ -96,6 +102,9 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
       setSelectedAddress("new");
       setFormData(prev => ({
         ...prev,
+        flatHouseNumber: "",
+        areaStreetSector: "",
+        landmark: "",
         address: "",
         city: "",
         state: "",
@@ -109,6 +118,9 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
         setFormData(prev => ({
           ...prev,
           fullName: address.fullName,
+          flatHouseNumber: (address as any).flatHouseNumber || "",
+          areaStreetSector: (address as any).areaStreetSector || "",
+          landmark: (address as any).landmark || "",
           address: address.address,
           city: address.city,
           state: address.state,
@@ -214,6 +226,9 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
         total: cartTotal + Math.round(cartTotal * 0.18) + (cartTotal > 999 ? 0 : 69),
         shippingAddress: {
           fullName: formData.fullName,
+          flatHouseNumber: formData.flatHouseNumber,
+          areaStreetSector: formData.areaStreetSector,
+          landmark: formData.landmark,
           address: formData.address,
           city: formData.city,
           state: formData.state,
@@ -289,13 +304,16 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
         try {
           await addAddress({
             fullName: formData.fullName,
+            flatHouseNumber: formData.flatHouseNumber,
+            areaStreetSector: formData.areaStreetSector,
+            landmark: formData.landmark,
             address: formData.address,
             city: formData.city,
             state: formData.state,
             postalCode: formData.postalCode,
             country: formData.country,
             isDefault: user.addresses.length === 0
-          });
+          } as any);
         } catch (addrError) {
           console.error('Failed to save address:', addrError);
         }
@@ -433,6 +451,48 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Flat, House no., Building, Company, Apartment
+                </label>
+                <input
+                  type="text"
+                  name="flatHouseNumber"
+                  value={formData.flatHouseNumber}
+                  onChange={handleInputChange}
+                  placeholder="e.g., 21c/144b North"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Area, Street, Sector, Village
+                </label>
+                <input
+                  type="text"
+                  name="areaStreetSector"
+                  value={formData.areaStreetSector}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Kennedy Street"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Landmark
+                </label>
+                <input
+                  type="text"
+                  name="landmark"
+                  value={formData.landmark}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Near CSI Church"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Street Address
                 </label>
                 <input
@@ -440,7 +500,6 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
-                  required
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
