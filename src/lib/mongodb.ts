@@ -464,6 +464,31 @@ class ApiService {
       method: 'POST',
     });
   }
+
+  async createPaymentOrder(paymentData: any) {
+    return this.request('/payments/create-order', {
+      method: 'POST',
+      body: JSON.stringify(paymentData),
+    });
+  }
+
+  async verifyPayment(verificationData: any) {
+    return this.request('/payments/verify', {
+      method: 'POST',
+      body: JSON.stringify(verificationData),
+    });
+  }
+
+  async recordPaymentFailure(failureData: any) {
+    return this.request('/payments/failure', {
+      method: 'POST',
+      body: JSON.stringify(failureData),
+    });
+  }
+
+  async getPaymentDetails(paymentId: string) {
+    return this.request(`/payments/details/${paymentId}`);
+  }
 }
 
 export const apiService = new ApiService();
