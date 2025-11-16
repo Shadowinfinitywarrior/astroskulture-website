@@ -23,25 +23,46 @@ export function LoadingSpinner({ fullScreen = false, size = 'md' }: LoadingSpinn
     : 'transparent';
 
   const sizeConfig = {
-    sm: { containerWidth: 140, containerHeight: 140, logoSize: 40, loaderSize: 100 },
-    md: { containerWidth: 220, containerHeight: 220, logoSize: 65, loaderSize: 160 },
-    lg: { containerWidth: 300, containerHeight: 300, logoSize: 90, loaderSize: 220 }
+    sm: { containerWidth: 140, containerHeight: 140, logoSize: 40, svgSize: 120 },
+    md: { containerWidth: 220, containerHeight: 220, logoSize: 65, svgSize: 180 },
+    lg: { containerWidth: 300, containerHeight: 300, logoSize: 90, svgSize: 240 }
   };
 
   const config = sizeConfig[size];
+  const radius = config.svgSize / 2 - 8;
 
   return (
     <div className={containerClass} style={{ background: bgStyle }}>
       <div className="relative flex flex-col items-center justify-center" style={{ width: config.containerWidth, height: config.containerHeight }}>
         
-        {/* Circular Loader - CSS Animation - Around Logo */}
-        <div 
-          className="loader-big"
-          style={{
-            width: config.loaderSize,
-            height: config.loaderSize
-          }}
-        ></div>
+        {/* SVG Circular Loader */}
+        <svg
+          className="loader-svg"
+          width={config.svgSize}
+          height={config.svgSize}
+          viewBox={`0 0 ${config.svgSize} ${config.svgSize}`}
+          style={{ position: 'absolute' }}
+        >
+          <circle
+            cx={config.svgSize / 2}
+            cy={config.svgSize / 2}
+            r={radius}
+            fill="none"
+            stroke="rgba(239, 68, 68, 0.1)"
+            strokeWidth="3"
+          />
+          <circle
+            cx={config.svgSize / 2}
+            cy={config.svgSize / 2}
+            r={radius}
+            fill="none"
+            stroke="#FF3D00"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeDasharray={`${(radius * Math.PI * 0.5)} ${(radius * Math.PI * 2)}`}
+            className="loader-circle"
+          />
+        </svg>
 
         {/* Center Logo Container */}
         {logoLoaded && (
@@ -73,36 +94,34 @@ export function LoadingSpinner({ fullScreen = false, size = 'md' }: LoadingSpinn
       </div>
 
       <style>{`
-        .loader-big {
-          border: 4px solid #FFF;
-          border-radius: 50%;
-          display: inline-block;
-          position: relative;
-          box-sizing: border-box;
-          animation: rotation 1s linear infinite;
+        .loader-svg {
+          animation: spinLoader 2s linear infinite;
         }
 
-        .loader-big::after {
-          content: '';
-          box-sizing: border-box;
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          transform: translate(-50%, -50%);
-          width: 90%;
-          height: 90%;
-          border-radius: 50%;
-          border: 4px solid transparent;
-          border-bottom-color: #FF3D00;
-          animation: rotation 0.8s linear infinite;
+        .loader-circle {
+          animation: dashLoader 2s ease-in-out infinite;
         }
 
-        @keyframes rotation {
+        @keyframes spinLoader {
           0% {
             transform: rotate(0deg);
+            transform-origin: center;
           }
           100% {
             transform: rotate(360deg);
+            transform-origin: center;
+          }
+        }
+
+        @keyframes dashLoader {
+          0% {
+            stroke-dashoffset: 0;
+          }
+          50% {
+            stroke-dashoffset: ${radius * Math.PI};
+          }
+          100% {
+            stroke-dashoffset: ${radius * Math.PI * 2};
           }
         }
       `}</style>
