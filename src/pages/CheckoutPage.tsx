@@ -147,7 +147,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
           },
           body: JSON.stringify({
             orderId,
@@ -185,7 +185,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
             body: JSON.stringify({
               orderId,
@@ -254,7 +254,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
           },
           body: JSON.stringify({
             orderId,
