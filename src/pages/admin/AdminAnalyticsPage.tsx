@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { BarChart3, TrendingUp, Eye, Users, Download, Calendar, RefreshCw } from 'lucide-react';
-import { apiService } from '../../lib/mongodb';
+import { BarChart3, TrendingUp, Eye, Users, Download, RefreshCw } from 'lucide-react';
 
 interface PageViewData {
   pageId: string;

@@ -80,8 +80,8 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
       backgroundColor: banner.backgroundColor || '#dc2626',
       displayOrder: banner.displayOrder,
       isActive: banner.isActive,
-      animationType: banner.animationType || 'slide',
-      animationSpeed: banner.animationSpeed || 'normal',
+      animationType: (banner.animationType || 'slide') as const,
+      animationSpeed: (banner.animationSpeed || 'normal') as const,
       description: (banner as any).description || '',
       link: (banner as any).link || '',
       imageUrl: (banner as any).imageUrl || ''
@@ -181,9 +181,6 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
   };
 
   const getAnimationClass = (type: string, speed: string) => {
-    const speedMap = { slow: '3s', normal: '2s', fast: '1s' };
-    const animDuration = speedMap[speed as keyof typeof speedMap] || '2s';
-    
     switch (type) {
       case 'slide':
         return `animate-slide-${speed}`;

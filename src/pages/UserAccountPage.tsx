@@ -7,11 +7,12 @@ interface UserData {
   fullName: string;
   phone?: string;
   addresses: Array<{
-    _id: string;
-    street: string;
+    _id?: string;
+    fullName: string;
+    address: string;
     city: string;
     state: string;
-    zipCode: string;
+    postalCode: string;
     country: string;
     isDefault: boolean;
   }>;

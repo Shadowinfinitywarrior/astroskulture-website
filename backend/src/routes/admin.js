@@ -289,7 +289,7 @@ router.delete('/categories/:id', async (req, res) => {
 router.get('/orders', async (req, res) => {
   try {
     const orders = await Order.find()
-      .populate('user', 'email fullName')
+      .populate('userId', 'email fullName')
       .populate('items.productId', 'name images')
       .sort({ createdAt: -1 });
     
@@ -315,7 +315,7 @@ router.put('/orders/:id/status', async (req, res) => {
       { status, updatedAt: Date.now() },
       { new: true }
     )
-    .populate('user', 'email fullName')
+    .populate('userId', 'email fullName')
     .populate('items.productId', 'name images');
 
     if (!order) {

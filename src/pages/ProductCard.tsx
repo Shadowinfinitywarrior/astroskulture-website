@@ -63,8 +63,11 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
     addToCart({
       productId: product._id,
       name: product.name,
-      price: currentPrice,
-      quantity: 1,
+      price: product.price,
+      discountPrice: product.discountPrice,
+      gstPercentage: product.gstPercentage || 18,
+      shippingFee: product.shippingFee || 69,
+      freeShippingAbove: product.freeShippingAbove || 999,
       size: defaultSize,
       image: product.images[0]?.url || '',
     });

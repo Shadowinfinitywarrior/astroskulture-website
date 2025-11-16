@@ -4,7 +4,7 @@ import { apiService } from '../lib/mongodb';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useAuth } from '../contexts/AuthContext';
-import type { Product, Category } from '../lib/types';
+import type { Product, Category, ProductSize } from '../lib/types';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 
 interface ShopPageProps {
@@ -26,7 +26,7 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
   const [sortBy, setSortBy] = useState('featured');
   const [wishlistLoading, setWishlistLoading] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const { addToCart } = useCart();
+
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { user } = useAuth();
 
@@ -82,51 +82,51 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
         let filteredProducts = data.data;
 
         // Apply price range filter on client side
-        filteredProducts = filteredProducts.filter(product => {
+        filteredProducts = filteredProducts.filter((product: Product) => {
           const price = product.discountPrice || product.price;
           return price >= priceRange[0] && price <= priceRange[1];
         });
 
         // Apply rating filter
         if (minRating > 0) {
-          filteredProducts = filteredProducts.filter(product => 
+          filteredProducts = filteredProducts.filter((product: Product) => 
             (product.rating || 0) >= minRating
           );
         }
 
         // Apply size filter
         if (selectedSizes.length > 0) {
-          filteredProducts = filteredProducts.filter(product =>
-            product.sizes && product.sizes.some(s => selectedSizes.includes(s.size))
+          filteredProducts = filteredProducts.filter((product: Product) =>
+            product.sizes && product.sizes.some((s: ProductSize) => selectedSizes.includes(s.size))
           );
         }
 
         // Apply fit filter
         if (selectedFits.length > 0) {
-          filteredProducts = filteredProducts.filter(product =>
-            product.fits && product.fits.some(f => selectedFits.includes(f))
+          filteredProducts = filteredProducts.filter((product: Product) =>
+            product.fits && product.fits.some((f: string) => selectedFits.includes(f))
           );
         }
 
         // Apply color filter
         if (selectedColors.length > 0) {
-          filteredProducts = filteredProducts.filter(product =>
-            product.colors && product.colors.some(c => selectedColors.includes(c))
+          filteredProducts = filteredProducts.filter((product: Product) =>
+            product.colors && product.colors.some((c: string) => selectedColors.includes(c))
           );
         }
 
         // Apply sorting on client side
         if (sortBy === 'price_low') {
-          filteredProducts.sort((a, b) => (a.discountPrice || a.price) - (b.discountPrice || b.price));
+          filteredProducts.sort((a: Product, b: Product) => (a.discountPrice || a.price) - (b.discountPrice || b.price));
         } else if (sortBy === 'price_high') {
-          filteredProducts.sort((a, b) => (b.discountPrice || b.price) - (a.discountPrice || a.price));
+          filteredProducts.sort((a: Product, b: Product) => (b.discountPrice || b.price) - (a.discountPrice || a.price));
         } else if (sortBy === 'rating') {
-          filteredProducts.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+          filteredProducts.sort((a: Product, b: Product) => (b.rating || 0) - (a.rating || 0));
         } else if (sortBy === 'newest') {
-          filteredProducts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          filteredProducts.sort((a: Product, b: Product) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         } else if (sortBy === 'featured') {
           // Featured products first, then by creation date
-          filteredProducts.sort((a, b) => {
+          filteredProducts.sort((a: Product, b: Product) => {
             if (a.isFeatured && !b.isFeatured) return -1;
             if (!a.isFeatured && b.isFeatured) return 1;
             return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -140,23 +140,6 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleAddToCart = (product: Product) => {
-    const defaultSize = product.sizes.find(size => size.stock > 0)?.size || 'M';
-    const imageUrl = product.images[0]?.url || '';
-    
-    addToCart({
-      productId: product._id,
-      name: product.name,
-      price: product.discountPrice || product.price,
-      quantity: 1,
-      size: defaultSize,
-      image: imageUrl
-    });
-
-    // You could add a toast notification here
-    console.log('Added to cart:', product.name);
   };
 
   const handleWishlistToggle = async (product: Product) => {
@@ -208,10 +191,6 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
     return product.images[0]?.url || 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500';
   };
 
-  const getProductPrice = (product: Product) => {
-    return product.discountPrice || product.price;
-  };
-
   const getDisplayPrice = (product: Product) => {
     return product.discountPrice || product.price;
   };
@@ -223,10 +202,6 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
   const getDiscountPercentage = (product: Product) => {
     if (!product.discountPrice || product.discountPrice >= product.price) return 0;
     return Math.round((1 - product.discountPrice / product.price) * 100);
-  };
-
-  const getAvailableSizes = (product: Product) => {
-    return product.sizes.filter(size => size.stock > 0).map(size => size.size);
   };
 
   // Format price with Indian numbering system

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
-import { Lock, Mail, User } from 'lucide-react';
+import { Lock, User } from 'lucide-react';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 
 interface LoginPageProps {
@@ -14,7 +14,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
-  const { login: adminLogin, isAuthenticated: isAdminAuthenticated } = useAdminAuth();
+  const { login: adminLogin } = useAdminAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
