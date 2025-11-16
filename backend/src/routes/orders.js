@@ -5,7 +5,8 @@ import {
   getUserOrders,
   createOrder,
   updateOrderStatus,
-  updatePaymentStatus
+  updatePaymentStatus,
+  updateOrderPrices
 } from '../controllers/orderController.js';
 import { auth } from '../middleware/auth.js'; // Import auth middleware
 
@@ -18,5 +19,6 @@ router.get('/:id', auth, getOrderById);
 router.post('/', auth, createOrder);
 router.put('/:id/status', auth, updateOrderStatus);
 router.put('/:id/payment', auth, updatePaymentStatus);
+router.put('/:id', auth, updateOrderPrices);
 
 export default router;

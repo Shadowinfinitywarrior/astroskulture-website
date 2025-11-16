@@ -205,3 +205,42 @@ export const updatePaymentStatus = async (req, res) => {
     });
   }
 };
+
+export const updateOrderPrices = async (req, res) => {
+  try {
+    const { subtotal, tax, shipping, total } = req.body;
+    
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      { 
+        subtotal: subtotal !== undefined ? subtotal : undefined,
+        tax: tax !== undefined ? tax : undefined,
+        shipping: shipping !== undefined ? shipping : undefined,
+        total: total !== undefined ? total : undefined,
+        updatedAt: Date.now() 
+      },
+      { new: true, runValidators: false }
+    )
+      .populate('userId', 'email fullName phone')
+      .populate('items.productId', 'name images');
+    
+    if (!order) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Order not found' 
+      });
+    }
+
+    res.json({
+      success: true,
+      data: order
+    });
+  } catch (error) {
+    console.error('Update order prices error:', error);
+    res.status(400).json({ 
+      success: false,
+      message: 'Invalid order data', 
+      error: error.message 
+    });
+  }
+};
