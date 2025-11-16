@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Heart, Star, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { apiService } from '../lib/mongodb';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { useWishlist } from '../contexts/WishlistContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Product {
   _id: string;
@@ -49,9 +51,18 @@ interface HomePageProps {
 }
 
 // Product Card Component
-function ProductCard({ product, onNavigate }: { 
+function ProductCard({ 
+  product, 
+  onNavigate,
+  onWishlistToggle,
+  isInWishlist,
+  wishlistLoading
+}: { 
   product: Product; 
   onNavigate: (page: string, params?: any) => void;
+  onWishlistToggle: (product: Product) => void;
+  isInWishlist: (productId: string) => boolean;
+  wishlistLoading: string | null;
 }) {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN').format(price);
@@ -84,8 +95,21 @@ function ProductCard({ product, onNavigate }: {
         )}
         
         {/* Wishlist Button */}
-        <button className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-600">
-          <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onWishlistToggle(product);
+          }}
+          disabled={wishlistLoading === product._id}
+          className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-600 disabled:opacity-50"
+        >
+          {wishlistLoading === product._id ? (
+            <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            <Heart 
+              className={`w-4 h-4 sm:w-5 sm:h-5 ${isInWishlist(product._id) ? 'fill-red-600 text-red-600' : 'text-gray-400'}`}
+            />
+          )}
         </button>
       </div>
       
@@ -163,6 +187,9 @@ export function HomePage({ onNavigate }: HomePageProps) {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [wishlistLoading, setWishlistLoading] = useState<string | null>(null);
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadData();
@@ -227,6 +254,26 @@ export function HomePage({ onNavigate }: HomePageProps) {
       setError(error instanceof Error ? error.message : 'Failed to load data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleWishlistToggle = async (product: Product) => {
+    if (!user) {
+      onNavigate('login');
+      return;
+    }
+
+    try {
+      setWishlistLoading(product._id);
+      if (isInWishlist(product._id)) {
+        await removeFromWishlist(product._id);
+      } else {
+        await addToWishlist(product);
+      }
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
+    } finally {
+      setWishlistLoading(null);
     }
   };
 
@@ -446,7 +493,14 @@ export function HomePage({ onNavigate }: HomePageProps) {
             <>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 {featuredProducts.slice(0, 8).map((product) => (
-                  <ProductCard key={product._id} product={product} onNavigate={onNavigate} />
+                  <ProductCard 
+                    key={product._id} 
+                    product={product} 
+                    onNavigate={onNavigate}
+                    onWishlistToggle={handleWishlistToggle}
+                    isInWishlist={isInWishlist}
+                    wishlistLoading={wishlistLoading}
+                  />
                 ))}
               </div>
             </>
@@ -495,7 +549,13 @@ export function HomePage({ onNavigate }: HomePageProps) {
                 <div className="flex gap-4 md:gap-6 min-w-min">
                   {products.slice(0, 5).map((product) => (
                     <div key={product._id} className="w-48 md:w-56 flex-shrink-0">
-                      <ProductCard product={product} onNavigate={onNavigate} />
+                      <ProductCard 
+                        product={product} 
+                        onNavigate={onNavigate}
+                        onWishlistToggle={handleWishlistToggle}
+                        isInWishlist={isInWishlist}
+                        wishlistLoading={wishlistLoading}
+                      />
                     </div>
                   ))}
                 </div>
