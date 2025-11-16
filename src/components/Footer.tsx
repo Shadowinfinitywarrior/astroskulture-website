@@ -81,10 +81,10 @@ export function Footer() {
         {/* Copyright */}
         <div className="border-t border-gray-800 mt-8 pt-8 text-center">
           <p className="text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} Astros Kulture, Wear your style, express your vibe ✨
+            &copy; {new Date().getFullYear()} Astros Kulture. All rights reserved.
           </p>
           <p className="text-xs text-gray-500 mt-2">
-            Wear the universe ✨
+            Wear the Universe ✨
           </p>
         </div>
       </div>
