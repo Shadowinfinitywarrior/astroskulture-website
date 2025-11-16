@@ -54,6 +54,11 @@ export const createRazorpayOrder = async (req, res) => {
       }
     });
 
+    await Order.findByIdAndUpdate(
+      orderId,
+      { razorpayOrderId: razorpayOrder.id }
+    );
+
     res.json({
       success: true,
       data: {
@@ -178,6 +183,85 @@ export const handlePaymentFailure = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to record payment failure',
+      error: error.message
+    });
+  }
+};
+
+export const handlePaymentWebhook = async (req, res) => {
+  try {
+    const { payload } = req.body;
+    
+    if (!payload) {
+      return res.status(400).json({
+        success: false,
+        message: 'Webhook payload is required'
+      });
+    }
+
+    const event = payload.payment?.entity || {};
+    const razorpayOrderId = event.order_id;
+    const razorpayPaymentId = event.id;
+    const razorpaySignature = req.headers['x-razorpay-signature'];
+
+    if (!razorpayOrderId || !razorpayPaymentId) {
+      console.warn('Incomplete webhook data:', { razorpayOrderId, razorpayPaymentId });
+      return res.status(400).json({
+        success: false,
+        message: 'Incomplete payment data'
+      });
+    }
+
+    const body = razorpayOrderId + '|' + razorpayPaymentId;
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_SECRET_KEY)
+      .update(body)
+      .digest('hex');
+
+    if (expectedSignature !== razorpaySignature) {
+      console.warn('Invalid webhook signature');
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid webhook signature'
+      });
+    }
+
+    const paymentStatus = event.status === 'captured' ? 'paid' : event.status === 'failed' ? 'failed' : 'pending';
+
+    const order = await Order.findOneAndUpdate(
+      { 'razorpayOrderId': razorpayOrderId },
+      {
+        paymentStatus,
+        paymentId: razorpayPaymentId,
+        updatedAt: Date.now()
+      },
+      { new: true }
+    );
+
+    if (!order) {
+      console.warn('Order not found for webhook:', razorpayOrderId);
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    console.log('✅ Webhook processed successfully:', {
+      orderId: order._id,
+      paymentId: razorpayPaymentId,
+      status: paymentStatus
+    });
+
+    res.json({
+      success: true,
+      message: 'Webhook processed successfully',
+      data: order
+    });
+  } catch (error) {
+    console.error('Error processing webhook:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to process webhook',
       error: error.message
     });
   }
