@@ -15,9 +15,9 @@ export function LoadingSpinner({ fullScreen = false, size = 'md' }: LoadingSpinn
     : 'transparent';
 
   const sizeConfig = {
-    sm: { width: 80, height: 80, loaderSize: 48 },
-    md: { width: 120, height: 120, loaderSize: 48 },
-    lg: { width: 160, height: 160, loaderSize: 48 }
+    sm: { width: 120, height: 120, logoSize: 40, loaderSize: 80 },
+    md: { width: 180, height: 180, logoSize: 65, loaderSize: 120 },
+    lg: { width: 240, height: 240, logoSize: 90, loaderSize: 160 }
   };
 
   const config = sizeConfig[size];
@@ -25,17 +25,38 @@ export function LoadingSpinner({ fullScreen = false, size = 'md' }: LoadingSpinn
   return (
     <div className={containerClass} style={{ background: bgStyle }}>
       <div className="relative flex flex-col items-center justify-center" style={{ width: config.width, height: config.height }}>
-        <div className="relative flex items-center justify-center" style={{ width: config.loaderSize, height: config.loaderSize }}>
-          <div className="loader"></div>
+        
+        {/* Circular Loader - CSS Animation */}
+        <div 
+          className="absolute loader" 
+          style={{
+            width: config.loaderSize,
+            height: config.loaderSize
+          }}
+        ></div>
+
+        {/* Center Logo Container */}
+        <div
+          className="absolute flex items-center justify-center rounded-full"
+          style={{
+            width: config.logoSize,
+            height: config.logoSize,
+            background: 'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05))',
+            backdropFilter: 'blur(10px)',
+            border: '1.5px solid rgba(239, 68, 68, 0.4)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 0 20px rgba(239, 68, 68, 0.08)',
+            zIndex: 20
+          }}
+        >
           <img
             src="/logo.png"
             alt="Logo"
             style={{
-              position: 'absolute',
-              width: '60%',
-              height: '60%',
+              width: '75%',
+              height: '75%',
               objectFit: 'contain',
-              zIndex: 10
+              filter: 'drop-shadow(0 2px 8px rgba(239, 68, 68, 0.2))',
+              opacity: 0.9
             }}
           />
         </div>
@@ -43,8 +64,6 @@ export function LoadingSpinner({ fullScreen = false, size = 'md' }: LoadingSpinn
 
       <style>{`
         .loader {
-          width: 48px;
-          height: 48px;
           border: 3px dotted #FFF;
           border-style: solid solid dotted dotted;
           border-radius: 50%;
@@ -65,8 +84,8 @@ export function LoadingSpinner({ fullScreen = false, size = 'md' }: LoadingSpinn
           margin: auto;
           border: 3px dotted #FF3D00;
           border-style: solid solid dotted;
-          width: 24px;
-          height: 24px;
+          width: 50%;
+          height: 50%;
           border-radius: 50%;
           animation: rotationBack 1s linear infinite;
           transform-origin: center center;
