@@ -4,6 +4,7 @@ import { Eye, Trash2 } from 'lucide-react';
 
 interface Order {
   _id: string;
+  orderNumber?: string;
   userId?: {
     email: string;
     firstName: string;
@@ -15,8 +16,13 @@ interface Order {
     price: number;
     quantity: number;
   }>;
-  totalAmount: number;
+  subtotal?: number;
+  tax?: number;
+  shipping?: number;
+  total?: number;
+  totalAmount?: number;
   status: string;
+  paymentStatus?: string;
   shippingAddress: {
     fullName: string;
     address: string;
@@ -35,6 +41,13 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditingPrices, setIsEditingPrices] = useState(false);
+  const [editingPrices, setEditingPrices] = useState({
+    subtotal: 0,
+    tax: 0,
+    shipping: 0,
+    total: 0
+  });
 
   // FIXED: Use environment-based API URL
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
@@ -107,6 +120,62 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
     } catch (error) {
       console.error('Error updating order status:', error);
       alert('Failed to update order status');
+    }
+  };
+
+  const startEditingPrices = () => {
+    if (selectedOrder) {
+      setEditingPrices({
+        subtotal: selectedOrder.subtotal || 0,
+        tax: selectedOrder.tax || 0,
+        shipping: selectedOrder.shipping || 0,
+        total: selectedOrder.total || selectedOrder.totalAmount || 0
+      });
+      setIsEditingPrices(true);
+    }
+  };
+
+  const cancelEditingPrices = () => {
+    setIsEditingPrices(false);
+    setEditingPrices({ subtotal: 0, tax: 0, shipping: 0, total: 0 });
+  };
+
+  const updateOrderPrices = async () => {
+    if (!selectedOrder) return;
+
+    const token = localStorage.getItem('adminToken');
+    try {
+      console.log('💰 Updating order prices:', editingPrices);
+      
+      const response = await fetch(`${API_BASE_URL}/orders/${selectedOrder._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          subtotal: Number(editingPrices.subtotal),
+          tax: Number(editingPrices.tax),
+          shipping: Number(editingPrices.shipping),
+          total: Number(editingPrices.total)
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log('✅ Order prices updated successfully');
+        setSelectedOrder(result.data);
+        setIsEditingPrices(false);
+        fetchOrders();
+        alert('Order prices updated successfully');
+      } else {
+        console.error('Error updating order prices:', result.message);
+        alert(result.message || 'Failed to update order prices');
+      }
+    } catch (error) {
+      console.error('Error updating order prices:', error);
+      alert('Failed to update order prices');
     }
   };
 
@@ -274,9 +343,86 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
               <div>
                 <h3 className="font-semibold text-slate-900 mb-2">Order Information</h3>
                 <div className="bg-slate-50 p-4 rounded-lg space-y-2">
-                  <p><span className="font-medium">Order ID:</span> {selectedOrder._id}</p>
+                  <p><span className="font-medium">Order ID:</span> {selectedOrder.orderNumber || selectedOrder._id}</p>
                   <p><span className="font-medium">Date:</span> {new Date(selectedOrder.createdAt).toLocaleString()}</p>
-                  <p><span className="font-medium">Total:</span> ${selectedOrder.totalAmount.toFixed(2)}</p>
+                  
+                  {!isEditingPrices && (
+                    <>
+                      <p><span className="font-medium">Subtotal:</span> ₹{(selectedOrder.subtotal || 0).toLocaleString()}</p>
+                      <p><span className="font-medium">Tax (18% GST):</span> ₹{(selectedOrder.tax || 0).toLocaleString()}</p>
+                      <p><span className="font-medium">Shipping:</span> ₹{(selectedOrder.shipping || 0).toLocaleString()}</p>
+                      <p className="text-lg"><span className="font-semibold">Total:</span> ₹{(selectedOrder.total || selectedOrder.totalAmount || 0).toLocaleString()}</p>
+                      <button
+                        onClick={startEditingPrices}
+                        className="mt-2 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
+                      >
+                        Edit Prices
+                      </button>
+                    </>
+                  )}
+                  
+                  {isEditingPrices && (
+                    <div className="space-y-3 mt-4 pt-4 border-t">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Subtotal (₹)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={editingPrices.subtotal}
+                          onChange={(e) => setEditingPrices({ ...editingPrices, subtotal: Number(e.target.value) || 0 })}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Tax - 18% GST (₹)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={editingPrices.tax}
+                          onChange={(e) => setEditingPrices({ ...editingPrices, tax: Number(e.target.value) || 0 })}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Shipping (₹)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={editingPrices.shipping}
+                          onChange={(e) => setEditingPrices({ ...editingPrices, shipping: Number(e.target.value) || 0 })}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Total (₹)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={editingPrices.total}
+                          onChange={(e) => setEditingPrices({ ...editingPrices, total: Number(e.target.value) || 0 })}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={updateOrderPrices}
+                          className="flex-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={cancelEditingPrices}
+                          className="flex-1 px-3 py-2 bg-slate-600 text-white rounded hover:bg-slate-700 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
