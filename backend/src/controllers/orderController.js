@@ -117,10 +117,19 @@ export const createOrder = async (req, res) => {
       }
     }
 
-    const order = new Order({
+    const orderData = {
       ...req.body,
       userId: req.user?.id
-    });
+    };
+
+    if (!orderData.orderNumber) {
+      const date = new Date();
+      const timestamp = date.getTime();
+      const random = Math.floor(Math.random() * 1000);
+      orderData.orderNumber = `ORD-${timestamp}-${random}`;
+    }
+
+    const order = new Order(orderData);
     
     await order.save();
 
