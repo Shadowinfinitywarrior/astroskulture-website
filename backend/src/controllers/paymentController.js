@@ -2,10 +2,26 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import Order from '../models/Order.js';
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_SECRET_KEY
-});
+const validateRazorpayConfig = () => {
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_SECRET_KEY) {
+    console.error('❌ Razorpay configuration missing:');
+    console.error('   RAZORPAY_KEY_ID:', process.env.RAZORPAY_KEY_ID ? '✓' : '✗ MISSING');
+    console.error('   RAZORPAY_SECRET_KEY:', process.env.RAZORPAY_SECRET_KEY ? '✓' : '✗ MISSING');
+    return false;
+  }
+  return true;
+};
+
+const getRazorpayInstance = () => {
+  if (!validateRazorpayConfig()) {
+    throw new Error('Razorpay is not configured. Please set RAZORPAY_KEY_ID and RAZORPAY_SECRET_KEY environment variables.');
+  }
+  
+  return new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_SECRET_KEY
+  });
+};
 
 export const createRazorpayOrder = async (req, res) => {
   try {
@@ -26,6 +42,8 @@ export const createRazorpayOrder = async (req, res) => {
       });
     }
 
+    const razorpay = getRazorpayInstance();
+    
     const razorpayOrder = await razorpay.orders.create({
       amount: Math.round(amount * 100),
       currency,
@@ -47,6 +65,15 @@ export const createRazorpayOrder = async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating Razorpay order:', error);
+    
+    if (error.message.includes('Razorpay is not configured')) {
+      return res.status(500).json({
+        success: false,
+        message: 'Payment service is not configured',
+        error: error.message
+      });
+    }
+    
     res.status(500).json({
       success: false,
       message: 'Failed to create payment order',
@@ -167,6 +194,7 @@ export const getPaymentDetails = async (req, res) => {
       });
     }
 
+    const razorpay = getRazorpayInstance();
     const payment = await razorpay.payments.fetch(paymentId);
 
     res.json({
@@ -188,6 +216,15 @@ export const getPaymentDetails = async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching payment details:', error);
+    
+    if (error.message.includes('Razorpay is not configured')) {
+      return res.status(500).json({
+        success: false,
+        message: 'Payment service is not configured',
+        error: error.message
+      });
+    }
+    
     res.status(500).json({
       success: false,
       message: 'Failed to fetch payment details',
