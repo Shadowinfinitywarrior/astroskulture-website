@@ -35,6 +35,8 @@ interface Category {
 
 interface Banner {
   _id: string;
+  title?: string;
+  displayText?: string;
   discountPercentage: number;
   textColor?: string;
   backgroundColor?: string;
@@ -308,10 +310,10 @@ export function HomePage({ onNavigate }: HomePageProps) {
             >
               <div className="relative whitespace-nowrap animate-scroll-text">
                 <p className="font-bold text-xs md:text-sm inline-block pr-8">
-                  ✨ Special Offer: Get {banner.discountPercentage}% OFF on your order today!
+                  ✨ {banner.displayText || `Special Offer: Get ${banner.discountPercentage}% OFF on your order today!`}
                 </p>
                 <p className="font-bold text-xs md:text-sm inline-block pr-8">
-                  ✨ Special Offer: Get {banner.discountPercentage}% OFF on your order today!
+                  ✨ {banner.displayText || `Special Offer: Get ${banner.discountPercentage}% OFF on your order today!`}
                 </p>
               </div>
               <style>{`
