@@ -343,8 +343,29 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Checkout Form */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          {/* Checkout Form or Login Prompt */}
+          {!user ? (
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Login Required</h2>
+                <p className="text-gray-600 mb-6">Please log in to complete your purchase</p>
+                <button
+                  onClick={() => onNavigate('/login')}
+                  className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 mb-4 font-medium"
+                >
+                  Log In
+                </button>
+                <p className="text-sm text-gray-600 mb-2">Don't have an account?</p>
+                <button
+                  onClick={() => onNavigate('/register')}
+                  className="text-blue-600 hover:text-blue-700 font-medium underline"
+                >
+                  Sign Up Here
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-xl font-semibold mb-6">Shipping Information</h2>
 
             {user && user.addresses.length > 0 && (
@@ -507,7 +528,8 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string) => voi
                 {loading ? "Processing..." : `Pay ₹${finalTotal}`}
               </button>
             </form>
-          </div>
+            </div>
+          )}
 
           {/* Order Summary */}
           <div className="bg-white rounded-lg shadow-sm p-6 h-fit">
