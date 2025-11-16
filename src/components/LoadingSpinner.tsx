@@ -23,19 +23,25 @@ export function LoadingSpinner({ fullScreen = false, size = 'md' }: LoadingSpinn
     : 'transparent';
 
   const sizeConfig = {
-    sm: { width: 120, height: 120, logoSize: 40, loaderSize: 48 },
-    md: { width: 180, height: 180, logoSize: 65, loaderSize: 48 },
-    lg: { width: 240, height: 240, logoSize: 90, loaderSize: 48 }
+    sm: { containerWidth: 140, containerHeight: 140, logoSize: 40, loaderSize: 100 },
+    md: { containerWidth: 220, containerHeight: 220, logoSize: 65, loaderSize: 160 },
+    lg: { containerWidth: 300, containerHeight: 300, logoSize: 90, loaderSize: 220 }
   };
 
   const config = sizeConfig[size];
 
   return (
     <div className={containerClass} style={{ background: bgStyle }}>
-      <div className="relative flex flex-col items-center justify-center" style={{ width: config.width, height: config.height }}>
+      <div className="relative flex flex-col items-center justify-center" style={{ width: config.containerWidth, height: config.containerHeight }}>
         
-        {/* Circular Loader - CSS Animation */}
-        <div className="loader"></div>
+        {/* Circular Loader - CSS Animation - Around Logo */}
+        <div 
+          className="loader-big"
+          style={{
+            width: config.loaderSize,
+            height: config.loaderSize
+          }}
+        ></div>
 
         {/* Center Logo Container */}
         {logoLoaded && (
@@ -67,10 +73,8 @@ export function LoadingSpinner({ fullScreen = false, size = 'md' }: LoadingSpinn
       </div>
 
       <style>{`
-        .loader {
-          width: 48px;
-          height: 48px;
-          border: 3px solid #FFF;
+        .loader-big {
+          border: 4px solid #FFF;
           border-radius: 50%;
           display: inline-block;
           position: relative;
@@ -78,17 +82,17 @@ export function LoadingSpinner({ fullScreen = false, size = 'md' }: LoadingSpinn
           animation: rotation 1s linear infinite;
         }
 
-        .loader::after {
+        .loader-big::after {
           content: '';
           box-sizing: border-box;
           position: absolute;
           left: 50%;
           top: 50%;
           transform: translate(-50%, -50%);
-          width: 56px;
-          height: 56px;
+          width: 90%;
+          height: 90%;
           border-radius: 50%;
-          border: 3px solid transparent;
+          border: 4px solid transparent;
           border-bottom-color: #FF3D00;
           animation: rotation 0.8s linear infinite;
         }
