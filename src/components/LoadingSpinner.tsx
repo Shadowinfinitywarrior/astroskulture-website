@@ -95,33 +95,21 @@ export function LoadingSpinner({ fullScreen = false, size = 'md' }: LoadingSpinn
 
       <style>{`
         .loader-svg {
-          animation: spinLoader 2s linear infinite;
+          animation: spin 1.5s linear infinite;
+          filter: drop-shadow(0 0 2px rgba(255, 61, 0, 0.1));
         }
 
         .loader-circle {
-          animation: dashLoader 2s ease-in-out infinite;
+          stroke-dasharray: ${radius * Math.PI * 1.5};
+          stroke-dashoffset: 0;
         }
 
-        @keyframes spinLoader {
+        @keyframes spin {
           0% {
             transform: rotate(0deg);
-            transform-origin: center;
           }
           100% {
             transform: rotate(360deg);
-            transform-origin: center;
-          }
-        }
-
-        @keyframes dashLoader {
-          0% {
-            stroke-dashoffset: 0;
-          }
-          50% {
-            stroke-dashoffset: ${radius * Math.PI};
-          }
-          100% {
-            stroke-dashoffset: ${radius * Math.PI * 2};
           }
         }
       `}</style>
