@@ -197,7 +197,7 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
       
       if (result.success) {
         console.log('✅ Order deleted successfully');
-        fetchOrders();
+        setOrders(orders.filter(order => order._id !== orderId));
         setSelectedOrder(null);
       } else {
         console.error('Error deleting order:', result.message);

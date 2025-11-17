@@ -341,11 +341,7 @@ router.put('/orders/:id/status', async (req, res) => {
 
 router.delete('/orders/:id', async (req, res) => {
   try {
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      { status: 'cancelled', updatedAt: Date.now() },
-      { new: true }
-    );
+    const order = await Order.findByIdAndDelete(req.params.id);
 
     if (!order) {
       return res.status(404).json({
@@ -356,7 +352,7 @@ router.delete('/orders/:id', async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Order cancelled successfully'
+      message: 'Order deleted successfully'
     });
   } catch (error) {
     console.error('Error deleting order:', error);

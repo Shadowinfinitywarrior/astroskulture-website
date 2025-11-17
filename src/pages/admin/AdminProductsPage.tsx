@@ -178,11 +178,11 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
       const method = editingProduct ? 'PUT' : 'POST';
 
       // FIXED: Proper number conversion with validation
-      const price = Number(formData.price) || 0;
+      const price = Number(formData.price);
       const discountPrice = formData.discountPrice ? Number(formData.discountPrice) : undefined;
 
       // Validate required fields
-      if (!formData.name.trim() || !formData.description.trim() || price <= 0 || !formData.categoryId.trim()) {
+      if (!formData.name.trim() || !formData.description.trim() || price < 0 || !formData.categoryId.trim()) {
         alert('Please fill in all required fields with valid values');
         return;
       }
@@ -596,7 +596,10 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                   <select
                     value={formData.categoryId}
                     onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                    className={`w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent ${
+                      editingProduct ? 'bg-slate-100 cursor-not-allowed' : ''
+                    }`}
+                    disabled={editingProduct ? true : false}
                     required
                   >
                     <option value="">Select a category</option>
@@ -610,7 +613,12 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                       ))
                     )}
                   </select>
-                  {categories.length === 0 && !categoriesLoading && (
+                  {editingProduct && (
+                    <p className="text-sm text-slate-600 mt-1">
+                      Category cannot be changed after product creation.
+                    </p>
+                  )}
+                  {categories.length === 0 && !categoriesLoading && !editingProduct && (
                     <p className="text-sm text-red-600 mt-1">
                       No categories found. Please create categories first in the admin panel.
                     </p>
