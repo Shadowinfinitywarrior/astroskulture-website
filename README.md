@@ -71,13 +71,6 @@ npm run dev
 ```
 Frontend will run on `http://localhost:5173`
 
-## Admin Access
-
-Access the admin control panel at: `http://localhost:5173/admin`
-
-**Default Admin Credentials:**
-- Username: `admin`
-- Password: `admin123`
 
 ## Admin Panel Features
 
