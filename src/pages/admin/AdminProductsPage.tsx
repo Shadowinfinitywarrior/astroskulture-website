@@ -12,7 +12,7 @@ interface Product {
   gstPercentage?: number;
   shippingFee?: number;
   freeShippingAbove?: number;
-  categoryId: string;
+  category: string;
   images: Array<{ url: string; alt?: string }>;
   sizes: Array<{ size: string; stock: number }>;
   totalStock: number;
@@ -52,7 +52,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
     gstPercentage: 18,
     shippingFee: 69,
     freeShippingAbove: 999,
-    categoryId: '',
+    category: '',
     images: [{ url: '', alt: '' }],
     sizes: [
       { size: 'S', stock: 0 },
@@ -182,7 +182,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
       const discountPrice = formData.discountPrice ? Number(formData.discountPrice) : undefined;
 
       // Validate required fields
-      if (!formData.name.trim() || !formData.description.trim() || price < 0 || !formData.categoryId.trim()) {
+      if (!formData.name.trim() || !formData.description.trim() || price < 0 || !formData.category.trim()) {
         alert('Please fill in all required fields with valid values');
         return;
       }
@@ -194,7 +194,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
       }
 
       // Validate that category exists
-      const selectedCategory = categories.find(cat => cat._id === formData.categoryId);
+      const selectedCategory = categories.find(cat => cat._id === formData.category);
       if (!selectedCategory) {
         alert('Please select a valid category');
         return;
@@ -218,7 +218,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         gstPercentage: Number(formData.gstPercentage) || 18,
         shippingFee: Number(formData.shippingFee) || 69,
         freeShippingAbove: Number(formData.freeShippingAbove) || 999,
-        categoryId: formData.categoryId.trim(),
+        category: formData.category.trim(),
         images: validImages,
         sizes: formData.sizes.map(size => ({
           size: size.size,
@@ -332,7 +332,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         gstPercentage: product.gstPercentage || 18,
         shippingFee: product.shippingFee || 69,
         freeShippingAbove: product.freeShippingAbove || 999,
-        categoryId: product.categoryId,
+        category: product.category,
         images: (product.images.length > 0 ? product.images : [{ url: '', alt: '' }]) as any,
         sizes: product.sizes,
         isFeatured: product.isFeatured,
@@ -348,7 +348,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         gstPercentage: 18,
         shippingFee: 69,
         freeShippingAbove: 999,
-        categoryId: '',
+        category: '',
         images: [{ url: '', alt: '' }],
         sizes: [
           { size: 'S', stock: 0 },
@@ -594,8 +594,8 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Category</label>
                   <select
-                    value={formData.categoryId}
-                    onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className={`w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent ${
                       editingProduct ? 'bg-slate-100 cursor-not-allowed' : ''
                     }`}
