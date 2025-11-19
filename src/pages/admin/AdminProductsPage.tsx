@@ -181,8 +181,10 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
       const price = Number(formData.price);
       const discountPrice = formData.discountPrice ? Number(formData.discountPrice) : undefined;
 
+      const categoryId = typeof formData.category === 'object' ? formData.category._id : formData.category;
+
       // Validate required fields
-      if (!formData.name.trim() || !formData.description.trim() || price < 0 || !formData.category.trim()) {
+      if (!formData.name.trim() || !formData.description.trim() || price < 0 || !categoryId) {
         alert('Please fill in all required fields with valid values');
         return;
       }
@@ -194,7 +196,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
       }
 
       // Validate that category exists
-      const selectedCategory = categories.find(cat => cat._id === formData.category);
+      const selectedCategory = categories.find(cat => cat._id === categoryId);
       if (!selectedCategory) {
         alert('Please select a valid category');
         return;
@@ -218,7 +220,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         gstPercentage: Number(formData.gstPercentage) || 18,
         shippingFee: Number(formData.shippingFee) || 69,
         freeShippingAbove: Number(formData.freeShippingAbove) || 999,
-        category: formData.category.trim(),
+        category: categoryId,
         images: validImages,
         sizes: formData.sizes.map(size => ({
           size: size.size,
