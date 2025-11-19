@@ -13,7 +13,7 @@ router.use(authenticateAdmin);
 // Admin products routes
 router.get('/products', async (req, res) => {
   try {
-    const products = await Product.find({ isActive: true })
+    const products = await Product.find({})
       .populate({
         path: 'category',
         select: 'name slug'
@@ -167,7 +167,11 @@ router.put('/products/:id', async (req, res) => {
 
 router.delete('/products/:id', async (req, res) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { isActive: false, updatedAt: Date.now() },
+      { new: true }
+    );
 
     if (!product) {
       return res.status(404).json({
