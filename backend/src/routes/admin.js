@@ -4,6 +4,7 @@ import Product from '../models/Product.js';
 import Order from '../models/Order.js';
 import User from '../models/User.js';
 import Category from '../models/Category.js';
+import DeletedProduct from '../models/DeletedProduct.js';
 
 const router = express.Router();
 
@@ -13,7 +14,7 @@ router.use(authenticateAdmin);
 // Admin products routes
 router.get('/products', async (req, res) => {
   try {
-    const products = await Product.find({})
+    const products = await Product.find({ isActive: true })
       .populate({
         path: 'category',
         select: 'name slug'
@@ -167,11 +168,7 @@ router.put('/products/:id', async (req, res) => {
 
 router.delete('/products/:id', async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      { isActive: false, updatedAt: Date.now() },
-      { new: true }
-    );
+    const product = await Product.findById(req.params.id);
 
     if (!product) {
       return res.status(404).json({
@@ -180,10 +177,47 @@ router.delete('/products/:id', async (req, res) => {
       });
     }
 
-    res.json({
-      success: true,
-      message: 'Product deleted successfully'
-    });
+    try {
+      await Product.findByIdAndDelete(req.params.id);
+      
+      res.json({
+        success: true,
+        message: 'Product deleted successfully'
+      });
+    } catch (deleteError) {
+      console.warn('⚠️ Failed to delete product from database, moving to deleted products:', deleteError.message);
+      
+      try {
+        const deletedProduct = new DeletedProduct({
+          originalProductId: product._id,
+          productData: {
+            name: product.name,
+            description: product.description,
+            price: product.price,
+            discountPrice: product.discountPrice,
+            category: product.category,
+            images: product.images,
+            slug: product.slug,
+            totalStock: product.totalStock
+          },
+          reason: 'system_error',
+          canRestore: true
+        });
+        
+        await deletedProduct.save();
+        
+        console.log('✅ Product moved to DeletedProduct collection');
+        
+        res.json({
+          success: true,
+          message: 'Product marked for deletion (moved to archive)',
+          archived: true
+        });
+      } catch (archiveError) {
+        console.error('❌ Failed to archive deleted product:', archiveError);
+        throw archiveError;
+      }
+    }
   } catch (error) {
     console.error('Error deleting product:', error);
     res.status(500).json({
@@ -535,6 +569,93 @@ router.get('/stats', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching dashboard stats',
+      error: error.message
+    });
+  }
+});
+
+// Deleted products routes
+router.get('/deleted-products', async (req, res) => {
+  try {
+    const deletedProducts = await DeletedProduct.find()
+      .sort({ deletedAt: -1 })
+      .lean();
+
+    res.json({
+      success: true,
+      data: deletedProducts
+    });
+  } catch (error) {
+    console.error('Error fetching deleted products:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching deleted products',
+      error: error.message
+    });
+  }
+});
+
+router.delete('/deleted-products/:id', async (req, res) => {
+  try {
+    const deletedProduct = await DeletedProduct.findByIdAndDelete(req.params.id);
+
+    if (!deletedProduct) {
+      return res.status(404).json({
+        success: false,
+        message: 'Deleted product not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Deleted product permanently removed'
+    });
+  } catch (error) {
+    console.error('Error deleting from archive:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting from archive',
+      error: error.message
+    });
+  }
+});
+
+router.post('/deleted-products/:id/restore', async (req, res) => {
+  try {
+    const deletedProduct = await DeletedProduct.findById(req.params.id);
+
+    if (!deletedProduct) {
+      return res.status(404).json({
+        success: false,
+        message: 'Deleted product not found'
+      });
+    }
+
+    if (!deletedProduct.canRestore) {
+      return res.status(400).json({
+        success: false,
+        message: 'This product cannot be restored'
+      });
+    }
+
+    const restoredProduct = new Product({
+      ...deletedProduct.productData,
+      isActive: true
+    });
+
+    await restoredProduct.save();
+    await DeletedProduct.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: 'Product restored successfully',
+      data: restoredProduct
+    });
+  } catch (error) {
+    console.error('Error restoring product:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error restoring product',
       error: error.message
     });
   }
