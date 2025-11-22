@@ -1,6 +1,5 @@
 import express from 'express';
 import Settings from '../models/Settings.js';
-import { authMiddleware } from '../middleware/auth.js';
 
 const router = express.Router();
 
