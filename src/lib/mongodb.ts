@@ -498,6 +498,18 @@ class ApiService {
   async getPaymentDetails(paymentId: string) {
     return this.request(`/payments/details/${paymentId}`);
   }
+
+  // Settings methods
+  async getSettings() {
+    return this.request('/settings');
+  }
+
+  async updateSettings(settingsData: any) {
+    return this.request('/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settingsData),
+    }, true);
+  }
 }
 
 export const apiService = new ApiService();

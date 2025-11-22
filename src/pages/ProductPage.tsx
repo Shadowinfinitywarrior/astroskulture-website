@@ -3,6 +3,7 @@ import { ShoppingCart, Heart, Star, Truck, Shield, RefreshCw, ArrowLeft } from '
 import { apiService } from '../lib/mongodb';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
+import { useAuth } from '../contexts/AuthContext';
 import type { Product } from '../lib/types';
 import ProductImageGallery from '../components/ProductImageGallery';
 import ProductReviews from '../components/ProductReviews';
@@ -20,6 +21,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
   const [error, setError] = useState('');
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist, operationLoading } = useWishlist();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadProduct();
@@ -76,6 +78,12 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
   };
 
   const handleBuyNow = () => {
+    if (!user) {
+      alert('Please login or sign up to proceed with your purchase');
+      localStorage.setItem('returnToProduct', slug);
+      onNavigate('login');
+      return;
+    }
     handleAddToCart();
     onNavigate('checkout');
   };

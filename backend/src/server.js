@@ -35,6 +35,7 @@ import bannerRoutes from './routes/banners.js'; // ADDED BANNER ROUTES
 import analyticsRoutes from './routes/analytics.js'; // ADDED ANALYTICS ROUTES
 import reviewRoutes from './routes/reviews.js'; // ADDED REVIEW ROUTES
 import paymentRoutes from './routes/payments.js'; // ADDED PAYMENT ROUTES
+import settingsRoutes from './routes/settings.js'; // ADDED SETTINGS ROUTES
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -174,6 +175,7 @@ app.use('/api/reviews', reviewRoutes); // ADDED REVIEW ROUTES
 app.use('/api/banners', bannerRoutes); // ADDED BANNER ROUTES
 app.use('/api/analytics', analyticsRoutes); // ADDED ANALYTICS ROUTES
 app.use('/api/payments', paymentRoutes); // ADDED PAYMENT ROUTES
+app.use('/api/settings', settingsRoutes); // ADDED SETTINGS ROUTES
 
 // Serve static files from React build in production
 if (process.env.NODE_ENV === 'production') {
@@ -240,7 +242,8 @@ app.get('/api/health', (req, res) => {
       categories: '/api/categories',
       admin: '/api/admin',
       wishlist: '/api/wishlist', // ADDED WISHLIST ROUTE
-      payments: '/api/payments' // ADDED PAYMENT ROUTE
+      payments: '/api/payments', // ADDED PAYMENT ROUTE
+      settings: '/api/settings' // ADDED SETTINGS ROUTE
     }
   });
 });
@@ -336,6 +339,10 @@ app.get('/api', (req, res) => {
         verify: 'POST /api/payments/verify',
         handleFailure: 'POST /api/payments/failure',
         getDetails: 'GET /api/payments/details/:paymentId'
+      },
+      settings: { // ADDED SETTINGS ENDPOINTS
+        get: 'GET /api/settings',
+        update: 'PUT /api/settings'
       }
     },
     authentication: {
@@ -377,6 +384,7 @@ app.use('*', (req, res) => {
       '/api/banners', // ADDED BANNER ROUTE
       '/api/analytics', // ADDED ANALYTICS ROUTE
       '/api/payments', // ADDED PAYMENT ROUTE
+      '/api/settings', // ADDED SETTINGS ROUTE
       '/api/health'
     ]
   });

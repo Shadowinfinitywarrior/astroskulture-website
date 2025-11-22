@@ -46,8 +46,16 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
         console.log('🔐 User has admin role, redirecting to admin dashboard');
         onNavigate('admin-dashboard');
       } else {
-        console.log('🔐 Regular user, redirecting to home');
-        onNavigate('home');
+        // Check if user was trying to buy a product
+        const returnToProduct = localStorage.getItem('returnToProduct');
+        if (returnToProduct) {
+          localStorage.removeItem('returnToProduct');
+          console.log('🔐 Regular user, redirecting back to product:', returnToProduct);
+          onNavigate('product', { slug: returnToProduct });
+        } else {
+          console.log('🔐 Regular user, redirecting to home');
+          onNavigate('home');
+        }
       }
       
     } catch (err: any) {
