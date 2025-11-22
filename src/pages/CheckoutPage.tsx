@@ -3,6 +3,14 @@ import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../contexts/AuthContext";
 import { apiService } from "../lib/mongodb";
 
+interface AppSettings {
+  gstPercentage: number;
+  gstEnabled: boolean;
+  shippingFee: number;
+  shippingEnabled: boolean;
+  freeShippingAbove: number;
+}
+
 interface CheckoutForm {
   email: string;
   fullName: string;
@@ -54,6 +62,13 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
   const [error, setError] = useState("");
   const [selectedAddress, setSelectedAddress] = useState<string>("new");
   const [razorpayKeyId, setRazorpayKeyId] = useState("");
+  const [settings, setSettings] = useState<AppSettings>({
+    gstPercentage: 18,
+    gstEnabled: true,
+    shippingFee: 69,
+    shippingEnabled: true,
+    freeShippingAbove: 999,
+  });
 
   const [formData, setFormData] = useState<CheckoutForm>({
     email: user?.email || "",
@@ -82,11 +97,24 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
     } else {
       console.warn('Razorpay Key ID not configured');
     }
+
+    loadSettings();
     
     return () => {
       document.body.removeChild(script);
     };
   }, []);
+
+  const loadSettings = async () => {
+    try {
+      const result = await apiService.getSettings();
+      if (result.success) {
+        setSettings(result.data);
+      }
+    } catch (err) {
+      console.error('Failed to load settings:', err);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -220,16 +248,12 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
       let tax = 0;
       let shipping = 0;
       
-      if (items.length > 0) {
-        const gstPercentage = items[0].gstPercentage || 18;
-        const freeShippingAbove = items[0].freeShippingAbove || 999;
-        const shippingFee = items[0].shippingFee || 69;
-        
-        tax = Math.round(cartTotal * (gstPercentage / 100));
-        shipping = cartTotal >= freeShippingAbove ? 0 : shippingFee;
-      } else {
-        tax = Math.round(cartTotal * 0.18);
-        shipping = cartTotal > 999 ? 0 : 69;
+      if (settings.gstEnabled) {
+        tax = Math.round(cartTotal * (settings.gstPercentage / 100));
+      }
+      
+      if (settings.shippingEnabled) {
+        shipping = cartTotal >= settings.freeShippingAbove ? 0 : settings.shippingFee;
       }
       
       const total = cartTotal + tax + shipping;
@@ -345,16 +369,12 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
   let shippingCost = 0;
   let tax = 0;
   
-  if (items.length > 0) {
-    const gstPercentage = items[0].gstPercentage || 18;
-    const freeShippingAbove = items[0].freeShippingAbove || 999;
-    const shippingFee = items[0].shippingFee || 69;
-    
-    tax = Math.round(cartTotal * (gstPercentage / 100));
-    shippingCost = cartTotal >= freeShippingAbove ? 0 : shippingFee;
-  } else {
-    tax = Math.round(cartTotal * 0.18);
-    shippingCost = cartTotal > 999 ? 0 : 69;
+  if (settings.gstEnabled) {
+    tax = Math.round(cartTotal * (settings.gstPercentage / 100));
+  }
+  
+  if (settings.shippingEnabled) {
+    shippingCost = cartTotal >= settings.freeShippingAbove ? 0 : settings.shippingFee;
   }
   
   const finalTotal = cartTotal + tax + shippingCost;
@@ -649,14 +669,18 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
                 <span>Subtotal</span>
                 <span>₹{cartTotal.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Shipping</span>
-                <span>{shippingCost === 0 ? "FREE" : `₹${shippingCost}`}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Tax (18% GST)</span>
-                <span>₹{tax.toFixed(2)}</span>
-              </div>
+              {settings.shippingEnabled && (
+                <div className="flex justify-between">
+                  <span>Shipping</span>
+                  <span>{shippingCost === 0 ? "FREE" : `₹${shippingCost}`}</span>
+                </div>
+              )}
+              {settings.gstEnabled && (
+                <div className="flex justify-between">
+                  <span>Tax ({settings.gstPercentage}% GST)</span>
+                  <span>₹{tax.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-lg font-bold border-t pt-2">
                 <span>Total</span>
                 <span>₹{finalTotal.toFixed(2)}</span>

@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 
 interface RegisterPageProps {
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, params?: any) => void;
 }
 
 export function RegisterPage({ onNavigate }: RegisterPageProps) {
@@ -56,7 +56,15 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
 
     try {
       await signUp(email, password, fullName, undefined, dateOfBirth, securityQuestion, securityAnswer);
-      onNavigate('home');
+      
+      // Check if user was trying to buy a product
+      const returnToProduct = localStorage.getItem('returnToProduct');
+      if (returnToProduct) {
+        localStorage.removeItem('returnToProduct');
+        onNavigate('product', { slug: returnToProduct });
+      } else {
+        onNavigate('home');
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to create account');
     } finally {

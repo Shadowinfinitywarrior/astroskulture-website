@@ -25,6 +25,7 @@ import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
 import AdminBannersPage from './pages/admin/AdminBannersPage';
 import AdminBlogPage from './pages/admin/AdminBlogPage';
 import AdminAnalyticsPage from './pages/admin/AdminAnalyticsPage';
+import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import UserAccountPage from './pages/UserAccountPage';
 import UserOrdersPage from './pages/UserOrdersPage';
 import { OrderConfirmationPage } from './pages/OrderConfirmationPage';
@@ -60,6 +61,8 @@ function AppContent() {
         setCurrentPage('admin-blogs');
       } else if (path === '/admin/analytics') {
         setCurrentPage('admin-analytics');
+      } else if (path === '/admin/settings') {
+        setCurrentPage('admin-settings');
       } else {
         setCurrentPage('admin-dashboard');
       }
@@ -135,6 +138,7 @@ function AppContent() {
         'admin-banners': '/admin/banners',
         'admin-blogs': '/admin/blogs',
         'admin-analytics': '/admin/analytics',
+        'admin-settings': '/admin/settings',
       };
       window.history.pushState({ page, params }, '', routes[page] || '/admin');
     } else {
@@ -261,6 +265,8 @@ function AdminRoutes({ currentPage, onNavigate }: { currentPage: string; onNavig
       return <AdminBlogPage onNavigate={onNavigate} />;
     case 'admin-analytics':
       return <AdminAnalyticsPage onNavigate={onNavigate} />;
+    case 'admin-settings':
+      return <AdminSettingsPage onNavigate={onNavigate} />;
     case 'admin-dashboard':
     default:
       return <AdminDashboardPage onNavigate={onNavigate} />;
