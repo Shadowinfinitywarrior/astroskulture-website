@@ -249,7 +249,14 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
       let shipping = 0;
       
       if (settings.gstEnabled) {
-        tax = Math.round(cartTotal * (settings.gstPercentage / 100));
+        tax = items.reduce((sum, item) => {
+          if (item.gstApplicable === false) {
+            return sum;
+          }
+          const itemSubtotal = (item.discountPrice || item.price) * item.quantity;
+          const itemGst = Math.round(itemSubtotal * ((item.gstPercentage || settings.gstPercentage) / 100));
+          return sum + itemGst;
+        }, 0);
       }
       
       if (settings.shippingEnabled) {
@@ -370,7 +377,14 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
   let tax = 0;
   
   if (settings.gstEnabled) {
-    tax = Math.round(cartTotal * (settings.gstPercentage / 100));
+    tax = items.reduce((sum, item) => {
+      if (item.gstApplicable === false) {
+        return sum;
+      }
+      const itemSubtotal = (item.discountPrice || item.price) * item.quantity;
+      const itemGst = Math.round(itemSubtotal * ((item.gstPercentage || settings.gstPercentage) / 100));
+      return sum + itemGst;
+    }, 0);
   }
   
   if (settings.shippingEnabled) {
