@@ -115,6 +115,13 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
           );
         }
 
+        // Defensive category filter - ensure products match selected category
+        if (selectedCategory && selectedCategory !== 'all') {
+          filteredProducts = filteredProducts.filter((product: Product) =>
+            product.category && product.category.slug === selectedCategory
+          );
+        }
+
         // Apply sorting on client side
         if (sortBy === 'price_low') {
           filteredProducts.sort((a: Product, b: Product) => (a.discountPrice || a.price) - (b.discountPrice || b.price));

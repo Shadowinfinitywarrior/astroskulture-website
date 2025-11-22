@@ -146,7 +146,7 @@ const UserOrdersPage = ({ onNavigate }: { onNavigate: (page: string) => void }) 
                       <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
                         {item.productId && item.productId.images && item.productId.images.length > 0 ? (
                           <img 
-                            src={item.productId.images[0]} 
+                            src={item.productId.images[0]?.url || item.productId.images[0]} 
                             alt={item.productId.name}
                             className="w-full h-full object-cover rounded"
                           />
