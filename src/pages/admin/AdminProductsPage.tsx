@@ -10,6 +10,7 @@ interface Product {
   price: number;
   discountPrice?: number;
   gstPercentage?: number;
+  gstApplicable?: boolean;
   shippingFee?: number;
   freeShippingAbove?: number;
   category: string;
@@ -50,6 +51,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
     price: 0,
     discountPrice: 0,
     gstPercentage: 18,
+    gstApplicable: true,
     shippingFee: 69,
     freeShippingAbove: 999,
     category: '',
@@ -332,6 +334,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         price: product.price,
         discountPrice: product.discountPrice || 0,
         gstPercentage: product.gstPercentage || 18,
+        gstApplicable: product.gstApplicable !== undefined ? product.gstApplicable : true,
         shippingFee: product.shippingFee || 69,
         freeShippingAbove: product.freeShippingAbove || 999,
         category: product.category,
@@ -348,6 +351,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         price: 0,
         discountPrice: 0,
         gstPercentage: 18,
+        gstApplicable: true,
         shippingFee: 69,
         freeShippingAbove: 999,
         category: '',
@@ -667,15 +671,30 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">GST Percentage (%)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="100"
-                    value={formData.gstPercentage}
-                    onChange={(e) => setFormData({ ...formData, gstPercentage: Number(e.target.value) || 18 })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
-                  />
+                  <div className="flex gap-2 items-end">
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      value={formData.gstPercentage}
+                      onChange={(e) => setFormData({ ...formData, gstPercentage: Number(e.target.value) || 18 })}
+                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                      disabled={!formData.gstApplicable}
+                    />
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="gstApplicable"
+                        checked={formData.gstApplicable}
+                        onChange={(e) => setFormData({ ...formData, gstApplicable: e.target.checked })}
+                        className="w-4 h-4 text-slate-900 border-slate-300 rounded focus:ring-slate-900"
+                      />
+                      <label htmlFor="gstApplicable" className="ml-2 text-sm text-slate-700 whitespace-nowrap">
+                        Apply GST
+                      </label>
+                    </div>
+                  </div>
                 </div>
 
                 <div>

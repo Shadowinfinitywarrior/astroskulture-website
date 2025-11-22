@@ -31,6 +31,10 @@ const productSchema = new mongoose.Schema({
     min: 0,
     max: 100
   },
+  gstApplicable: {
+    type: Boolean,
+    default: true
+  },
   shippingFee: {
     type: Number,
     default: 69,

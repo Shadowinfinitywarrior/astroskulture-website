@@ -143,6 +143,7 @@ export interface CartItem {
   price: number;
   discountPrice?: number;
   gstPercentage?: number;
+  gstApplicable?: boolean;
   shippingFee?: number;
   freeShippingAbove?: number;
   quantity: number;

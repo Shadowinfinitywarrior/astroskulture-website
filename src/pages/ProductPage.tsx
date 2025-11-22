@@ -70,6 +70,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
       price: product.price,
       discountPrice: product.discountPrice,
       gstPercentage: product.gstPercentage || 18,
+      gstApplicable: product.gstApplicable !== undefined ? product.gstApplicable : true,
       shippingFee: product.shippingFee || 69,
       freeShippingAbove: product.freeShippingAbove || 999,
       size: selectedSize,
