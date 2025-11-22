@@ -144,7 +144,7 @@ const UserOrdersPage = ({ onNavigate }: { onNavigate: (page: string) => void }) 
                   {order.items.map((item, index) => (
                     <div key={index} className="flex items-center gap-4 pb-4 border-b last:border-b-0 last:pb-0">
                       <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
-                        {item.productId.images && item.productId.images.length > 0 ? (
+                        {item.productId && item.productId.images && item.productId.images.length > 0 ? (
                           <img 
                             src={item.productId.images[0]} 
                             alt={item.productId.name}
@@ -155,7 +155,7 @@ const UserOrdersPage = ({ onNavigate }: { onNavigate: (page: string) => void }) 
                         )}
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-semibold">{item.productId.name}</h4>
+                        <h4 className="font-semibold">{item.productId?.name || 'Product unavailable'}</h4>
                         <p className="text-gray-600 text-sm">
                           Size: {item.size} • Qty: {item.quantity}
                         </p>
