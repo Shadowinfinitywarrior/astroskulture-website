@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { apiService } from '../lib/mongodb';
+import { apiService, API_BASE_URL } from '../lib/mongodb';
 import type { User, Address } from '../lib/types';
 
 interface AuthContextType {

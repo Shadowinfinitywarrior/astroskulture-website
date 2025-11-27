@@ -47,7 +47,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
       const token = localStorage.getItem('token');
       
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://astroskulture-website.onrender.com/api' : 'http://localhost:5000/api')}/reviews/product/${productId}`,
+        `${import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://astroskulture.in/api' : 'http://localhost:5000/api')}/reviews/product/${productId}`,
         {
           headers: token ? { Authorization: `Bearer ${token}` } : {}
         }
@@ -73,7 +73,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://astroskulture-website.onrender.com/api' : 'http://localhost:5000/api')}/reviews/user/${productId}`,
+        `${import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://astroskulture.in/api' : 'http://localhost:5000/api')}/reviews/user/${productId}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -120,8 +120,8 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
       };
 
       const url = userReview
-        ? `${import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://astroskulture-website.onrender.com/api' : 'http://localhost:5000/api')}/reviews/${userReview._id}`
-        : `${import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://astroskulture-website.onrender.com/api' : 'http://localhost:5000/api')}/reviews`;
+        ? `${import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://astroskulture.in/api' : 'http://localhost:5000/api')}/reviews/${userReview._id}`
+        : `${import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://astroskulture.in/api' : 'http://localhost:5000/api')}/reviews`;
 
       const response = await fetch(url, {
         method: userReview ? 'PUT' : 'POST',
@@ -171,7 +171,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
       const token = localStorage.getItem('token');
       
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://astroskulture-website.onrender.com/api' : 'http://localhost:5000/api')}/reviews/${userReview._id}`,
+        `${import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://astroskulture.in/api' : 'http://localhost:5000/api')}/reviews/${userReview._id}`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` }
