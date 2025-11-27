@@ -1,7 +1,7 @@
 // Use absolute URLs for both environments since frontend and backend are on different domains
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
   (import.meta.env.PROD 
-    ? 'https://astroskulture-website.onrender.com/api'  // Absolute URL in production
+    ? 'https://astroskulture.in/api'  // Absolute URL in production
     : 'http://localhost:5000/api' // Local development
   );
 

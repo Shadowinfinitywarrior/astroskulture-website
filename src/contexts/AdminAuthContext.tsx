@@ -25,7 +25,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   // FIXED: Use environment variable with fallback
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
     (import.meta.env.PROD 
-      ? 'https://astroskulture-website.onrender.com/api' 
+      ? 'https://astroskulture.in/api' 
       : 'http://localhost:5000/api'
     );
   const API_URL = API_BASE_URL;

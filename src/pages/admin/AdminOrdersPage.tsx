@@ -52,7 +52,7 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
   // FIXED: Use environment-based API URL
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
     (import.meta.env.PROD 
-      ? 'https://astroskulture-website.onrender.com/api' 
+      ? 'https://astroskulture.in/api' 
       : 'http://localhost:5000/api'
     );
 
