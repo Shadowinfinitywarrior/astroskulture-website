@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { Lock, User } from 'lucide-react';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { getFriendlyErrorMessage } from '../utils/errorUtils';
 
 interface LoginPageProps {
   onNavigate: (page: string, params?: any) => void;
@@ -40,7 +41,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
       console.log('🔐 Trying user login...');
       const result = await signIn(identifier, password);
       console.log('✅ User login successful, role:', result.role);
-      
+
       // Check if user is actually an admin but used the wrong login method
       if (result.role === 'admin') {
         console.log('🔐 User has admin role, redirecting to admin dashboard');
@@ -57,10 +58,10 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
           onNavigate('home');
         }
       }
-      
+
     } catch (err: any) {
       console.error('🔐 All login attempts failed:', err);
-      setError(err.message || 'Login failed. Please check your credentials.');
+      setError(getFriendlyErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -77,9 +78,9 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
           <div className="text-center mb-8">
             {/* Circular Logo */}
             <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-900 rounded-full mb-4 border-2 border-slate-900 overflow-hidden">
-              <img 
-                src="/logo.png" 
-                alt="Astros Kulture Logo" 
+              <img
+                src="/logo.png"
+                alt="Astros Kulture Logo"
                 className="w-10 h-10 object-contain"
               />
             </div>
