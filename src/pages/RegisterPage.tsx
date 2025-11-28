@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Mail, Lock, User, Calendar, HelpCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { getFriendlyErrorMessage } from '../utils/errorUtils';
 
 interface RegisterPageProps {
   onNavigate: (page: string, params?: any) => void;
@@ -56,7 +57,7 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
 
     try {
       await signUp(email, password, fullName, undefined, dateOfBirth, securityQuestion, securityAnswer);
-      
+
       // Check if user was trying to buy a product
       const returnToProduct = localStorage.getItem('returnToProduct');
       if (returnToProduct) {
@@ -66,7 +67,7 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
         onNavigate('home');
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to create account');
+      setError(getFriendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }

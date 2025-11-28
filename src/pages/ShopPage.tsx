@@ -13,36 +13,33 @@ interface ShopPageProps {
 }
 
 export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState < Product[] > ([]);
+  const [categories, setCategories] = useState < Category[] > ([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
-  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
-  const [selectedFits, setSelectedFits] = useState<string[]>([]);
-  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState < string | null > (initialCategory || null);
+  const [priceRange, setPriceRange] = useState < [number, number] > ([0, 10000]);
+  const [selectedSizes, setSelectedSizes] = useState < string[] > ([]);
+  const [selectedFits, setSelectedFits] = useState < string[] > ([]);
+  const [selectedColors, setSelectedColors] = useState < string[] > ([]);
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState('featured');
-  const [wishlistLoading, setWishlistLoading] = useState<string | null>(null);
+  const [wishlistLoading, setWishlistLoading] = useState < string | null > (null);
   const [showFilters, setShowFilters] = useState(false);
 
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { user } = useAuth();
 
   useEffect(() => {
-    // Set initial category if provided
+    // Update selected category if initialCategory changes
     if (initialCategory) {
       setSelectedCategory(initialCategory);
     }
-    
-    loadCategories();
-    
-    // Don't auto-refresh - it causes filtering issues
-    // Users can manually refresh if needed
-    
-    return () => {};
   }, [initialCategory]);
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
 
   useEffect(() => {
     loadProducts();
@@ -63,21 +60,21 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
     setLoading(true);
     try {
       const params: any = { limit: 0 };
-      
+
       if (selectedCategory && selectedCategory !== 'all') {
         params.category = selectedCategory;
       }
-      
+
       if (searchQuery) {
         params.search = searchQuery;
       }
-      
+
       if (sortBy === 'featured') {
         params.featured = true;
       }
 
       const data = await apiService.getProducts(params);
-      
+
       if (data.success) {
         let filteredProducts = data.data;
 
@@ -89,7 +86,7 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
 
         // Apply rating filter
         if (minRating > 0) {
-          filteredProducts = filteredProducts.filter((product: Product) => 
+          filteredProducts = filteredProducts.filter((product: Product) =>
             (product.rating || 0) >= minRating
           );
         }
@@ -289,11 +286,10 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
                   <div className="space-y-2">
                     <button
                       onClick={() => setSelectedCategory(null)}
-                      className={`block w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                        !selectedCategory
-                          ? 'bg-red-50 text-red-600 font-medium'
-                          : 'hover:bg-gray-50'
-                      }`}
+                      className={`block w-full text-left px-3 py-2 rounded-lg transition-colors ${!selectedCategory
+                        ? 'bg-red-50 text-red-600 font-medium'
+                        : 'hover:bg-gray-50'
+                        }`}
                     >
                       All Categories
                     </button>
@@ -301,11 +297,10 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
                       <button
                         key={category._id}
                         onClick={() => setSelectedCategory(category.slug)}
-                        className={`block w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                          selectedCategory === category.slug
-                            ? 'bg-red-50 text-red-600 font-medium'
-                            : 'hover:bg-gray-50'
-                        }`}
+                        className={`block w-full text-left px-3 py-2 rounded-lg transition-colors ${selectedCategory === category.slug
+                          ? 'bg-red-50 text-red-600 font-medium'
+                          : 'hover:bg-gray-50'
+                          }`}
                       >
                         {category.name}
                       </button>
@@ -458,111 +453,110 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
                     const stockStatus = getStockStatus(product);
                     const isInWishlistState = isInWishlist(product._id);
                     const isWishlistLoading = wishlistLoading === product._id;
-                    
+
                     return (
                       <div key={product._id} className="bg-white rounded-lg overflow-hidden group hover:shadow-lg transition-all duration-300 h-full flex flex-col border border-gray-200">
-                      <div className="relative overflow-hidden flex-shrink-0">
-                        <img
-                          src={getProductImage(product)}
-                          alt={product.images[0]?.alt || product.name}
-                          className="w-full h-48 md:h-72 object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
-                          onClick={() => handleProductClick(product)}
-                        />
-                        
-                        {/* Top Left - Bestseller Badge */}
-                        {product.isBestseller && (
-                          <div className="absolute top-2 left-2">
-                            <div className="bg-gray-800 text-white px-3 py-1 text-xs font-bold uppercase tracking-wide">
-                              BESTSELLER
-                            </div>
-                          </div>
-                        )}
-                        
-                        {/* Top Right - Wishlist Button */}
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleWishlistToggle(product);
-                          }}
-                          disabled={isWishlistLoading}
-                          className={`absolute top-2 right-2 p-2 rounded-full shadow-lg transition-all ${
-                            isInWishlistState
-                              ? 'bg-white text-red-600'
-                              : 'bg-white text-gray-400 hover:text-red-600'
-                          } disabled:opacity-50 disabled:cursor-not-allowed`}
-                          title={isInWishlistState ? 'Remove from Wishlist' : 'Add to Wishlist'}
-                        >
-                          {isWishlistLoading ? (
-                            <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                          ) : (
-                            <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${isInWishlistState ? 'fill-current' : ''}`} />
-                          )}
-                        </button>
-                      </div>
-                      <div className="p-3 md:p-4 flex flex-col flex-grow">
-                        {/* Brand Name */}
-                        {product.brand && (
-                          <p className="text-xs md:text-sm text-gray-500 font-medium uppercase tracking-wide mb-1">
-                            {product.brand}
-                          </p>
-                        )}
-                        
-                        {/* Product Name */}
-                        <h3 
-                          onClick={() => handleProductClick(product)}
-                          className="font-medium text-sm md:text-base text-gray-900 mb-2 cursor-pointer hover:text-red-600 transition-colors line-clamp-2 leading-snug"
-                        >
-                          {product.name}
-                        </h3>
-                        
-                        {/* Rating */}
-                        <div className="flex items-center gap-1 mb-3">
-                          <div className="flex items-center bg-green-600 text-white px-2 py-0.5 rounded text-xs font-semibold">
-                            <span>{(product.rating || 0).toFixed(1)}★</span>
-                          </div>
-                          <span className="text-xs text-gray-500">| {product.reviewCount || 0}</span>
-                        </div>
-                        
-                        {/* Price Section */}
-                        <div className="flex-grow mb-3">
-                          <div className="flex items-baseline gap-2 flex-wrap mb-1">
-                            <span className="text-lg md:text-xl font-bold text-gray-900">
-                              ₹{formatPrice(getDisplayPrice(product))}
-                            </span>
-                            {hasDiscount(product) && (
-                              <>
-                                <span className="text-sm text-gray-400 line-through">
-                                  ₹{formatPrice(product.price)}
-                                </span>
-                                <span className="text-sm font-semibold text-green-600">
-                                  {getDiscountPercentage(product)}% off
-                                </span>
-                              </>
-                            )}
-                          </div>
-                          
-                          {/* Offer Price Label */}
-                          {hasDiscount(product) && (
-                            <div className="flex items-center gap-1 mt-1">
-                              <div className="bg-green-50 text-green-700 px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1">
-                                <span>✓</span>
-                                <span>Offer Price: ₹{formatPrice(product.discountPrice!)}</span>
+                        <div className="relative overflow-hidden flex-shrink-0">
+                          <img
+                            src={getProductImage(product)}
+                            alt={product.images[0]?.alt || product.name}
+                            className="w-full h-48 md:h-72 object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
+                            onClick={() => handleProductClick(product)}
+                          />
+
+                          {/* Top Left - Bestseller Badge */}
+                          {product.isBestseller && (
+                            <div className="absolute top-2 left-2">
+                              <div className="bg-gray-800 text-white px-3 py-1 text-xs font-bold uppercase tracking-wide">
+                                BESTSELLER
                               </div>
                             </div>
                           )}
+
+                          {/* Top Right - Wishlist Button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleWishlistToggle(product);
+                            }}
+                            disabled={isWishlistLoading}
+                            className={`absolute top-2 right-2 p-2 rounded-full shadow-lg transition-all ${isInWishlistState
+                              ? 'bg-white text-red-600'
+                              : 'bg-white text-gray-400 hover:text-red-600'
+                              } disabled:opacity-50 disabled:cursor-not-allowed`}
+                            title={isInWishlistState ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                          >
+                            {isWishlistLoading ? (
+                              <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                              <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${isInWishlistState ? 'fill-current' : ''}`} />
+                            )}
+                          </button>
                         </div>
-                        
-                        {/* Stock Warning */}
-                        {product.totalStock > 0 && product.totalStock < 10 && (
-                          <p className="text-orange-600 text-xs mb-2 font-medium">Only {product.totalStock} left</p>
-                        )}
-                        
-                        {/* Out of Stock */}
-                        {stockStatus === 'out-of-stock' && (
-                          <p className="text-red-600 text-xs mb-2 font-semibold">Out of Stock</p>
-                        )}
+                        <div className="p-3 md:p-4 flex flex-col flex-grow">
+                          {/* Brand Name */}
+                          {product.brand && (
+                            <p className="text-xs md:text-sm text-gray-500 font-medium uppercase tracking-wide mb-1">
+                              {product.brand}
+                            </p>
+                          )}
+
+                          {/* Product Name */}
+                          <h3
+                            onClick={() => handleProductClick(product)}
+                            className="font-medium text-sm md:text-base text-gray-900 mb-2 cursor-pointer hover:text-red-600 transition-colors line-clamp-2 leading-snug"
+                          >
+                            {product.name}
+                          </h3>
+
+                          {/* Rating */}
+                          <div className="flex items-center gap-1 mb-3">
+                            <div className="flex items-center bg-green-600 text-white px-2 py-0.5 rounded text-xs font-semibold">
+                              <span>{(product.rating || 0).toFixed(1)}★</span>
+                            </div>
+                            <span className="text-xs text-gray-500">| {product.reviewCount || 0}</span>
+                          </div>
+
+                          {/* Price Section */}
+                          <div className="flex-grow mb-3">
+                            <div className="flex items-baseline gap-2 flex-wrap mb-1">
+                              <span className="text-lg md:text-xl font-bold text-gray-900">
+                                ₹{formatPrice(getDisplayPrice(product))}
+                              </span>
+                              {hasDiscount(product) && (
+                                <>
+                                  <span className="text-sm text-gray-400 line-through">
+                                    ₹{formatPrice(product.price)}
+                                  </span>
+                                  <span className="text-sm font-semibold text-green-600">
+                                    {getDiscountPercentage(product)}% off
+                                  </span>
+                                </>
+                              )}
+                            </div>
+
+                            {/* Offer Price Label */}
+                            {hasDiscount(product) && (
+                              <div className="flex items-center gap-1 mt-1">
+                                <div className="bg-green-50 text-green-700 px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1">
+                                  <span>✓</span>
+                                  <span>Offer Price: ₹{formatPrice(product.discountPrice!)}</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Stock Warning */}
+                          {product.totalStock > 0 && product.totalStock < 10 && (
+                            <p className="text-orange-600 text-xs mb-2 font-medium">Only {product.totalStock} left</p>
+                          )}
+
+                          {/* Out of Stock */}
+                          {stockStatus === 'out-of-stock' && (
+                            <p className="text-red-600 text-xs mb-2 font-semibold">Out of Stock</p>
+                          )}
+                        </div>
                       </div>
-                    </div>
                     );
                   })}
                 </div>
