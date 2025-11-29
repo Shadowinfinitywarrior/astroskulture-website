@@ -75,10 +75,10 @@ cd "$PROJECT_DIR"
 # Check if PM2 is running the app
 if pm2 list | grep -q "astroskulture-backend"; then
     echo -e "${YELLOW}Reloading existing PM2 process...${NC}"
-    pm2 reload ecosystem.config.js --env production
+    pm2 reload deployment/ecosystem.config.js --env production
 else
     echo -e "${YELLOW}Starting new PM2 process...${NC}"
-    pm2 start ecosystem.config.js --env production
+    pm2 start deployment/ecosystem.config.js --env production
 fi
 
 # Save PM2 process list
