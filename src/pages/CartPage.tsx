@@ -1,5 +1,15 @@
 import { Trash2, Plus, Minus } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
+import { useEffect, useState } from 'react';
+import { apiService } from '../lib/mongodb';
+
+interface AppSettings {
+  gstPercentage: number;
+  gstEnabled: boolean;
+  shippingFee: number;
+  shippingEnabled: boolean;
+  freeShippingAbove: number;
+}
 
 interface CartPageProps {
   onNavigate: (page: string) => void;
@@ -7,10 +17,45 @@ interface CartPageProps {
 
 export function CartPage({ onNavigate }: CartPageProps) {
   const { items, removeFromCart, updateQuantity, cartTotal, cartCount } = useCart();
+  const [settings, setSettings] = useState<AppSettings>({
+    gstPercentage: 18,
+    gstEnabled: true,
+    shippingFee: 69,
+    shippingEnabled: true,
+    freeShippingAbove: 999,
+  });
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      const result = await apiService.getSettings();
+      if (result.success) {
+        setSettings(result.data);
+      }
+    } catch (err) {
+      console.error('Failed to load settings:', err);
+    }
+  };
 
   const subtotal = cartTotal;
-  const gst = subtotal * 0.18;
-  const shipping = subtotal > 999 ? 0 : 69;
+  let gst = 0;
+  if (settings.gstEnabled) {
+    gst = items.reduce((sum, item) => {
+      if (item.gstApplicable === false) {
+        return sum;
+      }
+      const itemSubtotal = (item.discountPrice || item.price) * item.quantity;
+      const itemGst = Math.round(itemSubtotal * ((item.gstPercentage || settings.gstPercentage) / 100));
+      return sum + itemGst;
+    }, 0);
+  }
+  let shipping = 0;
+  if (settings.shippingEnabled) {
+    shipping = subtotal >= settings.freeShippingAbove ? 0 : settings.shippingFee;
+  }
   const total = subtotal + gst + shipping;
 
   if (items.length === 0) {
@@ -93,7 +138,7 @@ export function CartPage({ onNavigate }: CartPageProps) {
                   <span className="font-medium">₹{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-xs md:text-sm">
-                  <span className="text-gray-600">GST (18%)</span>
+                  <span className="text-gray-600">GST ({settings.gstPercentage}%)</span>
                   <span className="font-medium">₹{gst.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-xs md:text-sm">
@@ -102,9 +147,9 @@ export function CartPage({ onNavigate }: CartPageProps) {
                     {shipping === 0 ? 'FREE' : `₹${shipping}`}
                   </span>
                 </div>
-                {subtotal < 999 && (
+                {subtotal < settings.freeShippingAbove && (
                   <p className="text-xs text-red-600">
-                    Add ₹{(999 - subtotal).toFixed(2)} more for free shipping
+                    Add ₹{(settings.freeShippingAbove - subtotal).toFixed(2)} more for free shipping
                   </p>
                 )}
                 <div className="border-t border-gray-200 pt-2 md:pt-3 flex justify-between text-base md:text-lg font-bold">

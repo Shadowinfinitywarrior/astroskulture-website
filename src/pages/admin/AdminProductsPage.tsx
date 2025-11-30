@@ -220,8 +220,9 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         price: price,
         discountPrice: discountPrice,
         gstPercentage: Number(formData.gstPercentage) || 18,
-        shippingFee: Number(formData.shippingFee) || 69,
-        freeShippingAbove: Number(formData.freeShippingAbove) || 999,
+        gstApplicable: formData.gstApplicable,
+        shippingFee: Number(formData.shippingFee) !== '' ? Number(formData.shippingFee) : 0,
+        freeShippingAbove: Number(formData.freeShippingAbove) !== '' ? Number(formData.freeShippingAbove) : 0,
         category: categoryId,
         images: validImages,
         sizes: formData.sizes.map(size => ({
@@ -704,7 +705,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                     step="0.01"
                     min="0"
                     value={formData.shippingFee}
-                    onChange={(e) => setFormData({ ...formData, shippingFee: Number(e.target.value) || 69 })}
+                    onChange={(e) => setFormData({ ...formData, shippingFee: e.target.value === '' ? 0 : Number(e.target.value) })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                   />
                 </div>
@@ -716,7 +717,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                     step="0.01"
                     min="0"
                     value={formData.freeShippingAbove}
-                    onChange={(e) => setFormData({ ...formData, freeShippingAbove: Number(e.target.value) || 999 })}
+                    onChange={(e) => setFormData({ ...formData, freeShippingAbove: e.target.value === '' ? 0 : Number(e.target.value) })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                   />
                 </div>
