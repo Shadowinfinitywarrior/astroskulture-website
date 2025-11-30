@@ -9,38 +9,66 @@ import ProductImageGallery from '../components/ProductImageGallery';
 import ProductReviews from '../components/ProductReviews';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 
+interface AppSettings {
+  gstPercentage: number;
+  gstEnabled: boolean;
+  shippingFee: number;
+  shippingEnabled: boolean;
+  freeShippingAbove: number;
+}
+
 interface ProductPageProps {
   slug: string;
   onNavigate: (page: string, params?: any) => void;
 }
 
 export function ProductPage({ slug, onNavigate }: ProductPageProps) {
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState < Product | null > (null);
   const [selectedSize, setSelectedSize] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [settings, setSettings] = useState < AppSettings > ({
+    gstPercentage: 18,
+    gstEnabled: true,
+    shippingFee: 69,
+    shippingEnabled: true,
+    freeShippingAbove: 999,
+  });
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist, operationLoading } = useWishlist();
   const { user } = useAuth();
 
   useEffect(() => {
     loadProduct();
+    loadSettings();
   }, [slug]);
+
+  const loadSettings = async () => {
+    try {
+      const result = await apiService.getSettings();
+      if (result.success) {
+        setSettings(result.data);
+      }
+    } catch (err) {
+      console.error('Failed to load settings:', err);
+      // Keep default settings if loading fails
+    }
+  };
 
   const loadProduct = async () => {
     try {
       setLoading(true);
       setError('');
-      
+
       const data = await apiService.getProductBySlug(slug);
-      
+
       if (data.success && data.data) {
         setProduct(data.data);
         // Set default size to first available size
         const availableSizes = data.data.sizes
           .filter((size: any) => size.stock > 0)
           .map((size: any) => size.size);
-        
+
         if (availableSizes.length > 0) {
           setSelectedSize(availableSizes[0]);
         }
@@ -57,7 +85,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
 
   const handleAddToCart = () => {
     if (!product) return;
-    
+
     const selectedSizeData = product.sizes.find(size => size.size === selectedSize);
     if (!selectedSizeData || selectedSizeData.stock === 0) {
       alert('Selected size is out of stock');
@@ -91,7 +119,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
 
   const handleWishlistToggle = async () => {
     if (!product) return;
-    
+
     try {
       if (isInWishlist(product._id)) {
         await removeFromWishlist(product._id);
@@ -113,8 +141,8 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-500 text-lg mb-4">{error || 'Product not found'}</p>
-          <button 
-            onClick={() => onNavigate('shop')} 
+          <button
+            onClick={() => onNavigate('shop')}
             className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
           >
             Back to Shop
@@ -125,7 +153,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
   }
 
   const currentPrice = product.discountPrice || product.price;
-  const discountPercentage = product.discountPrice 
+  const discountPercentage = product.discountPrice
     ? Math.round((1 - product.discountPrice / product.price) * 100)
     : 0;
 
@@ -137,7 +165,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Navigation */}
-        <button 
+        <button
           onClick={() => onNavigate('shop')}
           className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors group"
         >
@@ -148,9 +176,9 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 lg:gap-12">
           {/* Product Images */}
           <div className="min-w-0 order-1 lg:order-1">
-            <ProductImageGallery 
-              images={product.images} 
-              productName={product.name} 
+            <ProductImageGallery
+              images={product.images}
+              productName={product.name}
             />
           </div>
 
@@ -172,11 +200,10 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-3.5 md:w-4 h-3.5 md:h-4 ${
-                      i < Math.floor(product.rating || 0)
+                    className={`w-3.5 md:w-4 h-3.5 md:h-4 ${i < Math.floor(product.rating || 0)
                         ? 'text-yellow-400 fill-yellow-400'
                         : 'text-gray-300'
-                    }`}
+                      }`}
                   />
                 ))}
               </div>
@@ -201,7 +228,9 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                   </>
                 )}
               </div>
-              <p className="text-xs text-gray-600">Inclusive of all taxes</p>
+              {settings.gstEnabled && (
+                <p className="text-xs text-gray-600">Inclusive of all taxes</p>
+              )}
             </div>
 
             {/* Description */}
@@ -227,13 +256,12 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                     key={sizeData.size}
                     onClick={() => setSelectedSize(sizeData.size)}
                     disabled={sizeData.stock === 0}
-                    className={`px-2 sm:px-3 md:px-6 py-1.5 sm:py-2 md:py-3 border-2 rounded-lg font-medium transition-all min-w-[44px] sm:min-w-[50px] md:min-w-[60px] relative text-xs md:text-sm ${
-                      selectedSize === sizeData.size
+                    className={`px-2 sm:px-3 md:px-6 py-1.5 sm:py-2 md:py-3 border-2 rounded-lg font-medium transition-all min-w-[44px] sm:min-w-[50px] md:min-w-[60px] relative text-xs md:text-sm ${selectedSize === sizeData.size
                         ? 'border-red-600 bg-red-600 text-white shadow-md'
                         : sizeData.stock > 0
-                        ? 'border-gray-300 hover:border-red-600 hover:text-red-600 text-gray-700 hover:shadow-md'
-                        : 'border-gray-200 text-gray-400 cursor-not-allowed'
-                    }`}
+                          ? 'border-gray-300 hover:border-red-600 hover:text-red-600 text-gray-700 hover:shadow-md'
+                          : 'border-gray-200 text-gray-400 cursor-not-allowed'
+                      }`}
                   >
                     {sizeData.size}
                     {sizeData.stock > 0 && sizeData.stock < 10 && (
@@ -265,8 +293,8 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-2 md:gap-4 items-center">
-              <button 
-                onClick={handleAddToCart} 
+              <button
+                onClick={handleAddToCart}
                 disabled={product.totalStock === 0 || !selectedSize}
                 className="w-full sm:flex-1 bg-gray-900 text-white py-3 md:py-4 px-4 md:px-6 rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center font-medium shadow-sm text-sm md:text-base"
               >
@@ -274,21 +302,20 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                 <span className="hidden xs:inline">Add to Cart</span>
                 <span className="inline xs:hidden">Add</span>
               </button>
-              <button 
+              <button
                 onClick={handleBuyNow}
                 disabled={product.totalStock === 0 || !selectedSize}
                 className="w-full sm:flex-1 bg-red-600 text-white py-3 md:py-4 px-4 md:px-6 rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium shadow-sm text-sm md:text-base"
               >
                 Buy Now
               </button>
-              <button 
+              <button
                 onClick={handleWishlistToggle}
                 disabled={operationLoading}
-                className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 md:h-auto md:w-auto md:px-4 md:py-3 border-2 rounded-lg transition-colors shadow-sm flex items-center justify-center ${
-                  isProductInWishlist
+                className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 md:h-auto md:w-auto md:px-4 md:py-3 border-2 rounded-lg transition-colors shadow-sm flex items-center justify-center ${isProductInWishlist
                     ? 'border-red-600 bg-red-50 text-red-600 hover:bg-red-100'
                     : 'border-gray-300 text-gray-600 hover:border-red-600 hover:text-red-600 hover:bg-red-50'
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
                 title={isProductInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
               >
                 {operationLoading ? (
