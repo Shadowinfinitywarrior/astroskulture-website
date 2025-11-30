@@ -1,6 +1,6 @@
 // Use absolute URLs for both environments since frontend and backend are on different domains
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-  (import.meta.env.PROD 
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.PROD
     ? 'https://astroskulture.in/api'  // Absolute URL in production
     : 'http://localhost:5000/api' // Local development
   );
@@ -13,16 +13,16 @@ class ApiService {
     // Determine which token to use based on the isAdmin flag
     const token = isAdmin ? localStorage.getItem('adminToken') : localStorage.getItem('token');
     const url = `${API_BASE_URL}${endpoint}`;
-    
+
     // Enhanced logging for debugging
-    console.log(`🔄 API Request: ${url}`, { 
-      isAdmin, 
+    console.log(`🔄 API Request: ${url}`, {
+      isAdmin,
       hasToken: !!token,
       tokenType: isAdmin ? 'adminToken' : 'userToken',
       endpoint,
       method: options.method || 'GET'
     });
-    
+
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
@@ -34,20 +34,29 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
-      
+
       // Handle connection errors
       if (!response.ok && response.status === 0) {
         throw new Error('Cannot connect to backend server. Please check if the server is running.');
       }
-      
+
       if (!response.ok) {
-        // Try to parse error response, but handle cases where response is not JSON
+        // Try to parse error response and extract the message
+        let errorMessage = `HTTP ${response.status}`;
         try {
           const data = await response.json();
-          throw new Error(data.message || `API request failed: ${response.status}`);
-        } catch (_parseError) {
-          throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+          // Prioritize the backend's error message
+          errorMessage = data.message || data.error || `API request failed: ${response.status}`;
+        } catch (parseError) {
+          // If response is not JSON, use status text
+          errorMessage = response.statusText || `API request failed: ${response.status}`;
         }
+
+        // Create an error with the backend message and preserve the status code
+        const error: any = new Error(errorMessage);
+        error.status = response.status;
+        error.statusText = response.statusText;
+        throw error;
       }
 
       return await response.json();
@@ -56,7 +65,8 @@ class ApiService {
       console.error('❌ API request error:', {
         endpoint,
         url,
-        error: errorMessage
+        error: errorMessage,
+        status: (error as any)?.status
       });
       throw error;
     }
@@ -99,13 +109,13 @@ class ApiService {
   // Product methods (public) - no auth required
   async getProducts(params?: { category?: string; featured?: boolean; search?: string; page?: number; limit?: number }) {
     const queryParams = new URLSearchParams();
-    
+
     if (params?.category) queryParams.append('category', params.category);
     if (params?.featured) queryParams.append('featured', 'true');
     if (params?.search) queryParams.append('search', params.search);
     if (params && params.page !== undefined) queryParams.append('page', params.page.toString());
     if (params && params.limit !== undefined) queryParams.append('limit', params.limit.toString());
-    
+
     const queryString = queryParams.toString();
     return this.request(`/products${queryString ? `?${queryString}` : ''}`);
   }
