@@ -12,7 +12,7 @@ interface Settings {
 }
 
 export default function AdminSettingsPage({ onNavigate }: { onNavigate: (page: string) => void }) {
-  const [settings, setSettings] = useState<Settings>({
+  const [settings, setSettings] = useState < Settings > ({
     gstPercentage: 18,
     gstEnabled: true,
     shippingFee: 69,
@@ -50,11 +50,11 @@ export default function AdminSettingsPage({ onNavigate }: { onNavigate: (page: s
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const inputElement = e.target as HTMLInputElement;
-    
+
     setSettings(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? inputElement.checked : 
-              type === 'number' ? parseFloat(value) : value
+      [name]: type === 'checkbox' ? inputElement.checked :
+        type === 'number' ? (value === '' ? 0 : parseFloat(value) || 0) : value
     }));
   };
 
@@ -68,6 +68,8 @@ export default function AdminSettingsPage({ onNavigate }: { onNavigate: (page: s
       const result = await apiService.updateSettings(settings);
       if (result.success) {
         setSuccess('Settings updated successfully!');
+        // Reload settings from server to ensure UI is in sync
+        await loadSettings();
         setTimeout(() => setSuccess(''), 3000);
       } else {
         throw new Error(result.message || 'Failed to update settings');
@@ -109,7 +111,7 @@ export default function AdminSettingsPage({ onNavigate }: { onNavigate: (page: s
           {/* GST Section */}
           <div className="mb-8 pb-8 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">GST Settings</h2>
-            
+
             <div className="flex items-center mb-6 p-4 bg-gray-50 rounded-lg">
               <input
                 type="checkbox"
@@ -150,7 +152,7 @@ export default function AdminSettingsPage({ onNavigate }: { onNavigate: (page: s
           {/* Shipping Section */}
           <div className="mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Shipping Settings</h2>
-            
+
             <div className="flex items-center mb-6 p-4 bg-gray-50 rounded-lg">
               <input
                 type="checkbox"
