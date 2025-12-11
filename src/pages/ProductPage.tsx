@@ -99,8 +99,8 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
       discountPrice: product.discountPrice,
       gstPercentage: product.gstPercentage || 18,
       gstApplicable: product.gstApplicable !== undefined ? product.gstApplicable : true,
-      shippingFee: product.shippingFee || 69,
-      freeShippingAbove: product.freeShippingAbove || 999,
+      shippingFee: product.shippingFee !== undefined ? product.shippingFee : 69,
+      freeShippingAbove: product.freeShippingAbove !== undefined ? product.freeShippingAbove : 999,
       size: selectedSize,
       image: product.images[0]?.url || '',
     });

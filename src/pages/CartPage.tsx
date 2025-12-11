@@ -137,16 +137,20 @@ export function CartPage({ onNavigate }: CartPageProps) {
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-medium">₹{subtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-xs md:text-sm">
-                  <span className="text-gray-600">GST ({settings.gstPercentage}%)</span>
-                  <span className="font-medium">₹{gst.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-xs md:text-sm">
-                  <span className="text-gray-600">Shipping</span>
-                  <span className="font-medium">
-                    {shipping === 0 ? 'FREE' : `₹${shipping}`}
-                  </span>
-                </div>
+                {settings.gstEnabled && (
+                  <div className="flex justify-between text-xs md:text-sm">
+                    <span className="text-gray-600">GST ({settings.gstPercentage}%)</span>
+                    <span className="font-medium">₹{gst.toFixed(2)}</span>
+                  </div>
+                )}
+                {settings.shippingEnabled && (
+                  <div className="flex justify-between text-xs md:text-sm">
+                    <span className="text-gray-600">Shipping</span>
+                    <span className="font-medium">
+                      {shipping === 0 ? 'FREE' : `₹${shipping}`}
+                    </span>
+                  </div>
+                )}
                 {subtotal < settings.freeShippingAbove && (
                   <p className="text-xs text-red-600">
                     Add ₹{(settings.freeShippingAbove - subtotal).toFixed(2)} more for free shipping
