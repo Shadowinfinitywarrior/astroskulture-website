@@ -201,13 +201,13 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                   <Star
                     key={i}
                     className={`w-3.5 md:w-4 h-3.5 md:h-4 ${i < Math.floor(product.rating || 0)
-                        ? 'text-yellow-400 fill-yellow-400'
-                        : 'text-gray-300'
+                      ? 'text-yellow-400 fill-yellow-400'
+                      : 'text-gray-300'
                       }`}
                   />
                 ))}
               </div>
-              <span className="text-xs md:text-sm font-medium text-gray-700">{(product.rating || 0).toFixed(1)}</span>
+              <span className="text-xs md:text-sm font-medium text-gray-700">{product.rating && product.rating % 1 === 0 ? Math.round(product.rating) : (product.rating || 0).toFixed(1)}</span>
               <span className="text-xs text-gray-500">({product.reviewCount || 0})</span>
             </div>
 
@@ -228,7 +228,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                   </>
                 )}
               </div>
-              {settings.gstEnabled && (
+              {settings.gstEnabled && product.gstApplicable !== false && (
                 <p className="text-xs text-gray-600">Inclusive of all taxes</p>
               )}
             </div>
@@ -257,10 +257,10 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                     onClick={() => setSelectedSize(sizeData.size)}
                     disabled={sizeData.stock === 0}
                     className={`px-2 sm:px-3 md:px-6 py-1.5 sm:py-2 md:py-3 border-2 rounded-lg font-medium transition-all min-w-[44px] sm:min-w-[50px] md:min-w-[60px] relative text-xs md:text-sm ${selectedSize === sizeData.size
-                        ? 'border-red-600 bg-red-600 text-white shadow-md'
-                        : sizeData.stock > 0
-                          ? 'border-gray-300 hover:border-red-600 hover:text-red-600 text-gray-700 hover:shadow-md'
-                          : 'border-gray-200 text-gray-400 cursor-not-allowed'
+                      ? 'border-red-600 bg-red-600 text-white shadow-md'
+                      : sizeData.stock > 0
+                        ? 'border-gray-300 hover:border-red-600 hover:text-red-600 text-gray-700 hover:shadow-md'
+                        : 'border-gray-200 text-gray-400 cursor-not-allowed'
                       }`}
                   >
                     {sizeData.size}
@@ -313,8 +313,8 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                 onClick={handleWishlistToggle}
                 disabled={operationLoading}
                 className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 md:h-auto md:w-auto md:px-4 md:py-3 border-2 rounded-lg transition-colors shadow-sm flex items-center justify-center ${isProductInWishlist
-                    ? 'border-red-600 bg-red-50 text-red-600 hover:bg-red-100'
-                    : 'border-gray-300 text-gray-600 hover:border-red-600 hover:text-red-600 hover:bg-red-50'
+                  ? 'border-red-600 bg-red-50 text-red-600 hover:bg-red-100'
+                  : 'border-gray-300 text-gray-600 hover:border-red-600 hover:text-red-600 hover:bg-red-50'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 title={isProductInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
               >
@@ -370,7 +370,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                 </div>
                 <div>
                   <span className="font-medium">Rating:</span>{' '}
-                  {product.rating?.toFixed(1)}/5 ({product.reviewCount})
+                  {product.rating && product.rating % 1 === 0 ? `${Math.round(product.rating)}/5` : `${product.rating?.toFixed(1)}/5`} ({product.reviewCount})
                 </div>
               </div>
             </div>
