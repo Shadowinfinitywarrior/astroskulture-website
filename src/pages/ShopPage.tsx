@@ -36,11 +36,7 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
     const sizes = params.get('sizes');
     return sizes ? sizes.split(',') : [];
   });
-  const [selectedFits, setSelectedFits] = useState < string[] > (() => {
-    const params = getSearchParams();
-    const fits = params.get('fits');
-    return fits ? fits.split(',') : [];
-  });
+
   const [minRating, setMinRating] = useState(() => {
     const params = getSearchParams();
     return Number(params.get('minRating')) || 0;
@@ -65,12 +61,12 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
 
   useEffect(() => {
     loadProducts();
-  }, [selectedCategory, sortBy, searchQuery, priceRange, selectedSizes, selectedFits, minRating]);
+  }, [selectedCategory, sortBy, searchQuery, priceRange, selectedSizes, minRating]);
 
   // Update URL when filters change
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    
+
     if (selectedCategory && selectedCategory !== 'all') {
       params.set('category', selectedCategory);
     } else {
@@ -89,8 +85,7 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
     if (selectedSizes.length > 0) params.set('sizes', selectedSizes.join(','));
     else params.delete('sizes');
 
-    if (selectedFits.length > 0) params.set('fits', selectedFits.join(','));
-    else params.delete('fits');
+
 
     if (minRating > 0) params.set('minRating', minRating.toString());
     else params.delete('minRating');
@@ -100,8 +95,8 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
 
     const newUrl = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState(window.history.state, '', newUrl);
-    
-  }, [selectedCategory, searchQuery, priceRange, selectedSizes, selectedFits, minRating, sortBy]);
+
+  }, [selectedCategory, searchQuery, priceRange, selectedSizes, minRating, sortBy]);
 
   const loadCategories = async () => {
     try {
@@ -156,12 +151,7 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
           );
         }
 
-        // Apply fit filter
-        if (selectedFits.length > 0) {
-          filteredProducts = filteredProducts.filter((product: Product) =>
-            product.fits && product.fits.some((f: string) => selectedFits.includes(f))
-          );
-        }
+
 
         // Defensive category filter - ensure products match selected category
         if (selectedCategory && selectedCategory !== 'all') {
@@ -236,7 +226,6 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
     setSearchQuery('');
     setPriceRange([0, 10000]);
     setSelectedSizes([]);
-    setSelectedFits([]);
     setMinRating(0);
     setSortBy('featured');
   };
@@ -405,31 +394,7 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
                   </div>
                 </div>
 
-                {/* Fit Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Fit
-                  </label>
-                  <div className="space-y-2">
-                    {['Regular Fit', 'Slim Fit', 'Oversized', 'Comfort Fit'].map((fit) => (
-                      <label key={fit} className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={selectedFits.includes(fit)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedFits([...selectedFits, fit]);
-                            } else {
-                              setSelectedFits(selectedFits.filter(f => f !== fit));
-                            }
-                          }}
-                          className="w-4 h-4 accent-red-600 rounded"
-                        />
-                        <span className="text-sm text-gray-700">{fit}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
+
 
                 {/* Rating Filter */}
                 <div>
@@ -536,7 +501,7 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
                           {/* Rating */}
                           <div className="flex items-center gap-1 mb-3">
                             <div className="flex items-center bg-green-600 text-white px-2 py-0.5 rounded text-xs font-semibold">
-                              <span>{(product.rating || 0).toFixed(1)}★</span>
+                              <span>{product.rating && product.rating % 1 === 0 ? Math.round(product.rating) : (product.rating || 0).toFixed(1)}★</span>
                             </div>
                             <span className="text-xs text-gray-500">| {product.reviewCount || 0}</span>
                           </div>
