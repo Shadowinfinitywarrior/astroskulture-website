@@ -66,8 +66,9 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
       price: product.price,
       discountPrice: product.discountPrice,
       gstPercentage: product.gstPercentage || 18,
-      shippingFee: product.shippingFee || 69,
-      freeShippingAbove: product.freeShippingAbove || 999,
+      gstApplicable: product.gstApplicable !== undefined ? product.gstApplicable : true,
+      shippingFee: product.shippingFee !== undefined ? product.shippingFee : 69,
+      freeShippingAbove: product.freeShippingAbove !== undefined ? product.freeShippingAbove : 999,
       size: defaultSize,
       image: product.images[0]?.url || '',
     });

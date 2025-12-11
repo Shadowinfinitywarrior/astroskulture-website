@@ -16,14 +16,36 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
   const [products, setProducts] = useState < Product[] > ([]);
   const [categories, setCategories] = useState < Category[] > ([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState < string | null > (initialCategory || null);
-  const [priceRange, setPriceRange] = useState < [number, number] > ([0, 10000]);
-  const [selectedSizes, setSelectedSizes] = useState < string[] > ([]);
-  const [selectedFits, setSelectedFits] = useState < string[] > ([]);
-  const [selectedColors, setSelectedColors] = useState < string[] > ([]);
-  const [minRating, setMinRating] = useState(0);
-  const [sortBy, setSortBy] = useState('featured');
+
+  // Initialize state from URL params
+  const getSearchParams = () => new URLSearchParams(window.location.search);
+
+  const [searchQuery, setSearchQuery] = useState(() => getSearchParams().get('search') || '');
+  const [selectedCategory, setSelectedCategory] = useState < string | null > (() => {
+    const params = getSearchParams();
+    return initialCategory || params.get('category') || null;
+  });
+  const [priceRange, setPriceRange] = useState < [number, number] > (() => {
+    const params = getSearchParams();
+    const min = Number(params.get('minPrice')) || 0;
+    const max = Number(params.get('maxPrice')) || 10000;
+    return [min, max];
+  });
+  const [selectedSizes, setSelectedSizes] = useState < string[] > (() => {
+    const params = getSearchParams();
+    const sizes = params.get('sizes');
+    return sizes ? sizes.split(',') : [];
+  });
+  const [selectedFits, setSelectedFits] = useState < string[] > (() => {
+    const params = getSearchParams();
+    const fits = params.get('fits');
+    return fits ? fits.split(',') : [];
+  });
+  const [minRating, setMinRating] = useState(() => {
+    const params = getSearchParams();
+    return Number(params.get('minRating')) || 0;
+  });
+  const [sortBy, setSortBy] = useState(() => getSearchParams().get('sortBy') || 'featured');
   const [wishlistLoading, setWishlistLoading] = useState < string | null > (null);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -43,7 +65,43 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
 
   useEffect(() => {
     loadProducts();
-  }, [selectedCategory, sortBy, searchQuery, priceRange, selectedSizes, selectedFits, selectedColors, minRating]);
+  }, [selectedCategory, sortBy, searchQuery, priceRange, selectedSizes, selectedFits, minRating]);
+
+  // Update URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    
+    if (selectedCategory && selectedCategory !== 'all') {
+      params.set('category', selectedCategory);
+    } else {
+      params.delete('category');
+    }
+
+    if (searchQuery) params.set('search', searchQuery);
+    else params.delete('search');
+
+    if (priceRange[0] > 0) params.set('minPrice', priceRange[0].toString());
+    else params.delete('minPrice');
+
+    if (priceRange[1] < 10000) params.set('maxPrice', priceRange[1].toString());
+    else params.delete('maxPrice');
+
+    if (selectedSizes.length > 0) params.set('sizes', selectedSizes.join(','));
+    else params.delete('sizes');
+
+    if (selectedFits.length > 0) params.set('fits', selectedFits.join(','));
+    else params.delete('fits');
+
+    if (minRating > 0) params.set('minRating', minRating.toString());
+    else params.delete('minRating');
+
+    if (sortBy !== 'featured') params.set('sortBy', sortBy);
+    else params.delete('sortBy');
+
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState(window.history.state, '', newUrl);
+    
+  }, [selectedCategory, searchQuery, priceRange, selectedSizes, selectedFits, minRating, sortBy]);
 
   const loadCategories = async () => {
     try {
@@ -102,13 +160,6 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
         if (selectedFits.length > 0) {
           filteredProducts = filteredProducts.filter((product: Product) =>
             product.fits && product.fits.some((f: string) => selectedFits.includes(f))
-          );
-        }
-
-        // Apply color filter
-        if (selectedColors.length > 0) {
-          filteredProducts = filteredProducts.filter((product: Product) =>
-            product.colors && product.colors.some((c: string) => selectedColors.includes(c))
           );
         }
 
@@ -186,7 +237,6 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
     setPriceRange([0, 10000]);
     setSelectedSizes([]);
     setSelectedFits([]);
-    setSelectedColors([]);
     setMinRating(0);
     setSortBy('featured');
   };
@@ -376,32 +426,6 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
                           className="w-4 h-4 accent-red-600 rounded"
                         />
                         <span className="text-sm text-gray-700">{fit}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Color Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Color
-                  </label>
-                  <div className="space-y-2">
-                    {['Black', 'White', 'Red', 'Blue', 'Green', 'Gray', 'Navy'].map((color) => (
-                      <label key={color} className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={selectedColors.includes(color)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedColors([...selectedColors, color]);
-                            } else {
-                              setSelectedColors(selectedColors.filter(c => c !== color));
-                            }
-                          }}
-                          className="w-4 h-4 accent-red-600 rounded"
-                        />
-                        <span className="text-sm text-gray-700">{color}</span>
                       </label>
                     ))}
                   </div>
