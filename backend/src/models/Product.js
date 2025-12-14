@@ -37,7 +37,7 @@ const productSchema = new mongoose.Schema({
   },
   shippingFee: {
     type: Number,
-    default: 69,
+    default: 0,
     min: 0
   },
   freeShippingAbove: {
@@ -105,16 +105,16 @@ const productSchema = new mongoose.Schema({
 });
 
 // Generate slug from name before saving (only on creation, not on update)
-productSchema.pre('save', function(next) {
+productSchema.pre('save', function (next) {
   if (!this.slug) {
     this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
   }
-  
+
   // Calculate total stock from sizes
   if (this.sizes && this.sizes.length > 0) {
     this.totalStock = this.sizes.reduce((total, size) => total + (size.stock || 0), 0);
   }
-  
+
   this.updatedAt = Date.now();
   next();
 });

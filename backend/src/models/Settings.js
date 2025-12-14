@@ -13,7 +13,7 @@ const settingsSchema = new mongoose.Schema({
   },
   shippingFee: {
     type: Number,
-    default: 69,
+    default: 0,
     min: 0
   },
   shippingEnabled: {
