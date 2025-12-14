@@ -520,6 +520,12 @@ class ApiService {
       body: JSON.stringify(settingsData),
     }, true);
   }
+  async masterReset(options: { products?: boolean; orders?: boolean; users?: boolean; reviews?: boolean; all?: boolean }) {
+    return this.request('/admin/reset-db', {
+      method: 'POST',
+      body: JSON.stringify(options),
+    }, true);
+  }
 }
 
 export const apiService = new ApiService();

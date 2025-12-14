@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ShoppingCart, Heart, Star, Truck, Shield, RefreshCw, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, Heart, Star, Truck, Shield, RefreshCw, ArrowLeft, Check } from 'lucide-react';
 import { apiService } from '../lib/mongodb';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -27,12 +27,13 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
   const [selectedSize, setSelectedSize] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isAdded, setIsAdded] = useState(false);
   const [settings, setSettings] = useState < AppSettings > ({
     gstPercentage: 18,
     gstEnabled: true,
-    shippingFee: 69,
+    shippingFee: 0,
     shippingEnabled: true,
-    freeShippingAbove: 999,
+    freeShippingAbove: 0,
   });
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist, operationLoading } = useWishlist();
@@ -97,13 +98,28 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
       name: product.name,
       price: product.price,
       discountPrice: product.discountPrice,
-      gstPercentage: product.gstPercentage || 18,
+      gstPercentage: product.gstPercentage || settings.gstPercentage || 18,
       gstApplicable: product.gstApplicable !== undefined ? product.gstApplicable : true,
-      shippingFee: product.shippingFee !== undefined ? product.shippingFee : 69,
-      freeShippingAbove: product.freeShippingAbove !== undefined ? product.freeShippingAbove : 999,
+      shippingFee: product.shippingFee !== undefined ? product.shippingFee : settings.shippingFee,
+      freeShippingAbove: product.freeShippingAbove !== undefined ? product.freeShippingAbove : settings.freeShippingAbove,
       size: selectedSize,
       image: product.images[0]?.url || '',
     });
+    addToCart({
+      productId: product._id,
+      name: product.name,
+      price: product.price,
+      discountPrice: product.discountPrice,
+      gstPercentage: product.gstPercentage || settings.gstPercentage || 18,
+      gstApplicable: product.gstApplicable !== undefined ? product.gstApplicable : true,
+      shippingFee: product.shippingFee !== undefined ? product.shippingFee : settings.shippingFee,
+      freeShippingAbove: product.freeShippingAbove !== undefined ? product.freeShippingAbove : settings.freeShippingAbove,
+      size: selectedSize,
+      image: product.images[0]?.url || '',
+    });
+
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 2000);
   };
 
   const handleBuyNow = () => {
@@ -295,12 +311,25 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
             <div className="flex flex-col sm:flex-row gap-2 md:gap-4 items-center">
               <button
                 onClick={handleAddToCart}
-                disabled={product.totalStock === 0 || !selectedSize}
-                className="w-full sm:flex-1 bg-gray-900 text-white py-3 md:py-4 px-4 md:px-6 rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center font-medium shadow-sm text-sm md:text-base"
+                disabled={product.totalStock === 0 || !selectedSize || isAdded}
+                className={`w-full sm:flex-1 py-3 md:py-4 px-4 md:px-6 rounded-lg transition-colors flex items-center justify-center font-medium shadow-sm text-sm md:text-base ${isAdded
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : 'bg-gray-900 hover:bg-gray-800 text-white disabled:bg-gray-400 disabled:cursor-not-allowed'
+                  }`}
               >
-                <ShoppingCart className="w-4 md:w-5 h-4 md:h-5 mr-1 md:mr-2" />
-                <span className="hidden xs:inline">Add to Cart</span>
-                <span className="inline xs:hidden">Add</span>
+                {isAdded ? (
+                  <>
+                    <Check className="w-4 md:w-5 h-4 md:h-5 mr-1 md:mr-2" />
+                    <span className="hidden xs:inline">Added to Cart</span>
+                    <span className="inline xs:hidden">Added</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="w-4 md:w-5 h-4 md:h-5 mr-1 md:mr-2" />
+                    <span className="hidden xs:inline">Add to Cart</span>
+                    <span className="inline xs:hidden">Add</span>
+                  </>
+                )}
               </button>
               <button
                 onClick={handleBuyNow}

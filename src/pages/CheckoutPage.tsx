@@ -60,17 +60,17 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
   const { user, addAddress } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [selectedAddress, setSelectedAddress] = useState<string>("new");
+  const [selectedAddress, setSelectedAddress] = useState < string > ("new");
   const [razorpayKeyId, setRazorpayKeyId] = useState("");
-  const [settings, setSettings] = useState<AppSettings>({
+  const [settings, setSettings] = useState < AppSettings > ({
     gstPercentage: 18,
     gstEnabled: true,
-    shippingFee: 69,
+    shippingFee: 0,
     shippingEnabled: true,
-    freeShippingAbove: 999,
+    freeShippingAbove: 0,
   });
 
-  const [formData, setFormData] = useState<CheckoutForm>({
+  const [formData, setFormData] = useState < CheckoutForm > ({
     email: user?.email || "",
     fullName: user?.fullName || "",
     phone: user?.phone || "",
@@ -90,7 +90,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
     document.body.appendChild(script);
-    
+
     const keyId = import.meta.env.VITE_RAZORPAY_KEY_ID;
     if (keyId) {
       setRazorpayKeyId(keyId);
@@ -99,7 +99,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
     }
 
     loadSettings();
-    
+
     return () => {
       document.body.removeChild(script);
     };
@@ -247,7 +247,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
 
       let tax = 0;
       let shipping = 0;
-      
+
       if (settings.gstEnabled) {
         tax = items.reduce((sum, item) => {
           if (item.gstApplicable === false) {
@@ -258,11 +258,11 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
           return sum + itemGst;
         }, 0);
       }
-      
+
       if (settings.shippingEnabled) {
         shipping = cartTotal >= settings.freeShippingAbove ? 0 : settings.shippingFee;
       }
-      
+
       const total = cartTotal + tax + shipping;
 
       const orderData = {
@@ -375,7 +375,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
 
   let shippingCost = 0;
   let tax = 0;
-  
+
   if (settings.gstEnabled) {
     tax = items.reduce((sum, item) => {
       if (item.gstApplicable === false) {
@@ -386,11 +386,11 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
       return sum + itemGst;
     }, 0);
   }
-  
+
   if (settings.shippingEnabled) {
     shippingCost = cartTotal >= settings.freeShippingAbove ? 0 : settings.shippingFee;
   }
-  
+
   const finalTotal = cartTotal + tax + shippingCost;
 
   if (items.length === 0) {
@@ -446,216 +446,216 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
             </div>
           ) : (
             <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-6">Shipping Information</h2>
+              <h2 className="text-xl font-semibold mb-6">Shipping Information</h2>
 
-            {user && user.addresses.length > 0 && (
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Address
-                </label>
-                <select
-                  value={selectedAddress}
-                  onChange={(e) => handleAddressSelect(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="new">Add New Address</option>
-                  {user.addresses.map((address) => (
-                    <option key={address._id} value={address._id}>
-                      {address.fullName} - {address.city}, {address.state}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Flat, House no., Building, Company, Apartment
-                </label>
-                <input
-                  type="text"
-                  name="flatHouseNumber"
-                  value={formData.flatHouseNumber}
-                  onChange={handleInputChange}
-                  placeholder="e.g., 21c/144b North"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Area, Street, Sector, Village
-                </label>
-                <input
-                  type="text"
-                  name="areaStreetSector"
-                  value={formData.areaStreetSector}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Kennedy Street"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Landmark
-                </label>
-                <input
-                  type="text"
-                  name="landmark"
-                  value={formData.landmark}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Near CSI Church"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Street Address
-                </label>
-                <input
-                  type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    City
+              {user && user.addresses.length > 0 && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Address
                   </label>
-                  <input
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    required
+                  <select
+                    value={selectedAddress}
+                    onChange={(e) => handleAddressSelect(e.target.value)}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    State
-                  </label>
-                  <input
-                    type="text"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Postal Code
-                  </label>
-                  <input
-                    type="text"
-                    name="postalCode"
-                    value={formData.postalCode}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Country
-                  </label>
-                  <input
-                    type="text"
-                    name="country"
-                    value={formData.country}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-
-              {user && (
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="saveAddress"
-                    checked={formData.saveAddress}
-                    onChange={handleInputChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label className="ml-2 text-sm text-gray-700">
-                    Save this address for future orders
-                  </label>
+                  >
+                    <option value="new">Add New Address</option>
+                    {user.addresses.map((address) => (
+                      <option key={address._id} value={address._id}>
+                        {address.fullName} - {address.city}, {address.state}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? "Processing..." : `Pay ₹${finalTotal}`}
-              </button>
-            </form>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Flat, House no., Building, Company, Apartment
+                  </label>
+                  <input
+                    type="text"
+                    name="flatHouseNumber"
+                    value={formData.flatHouseNumber}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 21c/144b North"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Area, Street, Sector, Village
+                  </label>
+                  <input
+                    type="text"
+                    name="areaStreetSector"
+                    value={formData.areaStreetSector}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Kennedy Street"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Landmark
+                  </label>
+                  <input
+                    type="text"
+                    name="landmark"
+                    value={formData.landmark}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Near CSI Church"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Street Address
+                  </label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      City
+                    </label>
+                    <input
+                      type="text"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      State
+                    </label>
+                    <input
+                      type="text"
+                      name="state"
+                      value={formData.state}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Postal Code
+                    </label>
+                    <input
+                      type="text"
+                      name="postalCode"
+                      value={formData.postalCode}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Country
+                    </label>
+                    <input
+                      type="text"
+                      name="country"
+                      value={formData.country}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {user && (
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="saveAddress"
+                      checked={formData.saveAddress}
+                      onChange={handleInputChange}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label className="ml-2 text-sm text-gray-700">
+                      Save this address for future orders
+                    </label>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? "Processing..." : `Pay ₹${finalTotal}`}
+                </button>
+              </form>
             </div>
           )}
 
           {/* Order Summary */}
           <div className="bg-white rounded-lg shadow-sm p-6 h-fit">
             <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
-            
+
             <div className="space-y-4 mb-6">
               {items.map((item) => (
                 <div key={`${item.productId}-${item.size}`} className="flex justify-between items-center">

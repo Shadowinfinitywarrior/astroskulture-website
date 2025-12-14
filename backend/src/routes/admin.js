@@ -43,7 +43,7 @@ router.post('/products', async (req, res) => {
       req.body.category = req.body.categoryId;
       delete req.body.categoryId;
     }
-    
+
     // Calculate totalStock from sizes if provided
     if (req.body.sizes && Array.isArray(req.body.sizes)) {
       req.body.totalStock = req.body.sizes.reduce((total, size) => total + (size.stock || 0), 0);
@@ -117,7 +117,7 @@ router.put('/products/:id', async (req, res) => {
       req.body.category = req.body.categoryId;
       delete req.body.categoryId;
     }
-    
+
     // Calculate totalStock from sizes if provided
     if (req.body.sizes && Array.isArray(req.body.sizes)) {
       req.body.totalStock = req.body.sizes.reduce((total, size) => total + (size.stock || 0), 0);
@@ -139,11 +139,11 @@ router.put('/products/:id', async (req, res) => {
       { ...req.body, updatedAt: Date.now() },
       { new: true, runValidators: true }
     )
-    .populate({
-      path: 'category',
-      select: 'name slug'
-    })
-    .lean();
+      .populate({
+        path: 'category',
+        select: 'name slug'
+      })
+      .lean();
 
     if (!product) {
       return res.status(404).json({
@@ -179,14 +179,14 @@ router.delete('/products/:id', async (req, res) => {
 
     try {
       await Product.findByIdAndDelete(req.params.id);
-      
+
       res.json({
         success: true,
         message: 'Product deleted successfully'
       });
     } catch (deleteError) {
       console.warn('⚠️ Failed to delete product from database, moving to deleted products:', deleteError.message);
-      
+
       try {
         const deletedProduct = new DeletedProduct({
           originalProductId: product._id,
@@ -203,11 +203,11 @@ router.delete('/products/:id', async (req, res) => {
           reason: 'system_error',
           canRestore: true
         });
-        
+
         await deletedProduct.save();
-        
+
         console.log('✅ Product moved to DeletedProduct collection');
-        
+
         res.json({
           success: true,
           message: 'Product marked for deletion (moved to archive)',
@@ -330,7 +330,7 @@ router.get('/orders', async (req, res) => {
       .populate('userId', 'email fullName')
       .populate('items.productId', 'name images')
       .sort({ createdAt: -1 });
-    
+
     res.json({
       success: true,
       data: orders
@@ -353,8 +353,8 @@ router.put('/orders/:id/status', async (req, res) => {
       { status, updatedAt: Date.now() },
       { new: true }
     )
-    .populate('userId', 'email fullName')
-    .populate('items.productId', 'name images');
+      .populate('userId', 'email fullName')
+      .populate('items.productId', 'name images');
 
     if (!order) {
       return res.status(404).json({
@@ -445,7 +445,7 @@ router.put('/users/:id', async (req, res) => {
   try {
     // Don't allow password updates through this route
     const { password, ...updateData } = req.body;
-    
+
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { ...updateData, updatedAt: Date.now() },
@@ -476,21 +476,21 @@ router.put('/users/:id', async (req, res) => {
 router.delete('/users/:id', async (req, res) => {
   try {
     const userId = req.params.id;
-    
+
     // First delete related data
     const Wishlist = (await import('../models/Wishlist.js')).default;
     const Review = (await import('../models/Review.js')).default;
-    
+
     // Delete user's wishlist items
     await Wishlist.deleteMany({ userId });
-    
+
     // Delete user's reviews
     await Review.deleteMany({ userId });
-    
+
     // Delete user's orders (optional - you might want to keep order history)
     // Uncomment the following line if you want to delete orders when user is deleted
     // await Order.deleteMany({ userId });
-    
+
     // Now delete the user
     const user = await User.findByIdAndDelete(userId);
 
@@ -538,12 +538,12 @@ router.get('/stats', async (req, res) => {
       ],
       isActive: true
     })
-    .populate({
-      path: 'category',
-      select: 'name'
-    })
-    .limit(10)
-    .lean();
+      .populate({
+        path: 'category',
+        select: 'name'
+      })
+      .limit(10)
+      .lean();
 
     // Calculate total revenue
     const revenueResult = await Order.aggregate([
@@ -656,6 +656,70 @@ router.post('/deleted-products/:id/restore', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error restoring product',
+      error: error.message
+    });
+  }
+});
+
+router.post('/reset-db', async (req, res) => {
+  try {
+    const { products, orders, users, reviews, all } = req.body;
+    const results = {};
+
+    // 1. Reset Products
+    if (products || all) {
+      // Delete all products
+      await Product.deleteMany({});
+      // Delete all deleted/archived products
+      await DeletedProduct.deleteMany({});
+      results.products = 'All products deleted';
+    }
+
+    // 2. Reset Orders
+    if (orders || all) {
+      await Order.deleteMany({});
+      results.orders = 'All orders deleted';
+    }
+
+    // 3. Reset Reviews
+    if (reviews || all) {
+      const Review = (await import('../models/Review.js')).default;
+      await Review.deleteMany({});
+      results.reviews = 'All reviews deleted';
+    }
+
+    // 4. Reset Users (except admin if possible, but request says "Users")
+    // Usually we want to keep the current admin user active so they don't get locked out immediately
+    if (users || all) {
+      // Delete all users except the one making the request (assuming req.admin exists)
+      // or just delete non-admin users?
+      // The requirement suggests a "Master Reset", which usually implies wiping everything.
+      // However, deleting the current admin would return a 401 on the response potentially? 
+      // No, the response is sent before the token invalidates technically, but usually better to keep admins or self.
+
+      // Let's delete ALL users with role 'customer'.
+      await User.deleteMany({ role: 'customer' });
+      results.users = 'All customer accounts deleted';
+
+      // If 'all' is strictly everything, maybe we delete all? 
+      // Safe bet: Delete customers. Only delete admins if we are sure.
+      // Let's stick to deleting customers for safety unless explicitly requested otherwise.
+    }
+
+    // If 'all' was selected, maybe we also want to reset categories/banners etc?
+    // The UI had specific checkboxes. 'all' is just a helper for those checkboxes.
+    // But let's check if we missed anything.
+
+    res.json({
+      success: true,
+      message: 'Database reset successful',
+      results
+    });
+  } catch (error) {
+    console.error('Error resetting database:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error resetting database',
       error: error.message
     });
   }
