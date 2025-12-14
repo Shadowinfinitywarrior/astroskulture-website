@@ -14,7 +14,8 @@ router.use(authenticateAdmin);
 // Admin products routes
 router.get('/products', async (req, res) => {
   try {
-    const products = await Product.find({ isActive: true })
+    // Admin should see ALL products (both active and inactive)
+    const products = await Product.find()
       .populate({
         path: 'category',
         select: 'name slug'
@@ -518,7 +519,7 @@ router.delete('/users/:id', async (req, res) => {
 // Admin dashboard stats
 router.get('/stats', async (req, res) => {
   try {
-    const totalProducts = await Product.countDocuments({ isActive: true });
+    const totalProducts = await Product.countDocuments(); // Count ALL products
     const totalUsers = await User.countDocuments();
     const totalOrders = await Order.countDocuments();
     const totalCategories = await Category.countDocuments({ isActive: true });
