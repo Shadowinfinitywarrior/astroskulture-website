@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { Package, ShoppingCart, Users, DollarSign, RefreshCw, AlertCircle, Trash2 } from 'lucide-react';
+import { apiService } from '../../lib/mongodb';
 import { useAdminAuth } from '../../contexts/AdminAuthContext';
 
 interface Stats {
@@ -146,11 +147,6 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
         totalRevenue,
       });
 
-      // If "view reset" mode is active, override stats with 0
-      if (sessionStorage.getItem('adminDashboardReset') === 'true') {
-        setStats({ totalProducts: 0, totalOrders: 0, totalUsers: 0, totalRevenue: 0 });
-      }
-
       setAdminAccess(true);
 
     } catch (error) {
@@ -168,14 +164,33 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
   };
 
   const handleRetry = () => {
-    sessionStorage.removeItem('adminDashboardReset');
     fetchStats();
   };
 
-  const handleResetView = () => {
-    sessionStorage.setItem('adminDashboardReset', 'true');
-    setStats({ totalProducts: 0, totalOrders: 0, totalUsers: 0, totalRevenue: 0 });
+  const handleResetRevenue = async () => {
+    if (!confirm('Are you sure you want to RESET REVENUE? This will PERMANENTLY DELETE ALL ORDERS from the database. This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const result = await apiService.masterReset({ orders: true });
+      if (result.success) {
+        // Refresh stats to show 0 revenue
+        await fetchStats();
+        alert('Revenue and Order history have been reset successfully.');
+      } else {
+        throw new Error(result.message || 'Failed to reset revenue');
+      }
+    } catch (err) {
+      console.error('Error resetting revenue:', err);
+      // setStats error state or just alert
+      alert('Failed to reset revenue: ' + (err instanceof Error ? err.message : String(err)));
+      setLoading(false); // fetchStats handles loading, but if we fail before that:
+    }
   };
+
+
 
   const handleLogout = () => {
     logout();
@@ -293,11 +308,11 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
               <span>Refresh</span>
             </button>
             <button
-              onClick={handleResetView}
-              className="flex items-center space-x-2 bg-slate-100 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors"
+              onClick={handleResetRevenue}
+              className="flex items-center space-x-2 bg-red-100 text-red-700 px-4 py-2 rounded-lg hover:bg-red-200 transition-colors"
             >
               <Trash2 className="w-4 h-4" />
-              <span>Reset View</span>
+              <span>Reset Revenue</span>
             </button>
             <button
               onClick={handleLogout}
