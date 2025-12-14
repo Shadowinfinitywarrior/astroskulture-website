@@ -100,6 +100,8 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
       discountPrice: product.discountPrice,
       gstPercentage: product.gstPercentage || settings.gstPercentage || 18,
       gstApplicable: product.gstApplicable !== undefined ? product.gstApplicable : true,
+      shippingFee: product.shippingFee !== undefined ? product.shippingFee : settings.shippingFee,
+      freeShippingAbove: product.freeShippingAbove !== undefined ? product.freeShippingAbove : settings.freeShippingAbove,
       size: selectedSize,
       image: product.images[0]?.url || '',
     });

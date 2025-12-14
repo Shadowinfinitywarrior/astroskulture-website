@@ -66,8 +66,10 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
       name: product.name,
       price: product.price,
       discountPrice: product.discountPrice,
-      gstPercentage: product.gstPercentage ?? 0, // Default to 0 if null/undefined, allow 0
-      gstApplicable: product.gstApplicable ?? false, // Default to false if null/undefined, allow false
+      gstPercentage: product.gstPercentage ?? 0,
+      gstApplicable: product.gstApplicable ?? false,
+      shippingFee: product.shippingFee ?? 0,
+      freeShippingAbove: product.freeShippingAbove ?? 0,
       size: defaultSize,
       image: product.images[0]?.url || '',
     });
