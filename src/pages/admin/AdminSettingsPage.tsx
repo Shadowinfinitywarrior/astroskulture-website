@@ -11,7 +11,16 @@ interface Settings {
   freeShippingAbove: number;
 }
 
+// Add confirmation modal state
 export default function AdminSettingsPage({ onNavigate }: { onNavigate: (page: string) => void }) {
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetOptions, setResetOptions] = useState({
+    products: false,
+    orders: false,
+    users: false,
+    reviews: false,
+    all: false
+  });
   const [settings, setSettings] = useState < Settings > ({
     gstPercentage: 18,
     gstEnabled: true,
@@ -51,11 +60,74 @@ export default function AdminSettingsPage({ onNavigate }: { onNavigate: (page: s
     const { name, value, type } = e.target;
     const inputElement = e.target as HTMLInputElement;
 
-    setSettings(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? inputElement.checked :
-        type === 'number' ? (value === '' ? 0 : parseFloat(value) || 0) : value
-    }));
+    // Enhanced number handling to allow 0 and empty strings
+    if (type === 'number') {
+      const numValue = value === '' ? 0 : parseFloat(value);
+      setSettings(prev => ({
+        ...prev,
+        [name]: numValue
+      }));
+    } else {
+      setSettings(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? inputElement.checked : value
+      }));
+    }
+  };
+
+  const handleResetOptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    if (name === 'all') {
+      setResetOptions({
+        products: checked,
+        orders: checked,
+        users: checked,
+        reviews: checked,
+        all: checked
+      });
+    } else {
+      setResetOptions(prev => ({
+        ...prev,
+        [name]: checked,
+        all: checked && prev.products && prev.orders && prev.users && prev.reviews // rough logic
+      }));
+    }
+  };
+
+  const handleMasterReset = async () => {
+    if (!resetOptions.products && !resetOptions.orders && !resetOptions.users && !resetOptions.reviews) {
+      setError('Please select at least one item to reset');
+      return;
+    }
+
+    if (!confirm('WARNING: This will PERMANENTLY DELETE the selected data. This action cannot be undone. Are you sure?')) {
+      return;
+    }
+
+    try {
+      setSaving(true);
+      // Logic for Master Reset - implementing mocked call or real if backend updated
+      // Assuming apiService.masterReset exists or we call a direct endpoint
+      const result = await apiService.request('/admin/reset-db', {
+        method: 'POST',
+        body: JSON.stringify(resetOptions)
+      }, true);
+
+      if (result.success) {
+        setSuccess('Data reset successfully');
+        setShowResetModal(false);
+        // Maybe logout if users deleted?
+        if (resetOptions.users || resetOptions.all) {
+          setTimeout(() => onNavigate('login'), 2000);
+        }
+      } else {
+        throw new Error(result.message || 'Reset failed');
+      }
+    } catch (err) {
+      setError('Failed to reset data: ' + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -204,6 +276,45 @@ export default function AdminSettingsPage({ onNavigate }: { onNavigate: (page: s
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Dangerous Zone - Master Reset */}
+          <div className="mb-8 border-t border-red-200 pt-8 mt-12">
+            <h2 className="text-xl font-bold text-red-600 mb-2">Dangerous Zone</h2>
+            <p className="text-gray-600 mb-4">Actions here can cause permanent data loss. Use with extreme caution.</p>
+
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h3 className="font-semibold text-red-900 mb-4">Master Data Reset</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                <label className="flex items-center space-x-2">
+                  <input type="checkbox" name="all" checked={resetOptions.all} onChange={handleResetOptionChange} className="rounded text-red-600 focus:ring-red-500" />
+                  <span className="text-sm font-medium text-gray-700">Select All</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input type="checkbox" name="orders" checked={resetOptions.orders} onChange={handleResetOptionChange} className="rounded text-red-600 focus:ring-red-500" />
+                  <span className="text-sm text-gray-700">Orders & Revenue</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input type="checkbox" name="users" checked={resetOptions.users} onChange={handleResetOptionChange} className="rounded text-red-600 focus:ring-red-500" />
+                  <span className="text-sm text-gray-700">Users & Accounts</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input type="checkbox" name="products" checked={resetOptions.products} onChange={handleResetOptionChange} className="rounded text-red-600 focus:ring-red-500" />
+                  <span className="text-sm text-gray-700">Products & Images</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input type="checkbox" name="reviews" checked={resetOptions.reviews} onChange={handleResetOptionChange} className="rounded text-red-600 focus:ring-red-500" />
+                  <span className="text-sm text-gray-700">Reviews</span>
+                </label>
+              </div>
+              <button
+                type="button"
+                onClick={handleMasterReset}
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors text-sm font-medium"
+              >
+                Clear Selected Data
+              </button>
+            </div>
           </div>
 
           {/* Summary */}

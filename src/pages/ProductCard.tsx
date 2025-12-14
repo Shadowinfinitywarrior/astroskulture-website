@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, ShoppingCart, Star, Eye } from 'lucide-react';
+import { Heart, ShoppingCart, Star, Eye, Check } from 'lucide-react';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -17,23 +17,24 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { addToCart } = useCart();
+  const [isAdded, setIsAdded] = useState(false);
   const { user } = useAuth();
-  
+
   const isInWishlistState = isInWishlist(product._id);
   const hasDiscount = product.discountPrice && product.discountPrice < product.price;
-  const discountPercentage = hasDiscount 
+  const discountPercentage = hasDiscount
     ? Math.round((1 - product.discountPrice! / product.price) * 100)
     : 0;
   const currentPrice = product.discountPrice || product.price;
 
   const handleWishlistToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     if (!user) {
       onNavigate('login');
       return;
     }
-    
+
     try {
       setWishlistLoading(true);
       if (isInWishlistState) {
@@ -51,30 +52,33 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     if (product.totalStock === 0) {
       // You could show a toast notification here
       console.log('Product is out of stock');
       return;
     }
-    
+
     const defaultSize = product.sizes?.find(size => size.stock > 0)?.size || 'M';
-    
+
     addToCart({
       productId: product._id,
       name: product.name,
       price: product.price,
       discountPrice: product.discountPrice,
-      gstPercentage: product.gstPercentage || 18,
-      gstApplicable: product.gstApplicable !== undefined ? product.gstApplicable : true,
-      shippingFee: product.shippingFee !== undefined ? product.shippingFee : 69,
-      freeShippingAbove: product.freeShippingAbove !== undefined ? product.freeShippingAbove : 999,
+      gstPercentage: product.gstPercentage ?? 0, // Default to 0 if null/undefined, allow 0
+      gstApplicable: product.gstApplicable ?? false, // Default to false if null/undefined, allow false
+      shippingFee: product.shippingFee ?? 0, // Default to 0 if null/undefined, allow 0
+      freeShippingAbove: product.freeShippingAbove ?? 0, // Default to 0 if null/undefined, allow 0
       size: defaultSize,
       image: product.images[0]?.url || '',
     });
 
     // You could add a success toast notification here
     console.log('Product added to cart:', product.name);
+
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 2000);
   };
 
   const handleProductClick = () => {
@@ -116,7 +120,7 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
     <div className="bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition-all duration-300 border border-gray-100">
       <div className="relative overflow-hidden">
         {/* Product Image */}
-        <div 
+        <div
           className="w-full aspect-square bg-gray-100 cursor-pointer relative"
           onClick={handleProductClick}
         >
@@ -125,19 +129,18 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
               <div className="w-8 h-8 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
           )}
-          
+
           <img
             src={imageError ? '/api/placeholder/300/300' : (product.images[0]?.url || '/api/placeholder/300/300')}
             alt={product.name}
-            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
-              imageLoading ? 'opacity-0' : 'opacity-100'
-            }`}
+            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${imageLoading ? 'opacity-0' : 'opacity-100'
+              }`}
             loading="lazy"
             decoding="async"
             onLoad={handleImageLoad}
             onError={handleImageError}
           />
-          
+
           {/* Overlay with quick actions - only on hover */}
           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300">
             <div className="absolute top-3 right-3 flex flex-col space-y-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
@@ -157,11 +160,10 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
             <button
               onClick={handleWishlistToggle}
               disabled={wishlistLoading}
-              className={`absolute bottom-3 right-3 p-2 rounded-full shadow-md transition-colors z-20 ${
-                isInWishlistState
-                  ? 'bg-red-600 text-white hover:bg-red-700'
-                  : 'bg-white text-gray-600 hover:bg-red-50 hover:text-red-600'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`absolute bottom-3 right-3 p-2 rounded-full shadow-md transition-colors z-20 ${isInWishlistState
+                ? 'bg-red-600 text-white hover:bg-red-700'
+                : 'bg-white text-gray-600 hover:bg-red-50 hover:text-red-600'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
               title={isInWishlistState ? 'Remove from Wishlist' : 'Add to Wishlist'}
             >
               {wishlistLoading ? (
@@ -180,7 +182,7 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
                 BESTSELLER
               </div>
             )}
-            
+
             {/* Featured Badge */}
             {product.isFeatured && !product.isBestseller && (
               <div className="bg-yellow-400 text-yellow-900 px-2.5 py-0.5 rounded-full text-xs font-bold shadow-lg">
@@ -213,11 +215,23 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
           <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-95 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 p-3">
             <button
               onClick={handleAddToCart}
-              disabled={!isAvailable}
-              className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center font-medium text-sm"
+              disabled={!isAvailable || isAdded}
+              className={`w-full py-2 px-4 rounded-lg transition-colors flex items-center justify-center font-medium text-sm ${isAdded
+                ? 'bg-green-600 text-white hover:bg-green-700'
+                : 'bg-red-600 text-white hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed'
+                }`}
             >
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              {isAvailable ? 'Add to Cart' : 'Out of Stock'}
+              {isAdded ? (
+                <>
+                  <Check className="w-4 h-4 mr-2" />
+                  Added
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  {isAvailable ? 'Add to Cart' : 'Out of Stock'}
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -231,7 +245,7 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
         </div>
 
         {/* Product Name */}
-        <h3 
+        <h3
           className="font-semibold text-sm text-gray-900 mb-2 cursor-pointer hover:text-red-600 transition-colors line-clamp-2 leading-tight"
           onClick={handleProductClick}
           title={product.name}
@@ -282,11 +296,10 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
               {product.sizes.slice(0, 3).map((sizeData) => (
                 <span
                   key={sizeData.size}
-                  className={`text-xs px-1 py-0.5 rounded ${
-                    sizeData.stock > 0
-                      ? 'bg-gray-100 text-gray-700'
-                      : 'bg-gray-50 text-gray-400 line-through'
-                  }`}
+                  className={`text-xs px-1 py-0.5 rounded ${sizeData.stock > 0
+                    ? 'bg-gray-100 text-gray-700'
+                    : 'bg-gray-50 text-gray-400 line-through'
+                    }`}
                 >
                   {sizeData.size}
                 </span>

@@ -32,6 +32,7 @@ export interface Product {
   price: number;
   discountPrice?: number;
   gstPercentage?: number;
+  gstApplicable?: boolean;
   shippingFee?: number;
   freeShippingAbove?: number;
   images: ProductImage[];

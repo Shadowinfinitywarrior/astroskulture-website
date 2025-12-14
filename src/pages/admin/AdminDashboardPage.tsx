@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { Package, ShoppingCart, Users, DollarSign, RefreshCw, AlertCircle } from 'lucide-react';
+import { Package, ShoppingCart, Users, DollarSign, RefreshCw, AlertCircle, Trash2 } from 'lucide-react';
 import { useAdminAuth } from '../../contexts/AdminAuthContext';
 
 interface Stats {
@@ -16,20 +16,20 @@ interface AdminDashboardPageProps {
 
 export default function AdminDashboardPage({ onNavigate }: AdminDashboardPageProps) {
   const { isAuthenticated, admin, logout } = useAdminAuth();
-  const [stats, setStats] = useState<Stats>({
+  const [stats, setStats] = useState < Stats > ({
     totalProducts: 0,
     totalOrders: 0,
     totalUsers: 0,
     totalRevenue: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [adminAccess, setAdminAccess] = useState<boolean>(true);
+  const [error, setError] = useState < string | null > (null);
+  const [adminAccess, setAdminAccess] = useState < boolean > (true);
 
   // FIXED: Use environment-based API URL
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-    (import.meta.env.PROD 
-      ? 'https://astroskulture.in/api' 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
+    (import.meta.env.PROD
+      ? 'https://astroskulture.in/api'
       : 'http://localhost:5000/api'
     );
 
@@ -48,11 +48,11 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
     try {
       setLoading(true);
       setError(null);
-      
+
       console.log('📊 Fetching dashboard stats with token:', token ? 'Present' : 'Missing');
       console.log('👤 Current admin:', admin);
       console.log('🌍 Using API URL:', API_BASE_URL);
-      
+
       // Debug token
       if (token) {
         try {
@@ -65,7 +65,7 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
 
       // Test admin access first
       const testAccess = await fetch(`${API_BASE_URL}/admin/products`, {
-        headers: { 
+        headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
@@ -75,10 +75,10 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
         console.error('🔐 Admin access test failed:', testAccess.status);
         const errorData = await testAccess.json().catch(() => ({}));
         console.error('🔐 Error details:', errorData);
-        
+
         setAdminAccess(false);
         setError(`Admin access denied: ${errorData.message || 'You do not have admin privileges'}`);
-        
+
         // Set default stats since we can't access admin data
         setStats({
           totalProducts: 0,
@@ -94,17 +94,17 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
       const requests = [
         // Public endpoint for products
         fetch(`${API_BASE_URL}/products`).then(res => res.json()),
-        
+
         // Admin endpoints
         fetch(`${API_BASE_URL}/admin/orders`, {
-          headers: { 
+          headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
         }).then(res => res.json()),
-        
+
         fetch(`${API_BASE_URL}/admin/users`, {
-          headers: { 
+          headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
@@ -135,7 +135,7 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
       const users = usersResult.success ? usersResult.data : [];
 
       // Calculate total revenue from orders
-      const totalRevenue = Array.isArray(orders) 
+      const totalRevenue = Array.isArray(orders)
         ? orders.reduce((sum: number, order: any) => sum + (order.totalAmount || order.total || 0), 0)
         : 0;
 
@@ -145,6 +145,11 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
         totalUsers: Array.isArray(users) ? users.length : 0,
         totalRevenue,
       });
+
+      // If "view reset" mode is active, override stats with 0
+      if (sessionStorage.getItem('adminDashboardReset') === 'true') {
+        setStats({ totalProducts: 0, totalOrders: 0, totalUsers: 0, totalRevenue: 0 });
+      }
 
       setAdminAccess(true);
 
@@ -163,7 +168,13 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
   };
 
   const handleRetry = () => {
+    sessionStorage.removeItem('adminDashboardReset');
     fetchStats();
+  };
+
+  const handleResetView = () => {
+    sessionStorage.setItem('adminDashboardReset', 'true');
+    setStats({ totalProducts: 0, totalOrders: 0, totalUsers: 0, totalRevenue: 0 });
   };
 
   const handleLogout = () => {
@@ -211,7 +222,7 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
     },
     {
       title: 'Total Revenue',
-      value: `$${stats.totalRevenue.toFixed(2)}`,
+      value: `₹${stats.totalRevenue.toFixed(2)}`,
       icon: DollarSign,
       color: 'bg-yellow-500',
       target: 'admin-orders',
@@ -282,6 +293,13 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
               <span>Refresh</span>
             </button>
             <button
+              onClick={handleResetView}
+              className="flex items-center space-x-2 bg-slate-100 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Reset View</span>
+            </button>
+            <button
               onClick={handleLogout}
               className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
             >
@@ -292,9 +310,8 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
 
         {/* Error Messages */}
         {error && (
-          <div className={`mb-6 rounded-lg p-4 ${
-            adminAccess ? 'bg-yellow-50 border border-yellow-200 text-yellow-800' : 'bg-red-50 border border-red-200 text-red-800'
-          }`}>
+          <div className={`mb-6 rounded-lg p-4 ${adminAccess ? 'bg-yellow-50 border border-yellow-200 text-yellow-800' : 'bg-red-50 border border-red-200 text-red-800'
+            }`}>
             <div className="flex items-start space-x-3">
               <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
@@ -328,11 +345,10 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
                 key={stat.title}
                 onClick={() => handleNavigation(stat.target)}
                 disabled={stat.disabled}
-                className={`bg-white rounded-lg shadow p-6 transition-all cursor-pointer text-left w-full ${
-                  stat.disabled 
-                    ? 'opacity-50 cursor-not-allowed' 
-                    : 'hover:shadow-lg hover:scale-105'
-                }`}
+                className={`bg-white rounded-lg shadow p-6 transition-all cursor-pointer text-left w-full ${stat.disabled
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:shadow-lg hover:scale-105'
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -365,11 +381,10 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
                     key={action.title}
                     onClick={() => handleNavigation(action.target)}
                     disabled={action.disabled}
-                    className={`block w-full text-left px-4 py-3 rounded-lg transition-colors cursor-pointer ${
-                      action.disabled
-                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                        : 'bg-slate-50 hover:bg-slate-100'
-                    }`}
+                    className={`block w-full text-left px-4 py-3 rounded-lg transition-colors cursor-pointer ${action.disabled
+                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                      : 'bg-slate-50 hover:bg-slate-100'
+                      }`}
                   >
                     <div className="flex items-center space-x-3">
                       <ActionIcon className="w-5 h-5" />
