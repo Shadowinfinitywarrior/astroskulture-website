@@ -17,10 +17,10 @@ interface CartPageProps {
 
 export function CartPage({ onNavigate }: CartPageProps) {
   const { items, removeFromCart, updateQuantity, cartTotal, cartCount } = useCart();
-  const [settings, setSettings] = useState<AppSettings>({
+  const [settings, setSettings] = useState < AppSettings > ({
     gstPercentage: 18,
     gstEnabled: true,
-    shippingFee: 69,
+    shippingFee: 0,
     shippingEnabled: true,
     freeShippingAbove: 999,
   });

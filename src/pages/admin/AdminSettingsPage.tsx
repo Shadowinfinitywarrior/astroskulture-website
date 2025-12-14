@@ -24,7 +24,7 @@ export default function AdminSettingsPage({ onNavigate }: { onNavigate: (page: s
   const [settings, setSettings] = useState < Settings > ({
     gstPercentage: 18,
     gstEnabled: true,
-    shippingFee: 69,
+    shippingFee: 0,
     shippingEnabled: true,
     freeShippingAbove: 999,
   });

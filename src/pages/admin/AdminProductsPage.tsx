@@ -38,10 +38,10 @@ interface AdminProductsPageProps {
 
 export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps) {
   const { isAuthenticated, login, loading: authLoading } = useAdminAuth();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]); // NEW: Categories state
+  const [products, setProducts] = useState < Product[] > ([]);
+  const [categories, setCategories] = useState < Category[] > ([]); // NEW: Categories state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingProduct, setEditingProduct] = useState < Product | null > (null);
   const [loading, setLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(false); // NEW: Categories loading state
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
@@ -52,7 +52,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
     discountPrice: 0,
     gstPercentage: 18,
     gstApplicable: true,
-    shippingFee: 69,
+    shippingFee: 0,
     freeShippingAbove: 999,
     category: '',
     images: [{ url: '', alt: '' }],
@@ -68,9 +68,9 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
   });
 
   // FIXED: Use environment-based API URL
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-    (import.meta.env.PROD 
-      ? 'https://astroskulture-website.onrender.com/api' 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
+    (import.meta.env.PROD
+      ? 'https://astroskulture-website.onrender.com/api'
       : 'http://localhost:5000/api'
     );
 
@@ -89,19 +89,19 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
       const token = localStorage.getItem('adminToken');
       console.log('📦 Fetching products from:', `${API_BASE_URL}/admin/products`);
       console.log('📦 Token present:', !!token);
-      
+
       const response = await fetch(`${API_BASE_URL}/admin/products`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
-      
+
       console.log('📦 Products response status:', response.status);
-      
+
       if (response.ok) {
         const result = await response.json();
         console.log('📦 Products data received:', result.data?.length || 0, 'products');
-        
+
         if (result.success) {
           setProducts(result.data || []);
         } else {
@@ -111,13 +111,13 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
       } else {
         const errorText = await response.text();
         console.error('HTTP Error:', response.status, errorText);
-        
+
         if (response.status === 401) {
           // Token is invalid, clear it
           localStorage.removeItem('adminToken');
           window.location.reload();
         }
-        
+
         setProducts([]);
       }
     } catch (error) {
@@ -133,13 +133,13 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
     try {
       setCategoriesLoading(true);
       console.log('📂 Fetching categories...');
-      
+
       const response = await fetch(`${API_BASE_URL}/categories`);
-      
+
       if (response.ok) {
         const result = await response.json();
         console.log('📂 Categories data received:', result.data?.length || 0, 'categories');
-        
+
         if (result.success) {
           setCategories(result.data || []);
         } else {
@@ -247,7 +247,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
       });
 
       const result = await response.json();
-      
+
       if (!response.ok) {
         // Get detailed error message from backend
         const errorMessage = result.message || result.error || `HTTP error! status: ${response.status}`;
@@ -276,16 +276,16 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
 
     try {
       console.log('🗑️ Deleting product:', id);
-      
+
       const response = await fetch(`${API_BASE_URL}/admin/products/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         console.log('✅ Product deleted successfully');
         fetchProducts();
@@ -313,14 +313,14 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
   };
 
   const updateImageField = (index: number, field: 'url' | 'alt', value: string) => {
-    const newImages = formData.images.map((image, i) => 
+    const newImages = formData.images.map((image, i) =>
       i === index ? { ...image, [field]: value } : image
     );
     setFormData({ ...formData, images: newImages });
   };
 
   const updateSizeStock = (sizeIndex: number, stock: number) => {
-    const newSizes = formData.sizes.map((size, i) => 
+    const newSizes = formData.sizes.map((size, i) =>
       i === sizeIndex ? { ...size, stock: Number(stock) || 0 } : size
     );
     setFormData({ ...formData, sizes: newSizes });
@@ -336,7 +336,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         discountPrice: product.discountPrice || 0,
         gstPercentage: product.gstPercentage || 18,
         gstApplicable: product.gstApplicable !== undefined ? product.gstApplicable : true,
-        shippingFee: product.shippingFee !== undefined ? product.shippingFee : 69,
+        shippingFee: product.shippingFee !== undefined ? product.shippingFee : 0,
         freeShippingAbove: product.freeShippingAbove !== undefined ? product.freeShippingAbove : 999,
         category: product.category,
         images: (product.images.length > 0 ? product.images : [{ url: '', alt: '' }]) as any,
@@ -353,7 +353,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         discountPrice: 0,
         gstPercentage: 18,
         gstApplicable: true,
-        shippingFee: 69,
+        shippingFee: 0,
         freeShippingAbove: 999,
         category: '',
         images: [{ url: '', alt: '' }],
@@ -466,7 +466,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
           {products.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-slate-500">No products found.</p>
-              <button 
+              <button
                 onClick={fetchProducts}
                 className="mt-4 bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
               >
@@ -559,10 +559,10 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                           <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
                       </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
@@ -576,7 +576,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
               <h2 className="text-2xl font-bold text-slate-900">
                 {editingProduct ? 'Edit Product' : 'Add Product'}
               </h2>
-              <button 
+              <button
                 onClick={closeModal}
                 className="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100 transition-colors"
               >
@@ -603,9 +603,8 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className={`w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent ${
-                      editingProduct ? 'bg-slate-100 cursor-not-allowed' : ''
-                    }`}
+                    className={`w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent ${editingProduct ? 'bg-slate-100 cursor-not-allowed' : ''
+                      }`}
                     disabled={editingProduct ? true : false}
                     required
                   >
