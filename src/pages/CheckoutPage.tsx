@@ -67,7 +67,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
     gstEnabled: true,
     shippingFee: 0,
     shippingEnabled: true,
-    freeShippingAbove: 0,
+    freeShippingAbove: 999,
   });
 
   const [formData, setFormData] = useState < CheckoutForm > ({

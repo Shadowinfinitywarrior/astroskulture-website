@@ -33,7 +33,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
     gstEnabled: true,
     shippingFee: 0,
     shippingEnabled: true,
-    freeShippingAbove: 0,
+    freeShippingAbove: 999,
   });
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist, operationLoading } = useWishlist();
@@ -357,7 +357,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
             <div className="space-y-2 md:space-y-3 border-t border-gray-200 pt-3 md:pt-4">
               <div className="flex items-center space-x-2 md:space-x-3 text-gray-600">
                 <Truck className="w-4 md:w-5 h-4 md:h-5 text-red-600 flex-shrink-0" />
-                <span className="text-xs md:text-sm">Free delivery on orders above ₹999</span>
+                <span className="text-xs md:text-sm">Free delivery on orders above ₹{settings.freeShippingAbove}</span>
               </div>
               <div className="flex items-center space-x-2 md:space-x-3 text-gray-600">
                 <RefreshCw className="w-4 md:w-5 h-4 md:h-5 text-red-600 flex-shrink-0" />
