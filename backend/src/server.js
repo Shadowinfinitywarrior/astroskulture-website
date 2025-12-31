@@ -93,8 +93,9 @@ const maskedUri = MONGODB_URI.replace(/mongodb\+srv:\/\/([^:]+):([^@]+)@/, 'mong
 console.log('📦 Database:', maskedUri);
 
 mongoose.connect(MONGODB_URI, {
-  serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
-  socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  dbName: 'astromain' // Explicitly force the database name
 })
   .then(() => {
     console.log('✅ Connected to MongoDB successfully');
@@ -106,7 +107,7 @@ mongoose.connect(MONGODB_URI, {
     console.error('   Error:', err.message);
     console.error('   Code:', err.code);
     console.error('   Name:', err.name);
-    
+
     if (err.code === 'ENOTFOUND') {
       console.error('💡 Network issue: Cannot connect to MongoDB Atlas');
       console.error('💡 Check your internet connection and MongoDB Atlas IP whitelist');
@@ -115,13 +116,13 @@ mongoose.connect(MONGODB_URI, {
     } else if (err.code === 'ECONNREFUSED') {
       console.error('💡 Connection refused: Check if MongoDB is running');
     }
-    
+
     console.error('💡 Troubleshooting tips:');
     console.error('   1. Check your MongoDB connection string in .env file');
     console.error('   2. Verify your MongoDB Atlas cluster is running');
     console.error('   3. Check your network connection');
     console.error('   4. Ensure IP is whitelisted in MongoDB Atlas');
-    
+
     process.exit(1);
   });
 
@@ -181,7 +182,7 @@ app.use('/api/settings', settingsRoutes); // ADDED SETTINGS ROUTES
 // Serve static files from React build in production
 if (process.env.NODE_ENV === 'production') {
   console.log('🏗️  Production mode: Serving React static files');
-  
+
   // Serve static files from the React app build
   app.use(express.static(path.join(__dirname, '../../dist')));
 
@@ -189,12 +190,12 @@ if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => {
     // Don't serve HTML for API routes
     if (req.path.startsWith('/api/')) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'API route not found' 
+      return res.status(404).json({
+        success: false,
+        message: 'API route not found'
       });
     }
-    
+
     console.log(`📄 Serving React app for: ${req.path}`);
     // Serve React app for all other routes
     res.sendFile(path.join(__dirname, '../../dist/index.html'));
@@ -210,10 +211,10 @@ app.get('/api/health', (req, res) => {
     2: 'connecting',
     3: 'disconnecting'
   };
-  
+
   const healthStatus = dbStatus === 1 ? 'healthy' : 'unhealthy';
-  
-  res.json({ 
+
+  res.json({
     success: true,
     status: healthStatus,
     message: 'ASTRO-MAIN API Server Health Check',
@@ -356,13 +357,13 @@ app.get('/api', (req, res) => {
 // Global error handling middleware
 app.use((err, req, res, next) => {
   console.error('🚨 Unhandled Error:', err);
-  
+
   res.status(500).json({
     success: false,
     message: 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { 
+    ...(process.env.NODE_ENV === 'development' && {
       error: err.message,
-      stack: err.stack 
+      stack: err.stack
     })
   });
 });
@@ -375,7 +376,7 @@ app.use('*', (req, res) => {
     suggestion: 'Check the /api endpoint for available routes',
     availableRoutes: [
       '/api/auth',
-      '/api/products', 
+      '/api/products',
       '/api/orders',
       '/api/users',
       '/api/categories',
@@ -430,7 +431,7 @@ app.listen(PORT, () => {
   console.log('   • /api/analytics/* (admin only)'); // ADDED ANALYTICS PROTECTED ROUTES
   console.log('   • /api/payments/*'); // ADDED PAYMENT PROTECTED ROUTES
   console.log('═'.repeat(60));
-  
+
   // Additional production info
   if (process.env.NODE_ENV === 'production') {
     console.log('🏗️  Production Mode: Serving React frontend from /dist');
