@@ -31,6 +31,9 @@ if [ -d ".git" ]; then
     git pull origin main
 fi
 
+# Print current commit to verify update
+echo -e "${YELLOW}🔍 Current Commit: $(git log -1 --format="%h - %s")${NC}"
+
 # Step 3: Install frontend dependencies
 echo -e "${YELLOW}📦 Installing frontend dependencies...${NC}"
 npm install --production=false
@@ -43,6 +46,9 @@ npm install --production
 # Step 5: Build frontend
 echo -e "${YELLOW}🔨 Building frontend for production...${NC}"
 cd "$PROJECT_DIR"
+# Clean previous build
+echo -e "${YELLOW}🧹 Cleaning previous build...${NC}"
+rm -rf dist
 npm run build
 
 # Verify build was successful
