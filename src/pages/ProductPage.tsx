@@ -256,24 +256,18 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
               </div>
               <div className="flex flex-wrap gap-1 md:gap-2">
                 {product.sizes.map((sizeData) => (
-                  <button
-                    key={sizeData.size}
-                    onClick={() => setSelectedSize(sizeData.size)}
-                    disabled={sizeData.stock === 0}
-                    className={`px-2 sm:px-3 md:px-6 py-1.5 sm:py-2 md:py-3 border-2 rounded-lg font-medium transition-all min-w-[44px] sm:min-w-[50px] md:min-w-[60px] relative text-xs md:text-sm ${selectedSize === sizeData.size
-                      ? 'border-red-600 bg-red-600 text-white shadow-md'
-                      : sizeData.stock > 0
-                        ? 'border-gray-300 hover:border-red-600 hover:text-red-600 text-gray-700 hover:shadow-md'
-                        : 'border-gray-200 text-gray-400 cursor-not-allowed'
-                      }`}
-                  >
-                    {sizeData.size}
-                    {sizeData.stock > 0 && sizeData.stock < 10 && (
-                      <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center text-[10px]">
-                        {sizeData.stock}
-                      </span>
-                    )}
-                  </button>
+                  sizeData.stock > 0 && (
+                    <button
+                      key={sizeData.size}
+                      onClick={() => setSelectedSize(sizeData.size)}
+                      className={`px-2 sm:px-3 md:px-6 py-1.5 sm:py-2 md:py-3 border-2 rounded-lg font-medium transition-all min-w-[44px] sm:min-w-[50px] md:min-w-[60px] relative text-xs md:text-sm ${selectedSize === sizeData.size
+                        ? 'border-red-600 bg-red-600 text-white shadow-md'
+                        : 'border-gray-300 hover:border-red-600 hover:text-red-600 text-gray-700 hover:shadow-md'
+                        }`}
+                    >
+                      {sizeData.size}
+                    </button>
+                  )
                 ))}
               </div>
             </div>
