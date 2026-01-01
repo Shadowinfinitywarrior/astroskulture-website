@@ -7,8 +7,8 @@ interface Order {
   orderNumber?: string;
   userId?: {
     email: string;
-    firstName: string;
-    lastName: string;
+    fullName: string;
+    phone?: string;
   };
   items: Array<{
     productId: string;
@@ -29,6 +29,7 @@ interface Order {
     city: string;
     postalCode: string;
     country: string;
+    phone?: string;
   };
   createdAt: string;
 }
@@ -38,8 +39,8 @@ interface AdminOrdersPageProps {
 }
 
 export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [orders, setOrders] = useState < Order[] > ([]);
+  const [selectedOrder, setSelectedOrder] = useState < Order | null > (null);
   const [loading, setLoading] = useState(true);
   const [isEditingPrices, setIsEditingPrices] = useState(false);
   const [editingPrices, setEditingPrices] = useState({
@@ -50,9 +51,9 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
   });
 
   // FIXED: Use environment-based API URL
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-    (import.meta.env.PROD 
-      ? 'https://astroskulture.in/api' 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
+    (import.meta.env.PROD
+      ? 'https://astroskulture.in/api'
       : 'http://localhost:5000/api'
     );
 
@@ -65,17 +66,17 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
     try {
       setLoading(true);
       console.log('📦 Fetching orders from:', `${API_BASE_URL}/admin/orders`);
-      
+
       const response = await fetch(`${API_BASE_URL}/admin/orders`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
-      
+
       console.log('📦 Orders response status:', response.status);
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         console.log('📦 Orders data received:', result.data?.length || 0, 'orders');
         setOrders(result.data || []);
@@ -95,7 +96,7 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
     const token = localStorage.getItem('adminToken');
     try {
       console.log('🔄 Updating order status:', { orderId, status });
-      
+
       const response = await fetch(`${API_BASE_URL}/admin/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
@@ -104,9 +105,9 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
         },
         body: JSON.stringify({ status }),
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         console.log('✅ Order status updated successfully');
         fetchOrders();
@@ -146,7 +147,7 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
     const token = localStorage.getItem('adminToken');
     try {
       console.log('💰 Updating order prices:', editingPrices);
-      
+
       const response = await fetch(`${API_BASE_URL}/orders/${selectedOrder._id}`, {
         method: 'PUT',
         headers: {
@@ -160,9 +161,9 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
           total: Number(editingPrices.total)
         }),
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         console.log('✅ Order prices updated successfully');
         setSelectedOrder(result.data);
@@ -185,16 +186,16 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
     const token = localStorage.getItem('adminToken');
     try {
       console.log('🗑️ Deleting order:', orderId);
-      
+
       const response = await fetch(`${API_BASE_URL}/admin/orders/${orderId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         console.log('✅ Order deleted successfully');
         setOrders(orders.filter(order => order._id !== orderId));
@@ -249,7 +250,7 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
           {orders.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-slate-500">No orders found.</p>
-              <button 
+              <button
                 onClick={fetchOrders}
                 className="mt-4 bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
               >
@@ -288,7 +289,7 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                       {order.userId
-                        ? `${order.userId.firstName} ${order.userId.lastName}`
+                        ? order.userId.fullName
                         : order.shippingAddress?.fullName || 'Guest'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
@@ -345,7 +346,7 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
                 <div className="bg-slate-50 p-4 rounded-lg space-y-2">
                   <p><span className="font-medium">Order ID:</span> {selectedOrder.orderNumber || selectedOrder._id}</p>
                   <p><span className="font-medium">Date:</span> {new Date(selectedOrder.createdAt).toLocaleString()}</p>
-                  
+
                   {!isEditingPrices && (
                     <>
                       <p><span className="font-medium">Subtotal:</span> ₹{(selectedOrder.subtotal || 0).toLocaleString()}</p>
@@ -360,7 +361,7 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
                       </button>
                     </>
                   )}
-                  
+
                   {isEditingPrices && (
                     <div className="space-y-3 mt-4 pt-4 border-t">
                       <div>
@@ -448,6 +449,9 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
                   <p>{selectedOrder.shippingAddress.address}</p>
                   <p>{selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.postalCode}</p>
                   <p>{selectedOrder.shippingAddress.country}</p>
+                  {(selectedOrder.shippingAddress.phone || selectedOrder.userId?.phone) && (
+                    <p>{selectedOrder.shippingAddress.phone || selectedOrder.userId?.phone}</p>
+                  )}
                 </div>
               </div>
 

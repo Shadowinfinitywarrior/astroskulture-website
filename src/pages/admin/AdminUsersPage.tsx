@@ -6,8 +6,7 @@ import { useAdminAuth } from '../../contexts/AdminAuthContext';
 interface User {
   _id: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
   phone?: string;
   role: string;
   createdAt: string;
@@ -19,24 +18,23 @@ interface AdminUsersPageProps {
 
 export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
   const { isAuthenticated } = useAdminAuth();
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState < User[] > ([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState < User | null > (null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState < string | null > (null);
   const [formData, setFormData] = useState({
     email: '',
-    firstName: '',
-    lastName: '',
+    fullName: '',
     phone: '',
     password: '',
     role: 'customer',
   });
 
   // FIXED: Use environment-based API URL
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-    (import.meta.env.PROD 
-      ? 'https://astroskulture-website.onrender.com/api' 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
+    (import.meta.env.PROD
+      ? 'https://astroskulture-website.onrender.com/api'
       : 'http://localhost:5000/api'
     );
 
@@ -53,23 +51,23 @@ export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
     try {
       setLoading(true);
       setError(null);
-      
+
       console.log('👥 Fetching users from:', `${API_BASE_URL}/admin/users`);
       console.log('👥 Token present:', !!token);
-      
+
       const response = await fetch(`${API_BASE_URL}/admin/users`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
       });
-      
+
       console.log('👥 Users response status:', response.status);
-      
+
       if (response.ok) {
         const result = await response.json();
         console.log('👥 Users data received:', result.data?.length || 0, 'users');
-        
+
         if (result.success) {
           setUsers(result.data || []);
         } else {
@@ -80,7 +78,7 @@ export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
       } else {
         const errorText = await response.text();
         console.error('👥 HTTP Error:', response.status, errorText);
-        
+
         if (response.status === 401) {
           setError('Authentication failed. Please login again.');
           // Token is invalid, clear it
@@ -107,7 +105,7 @@ export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
 
     try {
       setError(null);
-      
+
       const url = editingUser
         ? `${API_BASE_URL}/admin/users/${editingUser._id}`
         : `${API_BASE_URL}/admin/users`;
@@ -126,7 +124,7 @@ export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         console.log('✅ User saved successfully');
         fetchUsers();
@@ -148,18 +146,18 @@ export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
     const token = localStorage.getItem('adminToken');
     try {
       setError(null);
-      
+
       console.log('🗑️ Deleting user:', id);
-      
+
       const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         console.log('✅ User deleted successfully');
         fetchUsers();
@@ -179,8 +177,7 @@ export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
       setEditingUser(user);
       setFormData({
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        fullName: user.fullName,
         phone: user.phone || '',
         password: '',
         role: user.role,
@@ -189,8 +186,7 @@ export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
       setEditingUser(null);
       setFormData({
         email: '',
-        firstName: '',
-        lastName: '',
+        fullName: '',
         phone: '',
         password: '',
         role: 'customer',
@@ -264,7 +260,7 @@ export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
           {users.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-slate-500 mb-4">No users found.</p>
-              <button 
+              <button
                 onClick={handleRetry}
                 className="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
               >
@@ -300,7 +296,7 @@ export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
                   <tr key={user._id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-slate-900">
-                        {user.firstName} {user.lastName}
+                        {user.fullName || 'N/A'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
@@ -310,11 +306,10 @@ export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
                       {user.phone || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.role === 'admin' 
-                          ? 'bg-purple-100 text-purple-800 border border-purple-200' 
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'admin'
+                          ? 'bg-purple-100 text-purple-800 border border-purple-200'
                           : 'bg-slate-100 text-slate-800 border border-slate-200'
-                      }`}>
+                        }`}>
                         {user.role}
                       </span>
                     </td>
@@ -352,7 +347,7 @@ export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
               <h2 className="text-2xl font-bold text-slate-900">
                 {editingUser ? 'Edit User' : 'Add User'}
               </h2>
-              <button 
+              <button
                 onClick={closeModal}
                 className="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100 transition-colors"
               >
@@ -372,29 +367,15 @@ export default function AdminUsersPage({ onNavigate }: AdminUsersPageProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    First Name *
+                    Full Name *
                   </label>
                   <input
                     type="text"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    value={formData.fullName}
+                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                     required
-                    placeholder="Enter first name"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Last Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
-                    required
-                    placeholder="Enter last name"
+                    placeholder="Enter full name"
                   />
                 </div>
               </div>
