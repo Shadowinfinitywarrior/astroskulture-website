@@ -26,6 +26,7 @@ echo -e "${YELLOW}📁 Navigating to project directory...${NC}"
 cd "$PROJECT_DIR" || exit 1
 
 # Step 2: Pull latest code (if using git)
+if [ -d ".git" ]; then
     echo -e "${YELLOW}📥 Pulling latest code from git...${NC}"
     git pull origin main
 else
