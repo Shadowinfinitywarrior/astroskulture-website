@@ -22,6 +22,7 @@ interface Product {
   slug: string;
   rating: number;
   reviewCount: number;
+  colors: string[];
 }
 
 interface Category {
@@ -63,9 +64,13 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
       { size: 'XL', stock: 0 },
       { size: 'XXL', stock: 0 }
     ],
+    colors: [] as string[],
     isFeatured: false,
     isActive: true,
   });
+
+  const STANDARD_COLORS = ['Red', 'Blue', 'Green', 'Black', 'White', 'Yellow'];
+  const [customColor, setCustomColor] = useState('');
 
   // FIXED: Use environment-based API URL
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
@@ -229,6 +234,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
           size: size.size,
           stock: Number(size.stock) || 0
         })),
+        colors: formData.colors,
         totalStock,
         isFeatured: formData.isFeatured,
         isActive: formData.isActive,
@@ -326,6 +332,33 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
     setFormData({ ...formData, sizes: newSizes });
   };
 
+  const handleColorToggle = (color: string) => {
+    setFormData(prev => {
+      if (prev.colors.includes(color)) {
+        return { ...prev, colors: prev.colors.filter(c => c !== color) };
+      } else {
+        return { ...prev, colors: [...prev.colors, color] };
+      }
+    });
+  };
+
+  const addCustomColor = () => {
+    if (customColor.trim() && !formData.colors.includes(customColor.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        colors: [...prev.colors, customColor.trim()]
+      }));
+      setCustomColor('');
+    }
+  };
+
+  const removeColor = (color: string) => {
+    setFormData(prev => ({
+      ...prev,
+      colors: prev.colors.filter(c => c !== color)
+    }));
+  };
+
   const openModal = (product?: Product) => {
     if (product) {
       setEditingProduct(product);
@@ -341,6 +374,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         category: product.category,
         images: (product.images.length > 0 ? product.images : [{ url: '', alt: '' }]) as any,
         sizes: product.sizes,
+        colors: product.colors || [],
         isFeatured: product.isFeatured,
         isActive: product.isActive,
       });
@@ -364,6 +398,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
           { size: 'XL', stock: 0 },
           { size: 'XXL', stock: 0 }
         ],
+        colors: [],
         isFeatured: false,
         isActive: true,
       });
@@ -790,6 +825,80 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Colors Section */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-4">Colors</label>
+
+                {/* Standard Colors */}
+                <div className="mb-4">
+                  <p className="text-xs text-slate-500 mb-2">Standard Colors</p>
+                  <div className="flex flex-wrap gap-3">
+                    {STANDARD_COLORS.map(color => (
+                      <label key={color} className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.colors.includes(color)}
+                          onChange={() => handleColorToggle(color)}
+                          className="w-4 h-4 text-slate-900 border-slate-300 rounded focus:ring-slate-900"
+                        />
+                        <span className="text-sm text-slate-700">{color}</span>
+                        <span
+                          className="w-4 h-4 rounded-full border border-gray-200"
+                          style={{ backgroundColor: color.toLowerCase() }}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Custom Colors */}
+                <div className="mb-4">
+                  <p className="text-xs text-slate-500 mb-2">Custom Colors</p>
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={customColor}
+                      onChange={(e) => setCustomColor(e.target.value)}
+                      placeholder="Enter custom color"
+                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomColor())}
+                    />
+                    <button
+                      type="button"
+                      onClick={addCustomColor}
+                      className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+
+                {/* Selected Colors Preview */}
+                {formData.colors.length > 0 && (
+                  <div className="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-lg">
+                    {formData.colors.map(color => (
+                      <span
+                        key={color}
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white border border-slate-200 shadow-sm"
+                      >
+                        <span
+                          className="w-3 h-3 rounded-full mr-1.5 border border-gray-200"
+                          style={{ backgroundColor: color.toLowerCase() }}
+                        />
+                        {color}
+                        <button
+                          type="button"
+                          onClick={() => removeColor(color)}
+                          className="ml-1.5 text-slate-400 hover:text-red-500"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col space-y-4 sm:space-y-0 pt-4">
