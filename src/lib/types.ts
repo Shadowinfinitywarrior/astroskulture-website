@@ -44,6 +44,7 @@ export interface Product {
   reviewCount: number;
   tags: string[];
   brand?: string; // New field for product brand (e.g., "RARE RABBIT")
+  material?: string; // New field for product material (e.g., "Cotton")
   isBestseller?: boolean; // New field to mark bestseller products
   colors?: string[]; // New field for available colors
   fits?: string[]; // New field for available fits (e.g., "Regular Fit", "Slim Fit")

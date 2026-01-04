@@ -407,6 +407,12 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                     {product.brand}
                   </div>
                 )}
+                {product.material && (
+                  <div>
+                    <span className="font-medium text-gray-900">Material:</span>{' '}
+                    {product.material}
+                  </div>
+                )}
                 <div>
                   <span className="font-medium text-gray-900">SKU:</span>{' '}
                   {product.slug.toUpperCase()}
