@@ -25,6 +25,7 @@ interface ProductPageProps {
 export function ProductPage({ slug, onNavigate }: ProductPageProps) {
   const [product, setProduct] = useState < Product | null > (null);
   const [selectedSize, setSelectedSize] = useState('');
+  const [selectedColor, setSelectedColor] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isAdded, setIsAdded] = useState(false);
@@ -73,6 +74,11 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
         if (availableSizes.length > 0) {
           setSelectedSize(availableSizes[0]);
         }
+
+        // Set default color
+        if (data.data.colors && data.data.colors.length > 0) {
+          setSelectedColor(data.data.colors[0]);
+        }
       } else {
         setError('Product not found');
       }
@@ -103,6 +109,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
       shippingFee: product.shippingFee !== undefined ? product.shippingFee : settings.shippingFee,
       freeShippingAbove: product.freeShippingAbove !== undefined ? product.freeShippingAbove : settings.freeShippingAbove,
       size: selectedSize,
+      color: selectedColor,
       image: product.images[0]?.url || '',
     });
 
@@ -272,6 +279,29 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
               </div>
             </div>
 
+            {/* Color Selection */}
+            {product.colors && product.colors.length > 0 && (
+              <div className="space-y-2 md:space-y-3">
+                <label className="block text-xs md:text-sm font-medium text-gray-700">
+                  Select Color
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {product.colors.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setSelectedColor(color)}
+                      className={`px-3 py-1.5 border-2 rounded-lg text-xs md:text-sm font-medium transition-all ${selectedColor === color
+                        ? 'border-red-600 bg-red-50 text-red-700'
+                        : 'border-gray-300 text-gray-600 hover:border-red-600'
+                        }`}
+                    >
+                      {color}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Stock Status */}
             <div className="flex items-center space-x-1.5 md:space-x-2">
               {product.totalStock > 0 ? (
@@ -293,7 +323,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
             <div className="flex flex-col sm:flex-row gap-2 md:gap-4 items-center">
               <button
                 onClick={handleAddToCart}
-                disabled={product.totalStock === 0 || !selectedSize || isAdded}
+                disabled={product.totalStock === 0 || !selectedSize || (product.colors && product.colors.length > 0 && !selectedColor) || isAdded}
                 className={`w-full sm:flex-1 py-3 md:py-4 px-4 md:px-6 rounded-lg transition-colors flex items-center justify-center font-medium shadow-sm text-sm md:text-base ${isAdded
                   ? 'bg-green-600 hover:bg-green-700 text-white'
                   : 'bg-gray-900 hover:bg-gray-800 text-white disabled:bg-gray-400 disabled:cursor-not-allowed'
@@ -315,7 +345,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
               </button>
               <button
                 onClick={handleBuyNow}
-                disabled={product.totalStock === 0 || !selectedSize}
+                disabled={product.totalStock === 0 || !selectedSize || (product.colors && product.colors.length > 0 && !selectedColor)}
                 className="w-full sm:flex-1 bg-red-600 text-white py-3 md:py-4 px-4 md:px-6 rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium shadow-sm text-sm md:text-base"
               >
                 Buy Now
@@ -368,19 +398,35 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
               <h3 className="font-semibold text-sm md:text-base text-gray-900 mb-2 md:mb-3">Product Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3 text-xs md:text-sm text-gray-600">
                 <div>
-                  <span className="font-medium">Category:</span>{' '}
+                  <span className="font-medium text-gray-900">Category:</span>{' '}
                   {categoryName}
                 </div>
+                {product.brand && (
+                  <div>
+                    <span className="font-medium text-gray-900">Brand:</span>{' '}
+                    {product.brand}
+                  </div>
+                )}
                 <div>
-                  <span className="font-medium">SKU:</span>{' '}
+                  <span className="font-medium text-gray-900">SKU:</span>{' '}
                   {product.slug.toUpperCase()}
                 </div>
+                {product.fits && product.fits.length > 0 && (
+                  <div>
+                    <span className="font-medium text-gray-900">Fit Type:</span>{' '}
+                    {product.fits.join(', ')}
+                  </div>
+                )}
                 <div>
-                  <span className="font-medium">Availability:</span>{' '}
+                  <span className="font-medium text-gray-900">Availability:</span>{' '}
                   {product.totalStock > 0 ? 'In Stock' : 'Out of Stock'}
                 </div>
                 <div>
-                  <span className="font-medium">Rating:</span>{' '}
+                  <span className="font-medium text-gray-900">Country of Origin:</span>{' '}
+                  India
+                </div>
+                <div>
+                  <span className="font-medium text-gray-900">Rating:</span>{' '}
                   {product.rating && product.rating % 1 === 0 ? `${Math.round(product.rating)}/5` : `${product.rating?.toFixed(1)}/5`} ({product.reviewCount})
                 </div>
               </div>
