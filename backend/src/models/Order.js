@@ -13,7 +13,8 @@ const orderItemSchema = new mongoose.Schema({
     required: true,
     min: 1
   },
-  size: String
+  size: String,
+  color: String
 });
 
 const orderSchema = new mongoose.Schema({
@@ -78,7 +79,7 @@ const orderSchema = new mongoose.Schema({
 });
 
 // Generate order number before saving
-orderSchema.pre('save', function(next) {
+orderSchema.pre('save', function (next) {
   if (this.isNew) {
     const date = new Date();
     const timestamp = date.getTime();

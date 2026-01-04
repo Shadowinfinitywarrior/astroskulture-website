@@ -271,7 +271,8 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
           name: item.name,
           price: item.discountPrice || item.price,
           quantity: item.quantity,
-          size: item.size
+          size: item.size,
+          color: item.color
         })),
         subtotal: cartTotal,
         tax,
@@ -667,7 +668,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
                     />
                     <div>
                       <p className="font-medium text-sm">{item.name}</p>
-                      <p className="text-gray-500 text-sm">Size: {item.size}</p>
+                      <p className="text-gray-500 text-sm">Size: {item.size} {item.color && `| Color: ${item.color}`}</p>
                       <p className="text-gray-500 text-sm">Qty: {item.quantity}</p>
                     </div>
                   </div>

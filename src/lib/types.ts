@@ -102,6 +102,7 @@ export interface OrderItem {
   price: number;
   quantity: number;
   size: string;
+  color?: string;
 }
 
 // Auth Types
@@ -149,6 +150,7 @@ export interface CartItem {
   freeShippingAbove?: number;
   quantity: number;
   size: string;
+  color?: string;
   image: string;
 }
 

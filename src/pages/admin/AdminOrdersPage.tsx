@@ -10,28 +10,29 @@ interface Order {
     fullName: string;
     phone?: string;
   };
-  items: Array<{
-    productId: string;
-    name: string;
-    price: number;
-    quantity: number;
-  }>;
-  subtotal?: number;
-  tax?: number;
-  shipping?: number;
-  total?: number;
-  totalAmount?: number;
-  status: string;
-  paymentStatus?: string;
-  shippingAddress: {
-    fullName: string;
-    address: string;
-    city: string;
-    postalCode: string;
-    country: string;
-    phone?: string;
-  };
-  createdAt: string;
+  productId: string;
+  name: string;
+  price: number;
+  quantity: number;
+  size?: string;
+  color?: string;
+}>;
+subtotal ?: number;
+tax ?: number;
+shipping ?: number;
+total ?: number;
+totalAmount ?: number;
+status: string;
+paymentStatus ?: string;
+shippingAddress: {
+  fullName: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  phone ?: string;
+};
+createdAt: string;
 }
 
 interface AdminOrdersPageProps {
@@ -462,7 +463,9 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
                     <div key={index} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg">
                       <div>
                         <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-slate-600">Quantity: {item.quantity}</p>
+                        <p className="text-sm text-slate-600">
+                          {item.quantity} x {item.size && `Size: ${item.size}`} {item.color && `| Color: ${item.color}`}
+                        </p>
                       </div>
                       <p className="font-medium">${(item.price * item.quantity).toFixed(2)}</p>
                     </div>

@@ -84,7 +84,7 @@ export function CartPage({ onNavigate }: CartPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
           <div className="lg:col-span-2 space-y-3 md:space-y-4">
             {items.map((item) => (
-              <div key={`${item.productId}-${item.size}`} className="bg-white rounded-lg shadow-sm p-3 md:p-6">
+              <div key={`${item.productId}-${item.size}-${item.color || ''}`} className="bg-white rounded-lg shadow-sm p-3 md:p-6">
                 <div className="flex flex-col sm:flex-row items-start space-y-3 sm:space-y-0 sm:space-x-4">
                   <img
                     src={item.image}
@@ -93,14 +93,14 @@ export function CartPage({ onNavigate }: CartPageProps) {
                   />
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-sm md:text-lg mb-1 truncate">{item.name}</h3>
-                    <p className="text-gray-600 text-xs md:text-sm mb-2">Size: {item.size}</p>
+                    <p className="text-gray-600 text-xs md:text-sm mb-2">Size: {item.size} {item.color && `| Color: ${item.color}`}</p>
                     <div className="flex items-center space-x-2">
                       <span className="text-base md:text-lg font-bold text-gray-900">₹{item.price}</span>
                     </div>
                   </div>
                   <div className="flex flex-row sm:flex-col items-center sm:items-end space-x-2 sm:space-x-0 sm:space-y-2 w-full sm:w-auto">
                     <button
-                      onClick={() => removeFromCart(item.productId, item.size)}
+                      onClick={() => removeFromCart(item.productId, item.size, item.color)}
                       className="p-2 hover:bg-red-50 rounded-lg transition-colors text-red-600 flex-shrink-0"
                       title="Remove from cart"
                     >
@@ -108,7 +108,7 @@ export function CartPage({ onNavigate }: CartPageProps) {
                     </button>
                     <div className="flex items-center space-x-1 md:space-x-2 border-2 border-gray-300 rounded-lg">
                       <button
-                        onClick={() => updateQuantity(item.productId, item.size, item.quantity - 1)}
+                        onClick={() => updateQuantity(item.productId, item.size, item.quantity - 1, item.color)}
                         className="p-1 md:p-2 hover:bg-gray-100 transition-colors"
                         title="Decrease quantity"
                       >
@@ -116,7 +116,7 @@ export function CartPage({ onNavigate }: CartPageProps) {
                       </button>
                       <span className="w-6 md:w-8 text-center text-xs md:text-sm font-medium">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.productId, item.size, item.quantity + 1)}
+                        onClick={() => updateQuantity(item.productId, item.size, item.quantity + 1, item.color)}
                         className="p-1 md:p-2 hover:bg-gray-100 transition-colors"
                         title="Increase quantity"
                       >
