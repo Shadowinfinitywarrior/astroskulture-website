@@ -60,6 +60,10 @@ const productSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  material: {
+    type: String,
+    default: ''
+  },
   isBestseller: {
     type: Boolean,
     default: false
