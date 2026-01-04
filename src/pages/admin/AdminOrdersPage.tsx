@@ -10,29 +10,30 @@ interface Order {
     fullName: string;
     phone?: string;
   };
-  productId: string;
-  name: string;
-  price: number;
-  quantity: number;
-  size?: string;
-  color?: string;
-}>;
-subtotal ?: number;
-tax ?: number;
-shipping ?: number;
-total ?: number;
-totalAmount ?: number;
-status: string;
-paymentStatus ?: string;
-shippingAddress: {
-  fullName: string;
-  address: string;
-  city: string;
-  postalCode: string;
-  country: string;
-  phone ?: string;
-};
-createdAt: string;
+  items: Array<{
+    productId: string;
+    name: string;
+    price: number;
+    quantity: number;
+    size?: string;
+    color?: string;
+  }>;
+  subtotal?: number;
+  tax?: number;
+  shipping?: number;
+  total?: number;
+  totalAmount?: number;
+  status: string;
+  paymentStatus?: string;
+  shippingAddress: {
+    fullName: string;
+    address: string;
+    city: string;
+    postalCode: string;
+    country: string;
+    phone?: string;
+  };
+  createdAt: string;
 }
 
 interface AdminOrdersPageProps {
