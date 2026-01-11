@@ -23,6 +23,14 @@ interface Product {
   rating: number;
   reviewCount: number;
   colors: string[];
+  materialComposition?: string;
+  pattern?: string;
+  fitType?: string;
+  sleeveType?: string;
+  collarStyle?: string;
+  neckStyle?: string;
+  countryOfOrigin?: string;
+  sizeChart?: string;
 }
 
 interface Category {
@@ -67,6 +75,14 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
     colors: [] as string[],
     isFeatured: false,
     isActive: true,
+    materialComposition: '',
+    pattern: '',
+    fitType: '',
+    sleeveType: '',
+    collarStyle: '',
+    neckStyle: '',
+    countryOfOrigin: 'India',
+    sizeChart: '',
   });
 
   const STANDARD_COLORS = ['Red', 'Blue', 'Green', 'Black', 'White', 'Yellow'];
@@ -238,6 +254,15 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         totalStock,
         isFeatured: formData.isFeatured,
         isActive: formData.isActive,
+        // Product Detail Fields
+        materialComposition: formData.materialComposition?.trim() || '',
+        pattern: formData.pattern?.trim() || '',
+        fitType: formData.fitType?.trim() || '',
+        sleeveType: formData.sleeveType?.trim() || '',
+        collarStyle: formData.collarStyle?.trim() || '',
+        neckStyle: formData.neckStyle?.trim() || '',
+        countryOfOrigin: formData.countryOfOrigin?.trim() || 'India',
+        sizeChart: formData.sizeChart?.trim() || '',
       };
 
       console.log('💾 Saving product to:', url);
@@ -377,6 +402,14 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         colors: product.colors || [],
         isFeatured: product.isFeatured,
         isActive: product.isActive,
+        materialComposition: product.materialComposition || '',
+        pattern: product.pattern || '',
+        fitType: product.fitType || '',
+        sleeveType: product.sleeveType || '',
+        collarStyle: product.collarStyle || '',
+        neckStyle: product.neckStyle || '',
+        countryOfOrigin: product.countryOfOrigin || 'India',
+        sizeChart: product.sizeChart || '',
       });
     } else {
       setEditingProduct(null);
@@ -401,6 +434,14 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         colors: [],
         isFeatured: false,
         isActive: true,
+        materialComposition: '',
+        pattern: '',
+        fitType: '',
+        sleeveType: '',
+        collarStyle: '',
+        neckStyle: '',
+        countryOfOrigin: 'India',
+        sizeChart: '',
       });
     }
     setIsModalOpen(true);
@@ -899,6 +940,133 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Product Details Section */}
+              <div className="border-t border-slate-200 pt-6">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Product Details</h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Material Composition</label>
+                    <input
+                      type="text"
+                      value={formData.materialComposition}
+                      onChange={(e) => setFormData({ ...formData, materialComposition: e.target.value })}
+                      placeholder="e.g., Cottonblend, 100% Cotton"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Pattern</label>
+                    <select
+                      value={formData.pattern}
+                      onChange={(e) => setFormData({ ...formData, pattern: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                    >
+                      <option value="">Select pattern</option>
+                      <option value="Solid">Solid</option>
+                      <option value="Printed">Printed</option>
+                      <option value="Printed Colourblocked">Printed Colourblocked</option>
+                      <option value="Striped">Striped</option>
+                      <option value="Checked">Checked</option>
+                      <option value="Embroidered">Embroidered</option>
+                      <option value="Graphic Print">Graphic Print</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Fit Type</label>
+                    <select
+                      value={formData.fitType}
+                      onChange={(e) => setFormData({ ...formData, fitType: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                    >
+                      <option value="">Select fit type</option>
+                      <option value="Oversized Fit">Oversized Fit</option>
+                      <option value="Regular Fit">Regular Fit</option>
+                      <option value="Slim Fit">Slim Fit</option>
+                      <option value="Athletic Fit">Athletic Fit</option>
+                      <option value="Relaxed Fit">Relaxed Fit</option>
+                      <option value="Tailored Fit">Tailored Fit</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Sleeve Type</label>
+                    <select
+                      value={formData.sleeveType}
+                      onChange={(e) => setFormData({ ...formData, sleeveType: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                    >
+                      <option value="">Select sleeve type</option>
+                      <option value="Half Sleeve">Half Sleeve</option>
+                      <option value="Full Sleeve">Full Sleeve</option>
+                      <option value="Sleeveless">Sleeveless</option>
+                      <option value="3/4 Sleeve">3/4 Sleeve</option>
+                      <option value="Short Sleeve">Short Sleeve</option>
+                      <option value="Long Sleeve">Long Sleeve</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Collar Style</label>
+                    <select
+                      value={formData.collarStyle}
+                      onChange={(e) => setFormData({ ...formData, collarStyle: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                    >
+                      <option value="">Select collar style</option>
+                      <option value="Collarless">Collarless</option>
+                      <option value="Spread Collar">Spread Collar</option>
+                      <option value="Button-Down Collar">Button-Down Collar</option>
+                      <option value="Mandarin Collar">Mandarin Collar</option>
+                      <option value="Cuban Collar">Cuban Collar</option>
+                      <option value="Classic Collar">Classic Collar</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Neck Style</label>
+                    <select
+                      value={formData.neckStyle}
+                      onChange={(e) => setFormData({ ...formData, neckStyle: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                    >
+                      <option value="">Select neck style</option>
+                      <option value="Round Neck">Round Neck</option>
+                      <option value="V-Neck">V-Neck</option>
+                      <option value="Polo Neck">Polo Neck</option>
+                      <option value="Crew Neck">Crew Neck</option>
+                      <option value="Scoop Neck">Scoop Neck</option>
+                      <option value="Boat Neck">Boat Neck</option>
+                      <option value="Turtle Neck">Turtle Neck</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Country of Origin</label>
+                    <input
+                      type="text"
+                      value={formData.countryOfOrigin}
+                      onChange={(e) => setFormData({ ...formData, countryOfOrigin: e.target.value })}
+                      placeholder="e.g., India"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Size Chart (URL or description)</label>
+                    <input
+                      type="text"
+                      value={formData.sizeChart}
+                      onChange={(e) => setFormData({ ...formData, sizeChart: e.target.value })}
+                      placeholder="Size chart URL or description"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="flex flex-col space-y-4 sm:space-y-0 pt-4">

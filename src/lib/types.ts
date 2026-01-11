@@ -48,6 +48,15 @@ export interface Product {
   isBestseller?: boolean; // New field to mark bestseller products
   colors?: string[]; // New field for available colors
   fits?: string[]; // New field for available fits (e.g., "Regular Fit", "Slim Fit")
+  // Product Detail Fields
+  materialComposition?: string; // Material composition (e.g., "Cottonblend", "100% Cotton")
+  pattern?: string; // Pattern type (e.g., "Printed Colourblocked", "Solid")
+  fitType?: string; // Fit type (e.g., "Oversized Fit", "Regular Fit")
+  sleeveType?: string; // Sleeve type (e.g., "Half Sleeve", "Full Sleeve")
+  collarStyle?: string; // Collar style (e.g., "Collarless", "Spread Collar")
+  neckStyle?: string; // Neck style (e.g., "Round Neck", "V-Neck")
+  countryOfOrigin?: string; // Country of origin (default: "India")
+  sizeChart?: string; // Size chart URL or description
   createdAt: string;
   updatedAt: string;
 }
@@ -211,6 +220,15 @@ export interface ProductFormData {
   isBestseller?: boolean; // Mark as bestseller
   colors?: string[]; // Available colors
   fits?: string[]; // Available fits
+  // Product Detail Fields
+  materialComposition?: string;
+  pattern?: string;
+  fitType?: string;
+  sleeveType?: string;
+  collarStyle?: string;
+  neckStyle?: string;
+  countryOfOrigin?: string;
+  sizeChart?: string;
 }
 
 export interface CategoryFormData {
