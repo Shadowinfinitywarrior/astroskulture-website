@@ -168,8 +168,10 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
     ? Math.round((1 - product.discountPrice / product.price) * 100)
     : 0;
 
-  // Get category name - handle both category and categoryData
-  const categoryName = product.categoryData?.name || 'Astros Kulture';
+  // Get category name - handle both category object and categoryData
+  const categoryName = product.categoryData?.name ||
+    (typeof product.category === 'object' && product.category?.name) ||
+    'Uncategorized';
   const isProductInWishlist = isInWishlist(product._id);
 
   return (
@@ -377,6 +379,53 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
               </div>
             )}
 
+            {/* Product Details Section */}
+            <div className="space-y-2 md:space-y-3 border-t border-gray-200 pt-3 md:pt-4">
+              <h3 className="font-semibold text-sm md:text-base text-gray-900 mb-2 md:mb-3">Product details</h3>
+              <div className="space-y-1.5 md:space-y-2 text-xs md:text-sm">
+                {product.materialComposition && (
+                  <div className="grid grid-cols-2">
+                    <span className="text-gray-600">Material composition</span>
+                    <span className="text-gray-900">{product.materialComposition}</span>
+                  </div>
+                )}
+                {product.pattern && (
+                  <div className="grid grid-cols-2">
+                    <span className="text-gray-600">Pattern</span>
+                    <span className="text-gray-900">{product.pattern}</span>
+                  </div>
+                )}
+                {product.fitType && (
+                  <div className="grid grid-cols-2">
+                    <span className="text-gray-600">Fit type</span>
+                    <span className="text-gray-900">{product.fitType}</span>
+                  </div>
+                )}
+                {product.sleeveType && (
+                  <div className="grid grid-cols-2">
+                    <span className="text-gray-600">Sleeve type</span>
+                    <span className="text-gray-900">{product.sleeveType}</span>
+                  </div>
+                )}
+                {product.collarStyle && (
+                  <div className="grid grid-cols-2">
+                    <span className="text-gray-600">Collar style</span>
+                    <span className="text-gray-900">{product.collarStyle}</span>
+                  </div>
+                )}
+                {product.neckStyle && (
+                  <div className="grid grid-cols-2">
+                    <span className="text-gray-600">Neck style</span>
+                    <span className="text-gray-900">{product.neckStyle}</span>
+                  </div>
+                )}
+                <div className="grid grid-cols-2">
+                  <span className="text-gray-600">Country of Origin</span>
+                  <span className="text-gray-900">{product.countryOfOrigin || 'India'}</span>
+                </div>
+              </div>
+            </div>
+
             {/* Features */}
             <div className="space-y-2 md:space-y-3 border-t border-gray-200 pt-3 md:pt-4">
               <div className="flex items-center space-x-2 md:space-x-3 text-gray-600">
@@ -393,9 +442,9 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
               </div>
             </div>
 
-            {/* Additional Product Info */}
+            {/* About this item */}
             <div className="border-t border-gray-200 pt-3 md:pt-4">
-              <h3 className="font-semibold text-sm md:text-base text-gray-900 mb-2 md:mb-3">Product Details</h3>
+              <h3 className="font-semibold text-sm md:text-base text-gray-900 mb-2 md:mb-3">About this item</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3 text-xs md:text-sm text-gray-600">
                 <div>
                   <span className="font-medium text-gray-900">Category:</span>{' '}
@@ -419,17 +468,13 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                 </div>
                 {product.fits && product.fits.length > 0 && (
                   <div>
-                    <span className="font-medium text-gray-900">Fit Type:</span>{' '}
+                    <span className="font-medium text-gray-900">Available Fits:</span>{' '}
                     {product.fits.join(', ')}
                   </div>
                 )}
                 <div>
                   <span className="font-medium text-gray-900">Availability:</span>{' '}
                   {product.totalStock > 0 ? 'In Stock' : 'Out of Stock'}
-                </div>
-                <div>
-                  <span className="font-medium text-gray-900">Country of Origin:</span>{' '}
-                  India
                 </div>
                 <div>
                   <span className="font-medium text-gray-900">Rating:</span>{' '}

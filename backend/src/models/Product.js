@@ -68,6 +68,39 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  // Product Detail Fields
+  materialComposition: {
+    type: String,
+    default: ''
+  },
+  pattern: {
+    type: String,
+    default: ''
+  },
+  fitType: {
+    type: String,
+    default: ''
+  },
+  sleeveType: {
+    type: String,
+    default: ''
+  },
+  collarStyle: {
+    type: String,
+    default: ''
+  },
+  neckStyle: {
+    type: String,
+    default: ''
+  },
+  countryOfOrigin: {
+    type: String,
+    default: 'India'
+  },
+  sizeChart: {
+    type: String,
+    default: ''
+  },
   category: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
