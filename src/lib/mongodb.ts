@@ -24,6 +24,8 @@ class ApiService {
     });
 
     const config: RequestInit = {
+      // Prevent browser caching of API responses
+      cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
         ...(token && { 'Authorization': `Bearer ${token}` }),
