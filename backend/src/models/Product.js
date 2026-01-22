@@ -55,6 +55,13 @@ const productSchema = new mongoose.Schema({
     fit: String // e.g., "Regular Fit", "Slim Fit", "Oversized"
   }],
   colors: [String], // e.g., ["Red", "Blue", "Black"]
+  colorVariants: [{
+    color: { type: String, required: true },
+    images: [{
+      url: { type: String, required: true },
+      alt: String
+    }]
+  }],
   fits: [String], // e.g., ["Regular Fit", "Slim Fit", "Oversized"]
   brand: {
     type: String,

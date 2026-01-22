@@ -31,6 +31,12 @@ interface Product {
   neckStyle?: string;
   countryOfOrigin?: string;
   sizeChart?: string;
+  colorVariants?: ColorVariant[];
+}
+
+interface ColorVariant {
+  color: string;
+  images: Array<{ url: string; alt?: string }>;
 }
 
 interface Category {
@@ -83,6 +89,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
     neckStyle: '',
     countryOfOrigin: 'India',
     sizeChart: '',
+    colorVariants: [] as ColorVariant[],
   });
 
   const STANDARD_COLORS = ['Red', 'Blue', 'Green', 'Black', 'White', 'Yellow'];
@@ -263,6 +270,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         neckStyle: formData.neckStyle?.trim() || '',
         countryOfOrigin: formData.countryOfOrigin?.trim() || 'India',
         sizeChart: formData.sizeChart?.trim() || '',
+        colorVariants: formData.colorVariants,
       };
 
       console.log('💾 Saving product to:', url);
@@ -360,9 +368,17 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
   const handleColorToggle = (color: string) => {
     setFormData(prev => {
       if (prev.colors.includes(color)) {
-        return { ...prev, colors: prev.colors.filter(c => c !== color) };
+        return {
+          ...prev,
+          colors: prev.colors.filter(c => c !== color),
+          colorVariants: prev.colorVariants.filter(v => v.color !== color)
+        };
       } else {
-        return { ...prev, colors: [...prev.colors, color] };
+        return {
+          ...prev,
+          colors: [...prev.colors, color],
+          colorVariants: [...prev.colorVariants, { color, images: [{ url: '', alt: '' }, { url: '', alt: '' }] }]
+        };
       }
     });
   };
@@ -380,7 +396,44 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
   const removeColor = (color: string) => {
     setFormData(prev => ({
       ...prev,
-      colors: prev.colors.filter(c => c !== color)
+      colors: prev.colors.filter(c => c !== color),
+      colorVariants: prev.colorVariants.filter(v => v.color !== color)
+    }));
+  };
+
+  const updateVariantImage = (color: string, imgIndex: number, field: 'url' | 'alt', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      colorVariants: prev.colorVariants.map(v =>
+        v.color === color
+          ? {
+            ...v,
+            images: v.images.map((img, i) => i === imgIndex ? { ...img, [field]: value } : img)
+          }
+          : v
+      )
+    }));
+  };
+
+  const addVariantImage = (color: string) => {
+    setFormData(prev => ({
+      ...prev,
+      colorVariants: prev.colorVariants.map(v =>
+        v.color === color
+          ? { ...v, images: [...v.images, { url: '', alt: '' }] }
+          : v
+      )
+    }));
+  };
+
+  const removeVariantImage = (color: string, imgIndex: number) => {
+    setFormData(prev => ({
+      ...prev,
+      colorVariants: prev.colorVariants.map(v =>
+        v.color === color
+          ? { ...v, images: v.images.filter((_, i) => i !== imgIndex) }
+          : v
+      )
     }));
   };
 
@@ -410,6 +463,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         neckStyle: product.neckStyle || '',
         countryOfOrigin: product.countryOfOrigin || 'India',
         sizeChart: product.sizeChart || '',
+        colorVariants: product.colorVariants || [],
       });
     } else {
       setEditingProduct(null);
@@ -442,6 +496,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         neckStyle: '',
         countryOfOrigin: 'India',
         sizeChart: '',
+        colorVariants: [],
       });
     }
     setIsModalOpen(true);
@@ -916,28 +971,79 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
                   </div>
                 </div>
 
-                {/* Selected Colors Preview */}
+                {/* Selected Colors Preview and Variant Images */}
                 {formData.colors.length > 0 && (
-                  <div className="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-lg">
-                    {formData.colors.map(color => (
-                      <span
-                        key={color}
-                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white border border-slate-200 shadow-sm"
-                      >
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-lg">
+                      {formData.colors.map(color => (
                         <span
-                          className="w-3 h-3 rounded-full mr-1.5 border border-gray-200"
-                          style={{ backgroundColor: color.toLowerCase() }}
-                        />
-                        {color}
-                        <button
-                          type="button"
-                          onClick={() => removeColor(color)}
-                          className="ml-1.5 text-slate-400 hover:text-red-500"
+                          key={color}
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white border border-slate-200 shadow-sm"
                         >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
+                          <span
+                            className="w-3 h-3 rounded-full mr-1.5 border border-gray-200"
+                            style={{ backgroundColor: color.toLowerCase() }}
+                          />
+                          {color}
+                          <button
+                            type="button"
+                            onClick={() => removeColor(color)}
+                            className="ml-1.5 text-slate-400 hover:text-red-500"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="space-y-6">
+                      {formData.colorVariants.map((variant) => (
+                        <div key={variant.color} className="p-4 border border-slate-200 rounded-lg bg-white">
+                          <div className="flex justify-between items-center mb-4">
+                            <h4 className="text-sm font-semibold text-slate-800 flex items-center">
+                              <span
+                                className="w-3 h-3 rounded-full mr-2 border border-gray-200"
+                                style={{ backgroundColor: variant.color.toLowerCase() }}
+                              />
+                              Images for {variant.color}
+                              <span className="ml-2 text-xs font-normal text-slate-500">(Min 2, Max 5)</span>
+                            </h4>
+                            {variant.images.length < 5 && (
+                              <button
+                                type="button"
+                                onClick={() => addVariantImage(variant.color)}
+                                className="text-xs text-blue-600 hover:text-blue-800"
+                              >
+                                + Add Image
+                              </button>
+                            )}
+                          </div>
+                          <div className="space-y-3">
+                            {variant.images.map((img, idx) => (
+                              <div key={idx} className="flex gap-2">
+                                <input
+                                  type="url"
+                                  placeholder="Product Image URL"
+                                  value={img.url}
+                                  onChange={(e) => updateVariantImage(variant.color, idx, 'url', e.target.value)}
+                                  className="flex-1 px-3 py-1.5 border border-slate-200 rounded text-sm"
+                                  required
+                                />
+                                {variant.images.length > 2 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removeVariantImage(variant.color, idx)}
+                                    className="p-1.5 text-red-500 hover:bg-red-50 rounded"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
