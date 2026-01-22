@@ -57,8 +57,14 @@ export interface Product {
   neckStyle?: string; // Neck style (e.g., "Round Neck", "V-Neck")
   countryOfOrigin?: string; // Country of origin (default: "India")
   sizeChart?: string; // Size chart URL or description
+  colorVariants?: ColorVariant[]; // New field for color-based image variants
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ColorVariant {
+  color: string;
+  images: ProductImage[];
 }
 
 export interface ProductImage {

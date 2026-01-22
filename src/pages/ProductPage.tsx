@@ -190,7 +190,11 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
           {/* Product Images */}
           <div className="min-w-0 order-1 lg:order-1">
             <ProductImageGallery
-              images={product.images}
+              images={
+                selectedColor && product.colorVariants?.find(v => v.color === selectedColor)
+                  ? product.colorVariants.find(v => v.color === selectedColor)!.images
+                  : product.images
+              }
               productName={product.name}
             />
           </div>
