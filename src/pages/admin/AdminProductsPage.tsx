@@ -387,7 +387,8 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
     if (customColor.trim() && !formData.colors.includes(customColor.trim())) {
       setFormData(prev => ({
         ...prev,
-        colors: [...prev.colors, customColor.trim()]
+        colors: [...prev.colors, customColor.trim()],
+        colorVariants: [...prev.colorVariants, { color: customColor.trim(), images: [{ url: '', alt: '' }, { url: '', alt: '' }] }]
       }));
       setCustomColor('');
     }
