@@ -81,7 +81,9 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
 
       if (result.success) {
         console.log('📦 Orders data received:', result.data?.length || 0, 'orders');
-        setOrders(result.data || []);
+        // Filter out cancelled orders to only show valid orders
+        const validOrders = (result.data || []).filter(order => order.status !== 'cancelled');
+        setOrders(validOrders);
       } else {
         console.error('Error fetching orders:', result.message);
         setOrders([]);
