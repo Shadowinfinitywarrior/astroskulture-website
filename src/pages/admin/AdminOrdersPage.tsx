@@ -81,8 +81,12 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
 
       if (result.success) {
         console.log('📦 Orders data received:', result.data?.length || 0, 'orders');
-        // Filter out cancelled orders to only show valid orders
-        const validOrders = (result.data || []).filter(order => order.status !== 'cancelled');
+        // Filter to show only paid orders (exclude cancelled and pending payment)
+        const validOrders = (result.data || []).filter(order => 
+          order.status !== 'cancelled' && 
+          order.paymentStatus === 'paid'
+        );
+        console.log('✅ Showing', validOrders.length, 'paid orders (filtered out pending/unpaid)');
         setOrders(validOrders);
       } else {
         console.error('Error fetching orders:', result.message);
