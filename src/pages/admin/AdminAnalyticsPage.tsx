@@ -135,7 +135,7 @@ export default function AdminAnalyticsPage({ onNavigate }: AdminAnalyticsPagePro
       setLoading(true);
       const apiUrl = import.meta.env.VITE_API_BASE_URL ||
         (import.meta.env.PROD
-          ? 'https://astroskulture-website.onrender.com/api'
+          ? 'https://astroskulture.in/api'
           : 'http://localhost:5000/api'
         );
       const token = localStorage.getItem('adminToken');
@@ -322,8 +322,8 @@ export default function AdminAnalyticsPage({ onNavigate }: AdminAnalyticsPagePro
                 key={page.pageId}
                 onClick={() => togglePageSelection(page.pageId)}
                 className={`px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${selectedPages.includes(page.pageId)
-                    ? 'bg-slate-900 text-white'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
               >
                 {page.pageName}
@@ -355,10 +355,10 @@ export default function AdminAnalyticsPage({ onNavigate }: AdminAnalyticsPagePro
                     <td className="hidden sm:table-cell px-3 sm:px-6 py-4 text-xs sm:text-sm text-slate-700">{page.avgTimeSpent}m</td>
                     <td className="hidden sm:table-cell px-3 sm:px-6 py-4 text-xs sm:text-sm text-slate-700">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${page.bounceRate < 30
-                          ? 'bg-green-100 text-green-700'
-                          : page.bounceRate < 45
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : 'bg-red-100 text-red-700'
+                        ? 'bg-green-100 text-green-700'
+                        : page.bounceRate < 45
+                          ? 'bg-yellow-100 text-yellow-700'
+                          : 'bg-red-100 text-red-700'
                         }`}>
                         {page.bounceRate}%
                       </span>
