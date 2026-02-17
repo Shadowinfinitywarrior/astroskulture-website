@@ -36,6 +36,7 @@ import analyticsRoutes from './routes/analytics.js'; // ADDED ANALYTICS ROUTES
 import reviewRoutes from './routes/reviews.js'; // ADDED REVIEW ROUTES
 import paymentRoutes from './routes/payments.js'; // ADDED PAYMENT ROUTES
 import settingsRoutes from './routes/settings.js'; // ADDED SETTINGS ROUTES
+import paymentVerificationRoutes from './routes/paymentVerification.js'; // ADDED PAYMENT VERIFICATION ROUTES
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -171,6 +172,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin', paymentVerificationRoutes); // ADDED PAYMENT VERIFICATION ROUTES (admin only)
 app.use('/api/wishlist', wishlistRoutes); // ADDED WISHLIST ROUTES
 app.use('/api/blogs', blogRoutes); // ADDED BLOG ROUTES
 app.use('/api/reviews', reviewRoutes); // ADDED REVIEW ROUTES

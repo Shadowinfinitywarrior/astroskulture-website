@@ -81,18 +81,20 @@ export default function AdminAnalyticsPage({ onNavigate }: AdminAnalyticsPagePro
 
   // Fetch real-time analytics data from backend
   useEffect(() => {
-    const fetchAnalytics = async () => {
+    let interval: NodeJS.Timeout;
+
+    const fetchAnalytics = async (isBackground = false) => {
       try {
-        setLoading(true);
-        const apiUrl = import.meta.env.VITE_API_BASE_URL || 
-          (import.meta.env.PROD 
+        if (!isBackground) setLoading(true);
+        const apiUrl = import.meta.env.VITE_API_BASE_URL ||
+          (import.meta.env.PROD
             ? 'https://astroskulture.in/api'
             : 'http://localhost:5000/api'
           );
         const token = localStorage.getItem('adminToken');
-        
-        console.log('📊 Fetching analytics from:', apiUrl, 'with dateRange:', dateRange);
-        
+
+        console.log(`📊 ${isBackground ? 'Auto-refreshing' : 'Fetching'} analytics from:`, apiUrl, 'with dateRange:', dateRange);
+
         const response = await fetch(`${apiUrl}/analytics?dateRange=${dateRange}`, {
           headers: {
             'Authorization': `Bearer ${token || ''}`,
@@ -105,34 +107,41 @@ export default function AdminAnalyticsPage({ onNavigate }: AdminAnalyticsPagePro
         }
 
         const data = await response.json();
-        console.log('📊 Analytics data received:', data);
         if (data.success && data.data && Array.isArray(data.data)) {
           setAnalyticsData(data.data);
         }
       } catch (error) {
         console.error('❌ Analytics fetch failed:', error);
-        // Don't set fallback data - show real error
       } finally {
-        setLoading(false);
+        if (!isBackground) setLoading(false);
         setLastRefreshed(new Date());
       }
     };
 
     fetchAnalytics();
+
+    // Auto-refresh every 60 seconds
+    interval = setInterval(() => {
+      fetchAnalytics(true);
+    }, 60000);
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [dateRange]);
 
   const handleRefresh = async () => {
     try {
       setLoading(true);
-      const apiUrl = import.meta.env.VITE_API_BASE_URL || 
-        (import.meta.env.PROD 
+      const apiUrl = import.meta.env.VITE_API_BASE_URL ||
+        (import.meta.env.PROD
           ? 'https://astroskulture-website.onrender.com/api'
           : 'http://localhost:5000/api'
         );
       const token = localStorage.getItem('adminToken');
-      
+
       console.log('🔄 Refreshing analytics from:', apiUrl);
-      
+
       const response = await fetch(`${apiUrl}/analytics?dateRange=${dateRange}`, {
         headers: {
           'Authorization': `Bearer ${token || ''}`,
@@ -163,7 +172,7 @@ export default function AdminAnalyticsPage({ onNavigate }: AdminAnalyticsPagePro
 
   const exportToCSV = () => {
     let csvContent = 'Page Name,Total Views,Unique Visitors,Avg Time Spent (min),Bounce Rate (%),Last Updated\n';
-    
+
     analyticsData.forEach(page => {
       csvContent += `"${page.pageName}",${page.views},${page.uniqueVisitors},${page.avgTimeSpent},${page.bounceRate},${new Date(page.lastUpdated).toLocaleString()}\n`;
     });
@@ -312,11 +321,10 @@ export default function AdminAnalyticsPage({ onNavigate }: AdminAnalyticsPagePro
               <button
                 key={page.pageId}
                 onClick={() => togglePageSelection(page.pageId)}
-                className={`px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
-                  selectedPages.includes(page.pageId)
+                className={`px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${selectedPages.includes(page.pageId)
                     ? 'bg-slate-900 text-white'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
+                  }`}
               >
                 {page.pageName}
               </button>
@@ -346,13 +354,12 @@ export default function AdminAnalyticsPage({ onNavigate }: AdminAnalyticsPagePro
                     <td className="px-3 sm:px-6 py-4 text-xs sm:text-sm text-slate-700 font-semibold">{page.uniqueVisitors.toLocaleString()}</td>
                     <td className="hidden sm:table-cell px-3 sm:px-6 py-4 text-xs sm:text-sm text-slate-700">{page.avgTimeSpent}m</td>
                     <td className="hidden sm:table-cell px-3 sm:px-6 py-4 text-xs sm:text-sm text-slate-700">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        page.bounceRate < 30 
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${page.bounceRate < 30
                           ? 'bg-green-100 text-green-700'
                           : page.bounceRate < 45
-                          ? 'bg-yellow-100 text-yellow-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}>
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}>
                         {page.bounceRate}%
                       </span>
                     </td>

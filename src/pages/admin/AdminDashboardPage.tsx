@@ -17,15 +17,16 @@ interface AdminDashboardPageProps {
 
 export default function AdminDashboardPage({ onNavigate }: AdminDashboardPageProps) {
   const { isAuthenticated, admin, logout } = useAdminAuth();
-  const [stats, setStats] = useState < Stats > ({
+  const [stats, setStats] = useState<Stats>({
     totalProducts: 0,
     totalOrders: 0,
     totalUsers: 0,
     totalRevenue: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState < string | null > (null);
-  const [adminAccess, setAdminAccess] = useState < boolean > (true);
+  const [error, setError] = useState<string | null>(null);
+  const [adminAccess, setAdminAccess] = useState<boolean>(true);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   // FIXED: Use environment-based API URL
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
@@ -35,131 +36,73 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
     );
 
   useEffect(() => {
+    let interval: NodeJS.Timeout;
+
     if (isAuthenticated) {
       fetchStats();
+      // Auto-refresh every 30 seconds
+      interval = setInterval(() => {
+        fetchStats(true); // pass true to indicate a background refresh
+      }, 30 * 1000);
     } else {
       setLoading(false);
       onNavigate('login');
     }
-  }, [isAuthenticated]);
 
-  const fetchStats = async () => {
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isAuthenticated, onNavigate]);
+
+  const fetchStats = async (isBackground = false) => {
     const token = localStorage.getItem('adminToken');
 
     try {
-      setLoading(true);
+      if (!isBackground) setLoading(true);
       setError(null);
 
-      console.log('📊 Fetching dashboard stats with token:', token ? 'Present' : 'Missing');
-      console.log('👤 Current admin:', admin);
-      console.log('🌍 Using API URL:', API_BASE_URL);
+      console.log(`📊 ${isBackground ? 'Auto-refreshing' : 'Fetching'} dashboard stats...`);
 
-      // Debug token
-      if (token) {
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          console.log('📊 Token payload:', payload);
-        } catch (e) {
-          console.error('📊 Error decoding token:', e);
-        }
-      }
-
-      // Test admin access first
-      const testAccess = await fetch(`${API_BASE_URL}/admin/products`, {
+      const response = await fetch(`${API_BASE_URL}/admin/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
       });
 
-      if (!testAccess.ok) {
-        console.error('🔐 Admin access test failed:', testAccess.status);
-        const errorData = await testAccess.json().catch(() => ({}));
-        console.error('🔐 Error details:', errorData);
-
-        setAdminAccess(false);
-        setError(`Admin access denied: ${errorData.message || 'You do not have admin privileges'}`);
-
-        // Set default stats since we can't access admin data
-        setStats({
-          totalProducts: 0,
-          totalOrders: 0,
-          totalUsers: 0,
-          totalRevenue: 0,
-        });
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          setAdminAccess(false);
+          setError('Admin access denied. Please re-login.');
+        } else {
+          throw new Error(`API error: ${response.status}`);
+        }
         return;
       }
 
-      console.log('✅ Admin access verified');
+      const result = await response.json();
 
-      const requests = [
-        // Public endpoint for products
-        fetch(`${API_BASE_URL}/products`).then(res => res.json()),
-
-        // Admin endpoints
-        fetch(`${API_BASE_URL}/admin/orders`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-        }).then(res => res.json()),
-
-        fetch(`${API_BASE_URL}/admin/users`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-        }).then(res => res.json())
-      ];
-
-      const [productsResult, ordersResult, usersResult] = await Promise.all(requests);
-
-      console.log('📊 Dashboard API responses:', {
-        products: productsResult,
-        orders: ordersResult,
-        users: usersResult
-      });
-
-      // Check for API errors
-      const errors = [];
-      if (!productsResult.success) errors.push('products');
-      if (!ordersResult.success) errors.push('orders');
-      if (!usersResult.success) errors.push('users');
-
-      if (errors.length > 0) {
-        setError(`Failed to load: ${errors.join(', ')} data`);
+      if (result.success && result.data) {
+        const { totalProducts, totalOrders, totalUsers, totalRevenue } = result.data;
+        setStats({
+          totalProducts: totalProducts || 0,
+          totalOrders: totalOrders || 0,
+          totalUsers: totalUsers || 0,
+          totalRevenue: totalRevenue || 0,
+        });
+        setAdminAccess(true);
+        setLastUpdated(new Date());
+      } else {
+        setError(result.message || 'Failed to load dashboard data');
       }
-
-      // Extract data from API responses
-      const products = productsResult.success ? productsResult.data : [];
-      const orders = ordersResult.success ? ordersResult.data : [];
-      const users = usersResult.success ? usersResult.data : [];
-
-      // Calculate total revenue from orders
-      const totalRevenue = Array.isArray(orders)
-        ? orders.reduce((sum: number, order: any) => sum + (order.totalAmount || order.total || 0), 0)
-        : 0;
-
-      setStats({
-        totalProducts: Array.isArray(products) ? products.length : 0,
-        totalOrders: Array.isArray(orders) ? orders.length : 0,
-        totalUsers: Array.isArray(users) ? users.length : 0,
-        totalRevenue,
-      });
-
-      setAdminAccess(true);
 
     } catch (error) {
       console.error('📊 Error fetching stats:', error);
-      setError('Failed to load dashboard data. Please check your connection.');
-      setStats({
-        totalProducts: 0,
-        totalOrders: 0,
-        totalUsers: 0,
-        totalRevenue: 0,
-      });
+      if (!isBackground) {
+        setError('Failed to load dashboard data. Please check your connection.');
+      }
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   };
 
@@ -292,10 +235,15 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
             {admin && (
-              <p className="text-slate-600 mt-1">
-                Welcome back, {admin.fullName || admin.username}
-                {!adminAccess && ' (Limited Access)'}
-              </p>
+              <div className="flex flex-col">
+                <p className="text-slate-600 mt-1">
+                  Welcome back, {admin.fullName || admin.username}
+                  {!adminAccess && ' (Limited Access)'}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Last updated: {lastUpdated.toLocaleTimeString()} (Auto-refresh: 30s)
+                </p>
+              </div>
             )}
           </div>
           <div className="flex space-x-3">
