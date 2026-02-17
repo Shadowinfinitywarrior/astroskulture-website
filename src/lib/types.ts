@@ -27,7 +27,7 @@ export interface Product {
   name: string;
   slug: string;
   description: string;
-  category: string; // Reference to category ID
+  category: string | Category; // Reference to category ID or populated object
   categoryData?: Category; // Populated category data
   price: number;
   discountPrice?: number;
