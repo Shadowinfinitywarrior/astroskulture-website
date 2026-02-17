@@ -6,7 +6,9 @@ import { useAdminAuth } from '../../contexts/AdminAuthContext';
 
 interface Stats {
   totalProducts: number;
+  activeProducts: number;
   totalOrders: number;
+  pendingOrders: number;
   totalUsers: number;
   totalRevenue: number;
 }
@@ -19,7 +21,9 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
   const { isAuthenticated, admin, logout } = useAdminAuth();
   const [stats, setStats] = useState<Stats>({
     totalProducts: 0,
+    activeProducts: 0,
     totalOrders: 0,
+    pendingOrders: 0,
     totalUsers: 0,
     totalRevenue: 0,
   });
@@ -83,10 +87,12 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
       const result = await response.json();
 
       if (result.success && result.data) {
-        const { totalProducts, totalOrders, totalUsers, totalRevenue } = result.data;
+        const { totalProducts, activeProducts, totalOrders, pendingOrders, totalUsers, totalRevenue } = result.data;
         setStats({
           totalProducts: totalProducts || 0,
+          activeProducts: activeProducts || 0,
           totalOrders: totalOrders || 0,
+          pendingOrders: pendingOrders || 0,
           totalUsers: totalUsers || 0,
           totalRevenue: totalRevenue || 0,
         });
@@ -157,6 +163,7 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
     {
       title: 'Total Products',
       value: stats.totalProducts,
+      subtitle: `${stats.activeProducts} active`,
       icon: Package,
       color: 'bg-blue-500',
       target: 'admin-products',
@@ -165,6 +172,7 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
     {
       title: 'Total Orders',
       value: stats.totalOrders,
+      subtitle: `${stats.pendingOrders} pending`,
       icon: ShoppingCart,
       color: 'bg-green-500',
       target: 'admin-orders',
@@ -173,6 +181,7 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
     {
       title: 'Total Users',
       value: stats.totalUsers,
+      subtitle: 'Registered',
       icon: Users,
       color: 'bg-purple-500',
       target: 'admin-users',
@@ -180,7 +189,8 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
     },
     {
       title: 'Total Revenue',
-      value: `₹${stats.totalRevenue.toFixed(2)}`,
+      value: `₹${stats.totalRevenue.toLocaleString()}`,
+      subtitle: 'From paid orders',
       icon: DollarSign,
       color: 'bg-yellow-500',
       target: 'admin-orders',
@@ -317,6 +327,9 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
                   <div>
                     <p className="text-sm font-medium text-slate-600 mb-1">{stat.title}</p>
                     <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+                    {stat.subtitle && (
+                      <p className="text-xs text-slate-500 mt-1">{stat.subtitle}</p>
+                    )}
                   </div>
                   <div className={`${stat.color} p-3 rounded-lg`}>
                     <Icon className="w-6 h-6 text-white" />
