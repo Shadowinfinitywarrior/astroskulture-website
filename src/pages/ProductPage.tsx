@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ShoppingCart, Heart, Star, Truck, Shield, RefreshCw, ArrowLeft, Check } from 'lucide-react';
+import { ShoppingCart, Heart, Star, Truck, Shield, RefreshCw, ArrowLeft, Check, X } from 'lucide-react';
 import { apiService } from '../lib/mongodb';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -23,13 +23,14 @@ interface ProductPageProps {
 }
 
 export function ProductPage({ slug, onNavigate }: ProductPageProps) {
-  const [product, setProduct] = useState < Product | null > (null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isAdded, setIsAdded] = useState(false);
-  const [settings, setSettings] = useState < AppSettings > ({
+  const [showSizeChart, setShowSizeChart] = useState(false);
+  const [settings, setSettings] = useState<AppSettings>({
     gstPercentage: 18,
     gstEnabled: true,
     shippingFee: 0,
@@ -263,7 +264,10 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                 <label className="block text-xs md:text-sm font-medium text-gray-700">
                   Select Size
                 </label>
-                <button className="text-xs text-gray-500 hover:text-gray-700 underline">
+                <button
+                  onClick={() => setShowSizeChart(true)}
+                  className="text-xs text-red-600 hover:text-red-700 underline font-medium"
+                >
                   Size Guide
                 </button>
               </div>
@@ -494,6 +498,57 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
           <ProductReviews productId={product._id} />
         </div>
       </div>
+
+      {/* Size Chart Modal */}
+      {showSizeChart && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+              <h3 className="text-lg font-bold text-gray-900">Size Guide</h3>
+              <button
+                onClick={() => setShowSizeChart(false)}
+                className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              {product.sizeChart ? (
+                product.sizeChart.startsWith('http') ? (
+                  <div className="flex justify-center">
+                    <img
+                      src={product.sizeChart}
+                      alt="Size Chart"
+                      className="max-w-full h-auto rounded-lg shadow-sm"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.src = '/placeholder-size-chart.jpg'; // Fallback image if needed
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="prose prose-sm max-w-none text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 whitespace-pre-wrap">
+                    {product.sizeChart}
+                  </div>
+                )
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 italic">No size guide available for this product.</p>
+                </div>
+              )}
+            </div>
+            <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
+              <button
+                onClick={() => setShowSizeChart(false)}
+                className="px-6 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors shadow-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
