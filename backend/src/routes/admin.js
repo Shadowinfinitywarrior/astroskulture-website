@@ -519,14 +519,25 @@ router.delete('/users/:id', async (req, res) => {
 // Admin dashboard stats
 router.get('/stats', async (req, res) => {
   try {
-    const totalProducts = await Product.countDocuments(); // Count ALL products
-    const totalUsers = await User.countDocuments();
-    const totalOrders = await Order.countDocuments();
-    const totalCategories = await Category.countDocuments({ isActive: true });
+    const [
+      totalProducts,
+      activeProducts,
+      totalUsers,
+      totalOrders,
+      pendingOrders,
+      totalCategories
+    ] = await Promise.all([
+      Product.countDocuments(),
+      Product.countDocuments({ isActive: true }),
+      User.countDocuments(),
+      Order.countDocuments(),
+      Order.countDocuments({ status: 'pending' }),
+      Category.countDocuments({ isActive: true })
+    ]);
 
     // Get recent orders
     const recentOrders = await Order.find()
-      .populate('user', 'fullName email')
+      .populate('userId', 'fullName email') // FIXED: use userId instead of user if model uses userId
       .sort({ createdAt: -1 })
       .limit(5)
       .lean();
@@ -557,8 +568,10 @@ router.get('/stats', async (req, res) => {
       success: true,
       data: {
         totalProducts,
+        activeProducts,
         totalUsers,
         totalOrders,
+        pendingOrders,
         totalCategories,
         totalRevenue,
         recentOrders,
