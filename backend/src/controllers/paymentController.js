@@ -17,7 +17,7 @@ const getRazorpayInstance = () => {
   if (!validateRazorpayConfig()) {
     throw new Error('Razorpay is not configured. Please set RAZORPAY_KEY_ID and RAZORPAY_SECRET_KEY environment variables.');
   }
-  
+
   return new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_SECRET_KEY
@@ -44,7 +44,7 @@ export const createRazorpayOrder = async (req, res) => {
     }
 
     const razorpay = getRazorpayInstance();
-    
+
     const razorpayOrder = await razorpay.orders.create({
       amount: Math.round(amount * 100),
       currency,
@@ -71,7 +71,7 @@ export const createRazorpayOrder = async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating Razorpay order:', error);
-    
+
     if (error.message.includes('Razorpay is not configured')) {
       return res.status(500).json({
         success: false,
@@ -79,7 +79,7 @@ export const createRazorpayOrder = async (req, res) => {
         error: error.message
       });
     }
-    
+
     res.status(500).json({
       success: false,
       message: 'Failed to create payment order',
@@ -193,7 +193,7 @@ export const handlePaymentFailure = async (req, res) => {
     }
 
     const order = await Order.findById(orderId);
-    
+
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -319,7 +319,7 @@ export const handlePaymentWebhook = async (req, res) => {
     }
 
     const order = await Order.findOne({ razorpayOrderId });
-    
+
     if (!order) {
       console.warn('⚠️  Order not found for webhook:', razorpayOrderId);
       return res.status(200).json({
@@ -405,7 +405,7 @@ export const getPaymentDetails = async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching payment details:', error);
-    
+
     if (error.message.includes('Razorpay is not configured')) {
       return res.status(500).json({
         success: false,
@@ -413,10 +413,136 @@ export const getPaymentDetails = async (req, res) => {
         error: error.message
       });
     }
-    
+
     res.status(500).json({
       success: false,
       message: 'Failed to fetch payment details',
+      error: error.message
+    });
+  }
+};
+
+export const syncPendingOrders = async (req, res) => {
+  try {
+    console.log('🔄 Starting manual synchronization of pending orders...');
+
+    // Find orders where paymentStatus is 'pending', status is 'pending', and razorpayOrderId is present
+    const pendingOrders = await Order.find({
+      paymentStatus: 'pending',
+      status: 'pending',
+      razorpayOrderId: { $exists: true, $ne: null }
+    });
+
+    console.log(`📊 Found ${pendingOrders.length} pending orders to check.`);
+
+    if (pendingOrders.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No pending orders found that require synchronization.',
+        data: { syncedCount: 0, updatedCount: 0 }
+      });
+    }
+
+    const razorpay = getRazorpayInstance();
+    let updatedCount = 0;
+    const results = [];
+
+    for (const order of pendingOrders) {
+      try {
+        console.log(`🔍 Checking Razorpay for Order: ${order.orderNumber} (Razorpay ID: ${order.razorpayOrderId})`);
+
+        // Fetch all payments for this Razorpay order
+        const payments = await razorpay.orders.fetchPayments(order.razorpayOrderId);
+
+        // Look for a successful (captured or authorized) payment
+        const successfulPayment = payments.items.find(p =>
+          p.status === 'captured' || p.status === 'authorized'
+        );
+
+        if (successfulPayment) {
+          console.log(`✅ Found successful payment for ${order.orderNumber}: ${successfulPayment.id}`);
+
+          // Update order status
+          await Order.findByIdAndUpdate(order._id, {
+            paymentStatus: 'paid',
+            paymentId: successfulPayment.id,
+            status: 'processing',
+            updatedAt: Date.now()
+          });
+
+          updatedCount++;
+          results.push({
+            orderNumber: order.orderNumber,
+            status: 'updated',
+            razorpayPaymentId: successfulPayment.id
+          });
+        } else {
+          // Check if order is old (e.g., > 24 hours) and mark as failed if no payment found
+          const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+          if (order.createdAt < oneDayAgo) {
+            console.log(`⚠️ Order ${order.orderNumber} is older than 24h and no payment found. Marking as failed.`);
+
+            await Order.findByIdAndUpdate(order._id, {
+              paymentStatus: 'failed',
+              status: 'cancelled',
+              updatedAt: Date.now()
+            });
+
+            // Restore stock
+            for (const item of order.items) {
+              const product = await Product.findById(item.productId);
+              if (product) {
+                const sizeIndex = product.sizes?.findIndex(s => s.size === item.size);
+                if (sizeIndex !== -1) {
+                  product.sizes[sizeIndex].stock += item.quantity;
+                  await product.save();
+                }
+              }
+            }
+
+            results.push({
+              orderNumber: order.orderNumber,
+              status: 'cancelled (timeout)',
+              reason: 'No payment found within 24h'
+            });
+          } else {
+            results.push({
+              orderNumber: order.orderNumber,
+              status: 'pending',
+              reason: 'No capture found yet'
+            });
+          }
+        }
+
+        // Delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 200));
+      } catch (err) {
+        console.error(`❌ Error syncing order ${order.orderNumber}:`, err.message);
+        results.push({
+          orderNumber: order.orderNumber,
+          status: 'error',
+          error: err.message
+        });
+      }
+    }
+
+    console.log(`✅ Sync complete. Updated ${updatedCount} orders.`);
+
+    res.json({
+      success: true,
+      message: `Sync complete. ${updatedCount} orders were updated to 'paid'.`,
+      data: {
+        syncedCount: pendingOrders.length,
+        updatedCount,
+        details: results
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Global error in syncPendingOrders:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to synchronize pending orders',
       error: error.message
     });
   }

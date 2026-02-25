@@ -41,8 +41,8 @@ interface AdminOrdersPageProps {
 }
 
 export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
-  const [orders, setOrders] = useState < Order[] > ([]);
-  const [selectedOrder, setSelectedOrder] = useState < Order | null > (null);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditingPrices, setIsEditingPrices] = useState(false);
   const [editingPrices, setEditingPrices] = useState({
@@ -81,13 +81,10 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
 
       if (result.success) {
         console.log('📦 Orders data received:', result.data?.length || 0, 'orders');
-        // Filter to show only paid orders (exclude cancelled and pending payment)
-        const validOrders = (result.data || []).filter(order => 
-          order.status !== 'cancelled' && 
-          order.paymentStatus === 'paid'
-        );
-        console.log('✅ Showing', validOrders.length, 'paid orders (filtered out pending/unpaid)');
-        setOrders(validOrders);
+        // Show all orders except strictly cancelled ones, or just show all
+        const ordersToShow = (result.data || []).filter((order: Order) => order.status !== 'cancelled');
+        console.log('✅ Showing', ordersToShow.length, 'orders');
+        setOrders(ordersToShow);
       } else {
         console.error('Error fetching orders:', result.message);
         setOrders([]);
@@ -95,6 +92,38 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
     } catch (error) {
       console.error('Error fetching orders:', error);
       setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const syncPayments = async () => {
+    const token = localStorage.getItem('adminToken');
+    try {
+      setLoading(true);
+      console.log('🔄 Triggering payment synchronization...');
+
+      const response = await fetch(`${API_BASE_URL}/admin/sync-payments`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('✅ Sync result:', result);
+        alert(`Sync complete! ${result.data.updatedCount} orders were updated to 'paid'.`);
+        fetchOrders();
+      } else {
+        console.error('❌ Sync failed:', result.message);
+        alert(result.message || 'Sync failed');
+      }
+    } catch (error) {
+      console.error('❌ Error syncing payments:', error);
+      alert('Error syncing payments. Please check console.');
     } finally {
       setLoading(false);
     }
@@ -246,12 +275,24 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-slate-900">Orders</h1>
-          <button
-            onClick={fetchOrders}
-            className="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
-          >
-            Refresh Orders
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={syncPayments}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              title="Check Razorpay for pending orders"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Sync Payments
+            </button>
+            <button
+              onClick={fetchOrders}
+              className="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+            >
+              Refresh Orders
+            </button>
+          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">

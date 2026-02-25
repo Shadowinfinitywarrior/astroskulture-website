@@ -1,5 +1,6 @@
 import express from 'express';
 import { authenticateAdmin } from '../middleware/auth.js';
+import { syncPendingOrders } from '../controllers/paymentController.js';
 import Product from '../models/Product.js';
 import Order from '../models/Order.js';
 import User from '../models/User.js';
@@ -738,5 +739,8 @@ router.post('/reset-db', async (req, res) => {
     });
   }
 });
+
+// Sync pending payments with Razorpay
+router.post('/sync-payments', syncPendingOrders);
 
 export default router;
