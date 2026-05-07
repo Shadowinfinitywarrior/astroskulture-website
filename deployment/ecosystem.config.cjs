@@ -5,7 +5,7 @@ module.exports = {
     apps: [
         {
             name: 'astroskulture-backend',
-            script: '../backend/src/server.js',
+            script: '/var/www/astroskulture/backend/src/server.js',
             instances: 2,
             exec_mode: 'cluster',
 
@@ -21,9 +21,9 @@ module.exports = {
             max_memory_restart: '500M',
 
             // Logging
-            error_file: './logs/backend-error.log',
-            out_file: './logs/backend-out.log',
-            log_file: './logs/backend-combined.log',
+            error_file: '/var/www/astroskulture/logs/backend-error.log',
+            out_file: '/var/www/astroskulture/logs/backend-out.log',
+            log_file: '/var/www/astroskulture/logs/backend-combined.log',
             time: true,
             log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
 
