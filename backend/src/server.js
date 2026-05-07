@@ -5,12 +5,12 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Load environment variables FIRST - before any other imports
-dotenv.config();
-
-// Fix for ES modules __dirname equivalent
+// Fix for ES modules __dirname equivalent (must be before dotenv.config!)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Load environment variables using ABSOLUTE path - works regardless of launch directory
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 // Debug environment variables
 console.log('🔧 Environment Variables Check:');
