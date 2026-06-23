@@ -23,11 +23,12 @@ class ApiService {
       method: options.method || 'GET'
     });
 
+    const isFormData = options.body instanceof FormData;
     const config: RequestInit = {
       // Prevent browser caching of API responses
       cache: 'no-store',
       headers: {
-        'Content-Type': 'application/json',
+        ...(!isFormData && { 'Content-Type': 'application/json' }),
         ...(token && { 'Authorization': `Bearer ${token}` }),
         ...options.headers,
       },
@@ -526,6 +527,29 @@ class ApiService {
     return this.request('/admin/reset-db', {
       method: 'POST',
       body: JSON.stringify(options),
+    }, true);
+  }
+
+  // Custom Design methods
+  async createCustomDesign(formData: FormData) {
+    return this.request('/custom-designs', {
+      method: 'POST',
+      body: formData,
+    });
+  }
+
+  async getMyCustomDesigns() {
+    return this.request('/custom-designs/my');
+  }
+
+  async adminGetCustomDesigns() {
+    return this.request('/custom-designs/admin', {}, true);
+  }
+
+  async adminUpdateCustomDesignStatus(id: string, status: 'accepted' | 'rejected', notes: string) {
+    return this.request(`/custom-designs/admin/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status, notes }),
     }, true);
   }
 }

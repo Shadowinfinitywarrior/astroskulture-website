@@ -13,7 +13,6 @@ interface Settings {
 
 // Add confirmation modal state
 export default function AdminSettingsPage({ onNavigate }: { onNavigate: (page: string) => void }) {
-  const [showResetModal, setShowResetModal] = useState(false);
   const [resetOptions, setResetOptions] = useState({
     products: false,
     orders: false,
@@ -115,7 +114,6 @@ export default function AdminSettingsPage({ onNavigate }: { onNavigate: (page: s
 
       if (result.success) {
         setSuccess('Data reset successfully');
-        setShowResetModal(false);
         // Maybe logout if users deleted?
         if (resetOptions.users || resetOptions.all) {
           setTimeout(() => onNavigate('login'), 2000);

@@ -37,6 +37,7 @@ import reviewRoutes from './routes/reviews.js'; // ADDED REVIEW ROUTES
 import paymentRoutes from './routes/payments.js'; // ADDED PAYMENT ROUTES
 import settingsRoutes from './routes/settings.js'; // ADDED SETTINGS ROUTES
 import paymentVerificationRoutes from './routes/paymentVerification.js'; // ADDED PAYMENT VERIFICATION ROUTES
+import customDesignRoutes from './routes/customDesigns.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -178,8 +179,9 @@ app.use('/api/blogs', blogRoutes); // ADDED BLOG ROUTES
 app.use('/api/reviews', reviewRoutes); // ADDED REVIEW ROUTES
 app.use('/api/banners', bannerRoutes); // ADDED BANNER ROUTES
 app.use('/api/analytics', analyticsRoutes); // ADDED ANALYTICS ROUTES
-app.use('/api/payments', paymentRoutes); // ADDED PAYMENT ROUTES
-app.use('/api/settings', settingsRoutes); // ADDED SETTINGS ROUTES
+app.use('/api/payments', paymentRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/custom-designs', customDesignRoutes); // ADDED SETTINGS ROUTES
 
 // Serve static files from React build in production
 if (process.env.NODE_ENV === 'production') {
@@ -247,7 +249,8 @@ app.get('/api/health', (req, res) => {
       admin: '/api/admin',
       wishlist: '/api/wishlist', // ADDED WISHLIST ROUTE
       payments: '/api/payments', // ADDED PAYMENT ROUTE
-      settings: '/api/settings' // ADDED SETTINGS ROUTE
+      settings: '/api/settings', // ADDED SETTINGS ROUTE
+      customDesigns: '/api/custom-designs'
     }
   });
 });
@@ -347,6 +350,12 @@ app.get('/api', (req, res) => {
       settings: { // ADDED SETTINGS ENDPOINTS
         get: 'GET /api/settings',
         update: 'PUT /api/settings'
+      },
+      customDesigns: {
+        create: 'POST /api/custom-designs',
+        myList: 'GET /api/custom-designs/my',
+        adminList: 'GET /api/custom-designs/admin',
+        adminUpdate: 'PUT /api/custom-designs/admin/:id/status'
       }
     },
     authentication: {
@@ -389,6 +398,7 @@ app.use('*', (req, res) => {
       '/api/analytics', // ADDED ANALYTICS ROUTE
       '/api/payments', // ADDED PAYMENT ROUTE
       '/api/settings', // ADDED SETTINGS ROUTE
+      '/api/custom-designs',
       '/api/health'
     ]
   });
