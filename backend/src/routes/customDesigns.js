@@ -36,7 +36,7 @@ if (hasCloudinaryCreds) {
 const uploadToCloudinary = (fileBuffer) => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
-      { folder: 'custom-designs' },
+      { folder: process.env.CLOUDINARY_FOLDER || 'custom-designs' },
       (error, result) => {
         if (error) return reject(error);
         resolve(result);
