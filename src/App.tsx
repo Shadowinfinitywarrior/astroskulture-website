@@ -26,9 +26,11 @@ import AdminBannersPage from './pages/admin/AdminBannersPage';
 import AdminBlogPage from './pages/admin/AdminBlogPage';
 import AdminAnalyticsPage from './pages/admin/AdminAnalyticsPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
+import AdminCustomDesignsPage from './pages/admin/AdminCustomDesignsPage';
 import UserAccountPage from './pages/UserAccountPage';
 import UserOrdersPage from './pages/UserOrdersPage';
 import { OrderConfirmationPage } from './pages/OrderConfirmationPage';
+import { CustomDesignsPage } from './pages/CustomDesignsPage';
 
 interface NavigationParams {
   slug?: string;
@@ -61,6 +63,8 @@ function AppContent() {
         setCurrentPage('admin-blogs');
       } else if (path === '/admin/analytics') {
         setCurrentPage('admin-analytics');
+      } else if (path === '/admin/custom-designs') {
+        setCurrentPage('admin-custom-designs');
       } else if (path === '/admin/settings') {
         setCurrentPage('admin-settings');
       } else {
@@ -100,6 +104,8 @@ function AppContent() {
       setCurrentPage('account');
     } else if (path === '/orders') {
       setCurrentPage('orders');
+    } else if (path === '/custom-design') {
+      setCurrentPage('custom-design');
     } else if (path.startsWith('/order-confirmation/')) {
       const orderId = path.replace('/order-confirmation/', '');
       setCurrentPage('order-confirmation');
@@ -138,6 +144,7 @@ function AppContent() {
         'admin-banners': '/admin/banners',
         'admin-blogs': '/admin/blogs',
         'admin-analytics': '/admin/analytics',
+        'admin-custom-designs': '/admin/custom-designs',
         'admin-settings': '/admin/settings',
       };
       window.history.pushState({ page, params }, '', routes[page] || '/admin');
@@ -157,6 +164,7 @@ function AppContent() {
         'forgot-password': '/forgot-password',
         'account': '/account',
         'orders': '/orders',
+        'custom-design': '/custom-design',
         'order-confirmation': `/order-confirmation/${params?.orderId}`,
       };
       
@@ -203,6 +211,8 @@ function AppContent() {
         return <UserAccountPage onNavigate={handleNavigate} />;
       case 'orders':
         return <UserOrdersPage onNavigate={handleNavigate} />;
+      case 'custom-design':
+        return <CustomDesignsPage onNavigate={handleNavigate} />;
       case 'order-confirmation':
         return <OrderConfirmationPage orderId={pageParams.orderId || ''} onNavigate={handleNavigate} />;
       default:
@@ -265,6 +275,8 @@ function AdminRoutes({ currentPage, onNavigate }: { currentPage: string; onNavig
       return <AdminBlogPage onNavigate={onNavigate} />;
     case 'admin-analytics':
       return <AdminAnalyticsPage onNavigate={onNavigate} />;
+    case 'admin-custom-designs':
+      return <AdminCustomDesignsPage onNavigate={onNavigate} />;
     case 'admin-settings':
       return <AdminSettingsPage onNavigate={onNavigate} />;
     case 'admin-dashboard':

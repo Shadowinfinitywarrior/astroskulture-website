@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Heart, Search, SlidersHorizontal, X } from 'lucide-react';
 import { apiService } from '../lib/mongodb';
-import { useCart } from '../contexts/CartContext';
+
 import { useWishlist } from '../contexts/WishlistContext';
 import { useAuth } from '../contexts/AuthContext';
 import type { Product, Category, ProductSize } from '../lib/types';
@@ -156,7 +156,7 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
         // Defensive category filter - ensure products match selected category
         if (selectedCategory && selectedCategory !== 'all') {
           filteredProducts = filteredProducts.filter((product: Product) =>
-            product.category && product.category.slug === selectedCategory
+            product.category && (typeof product.category === 'object' ? product.category.slug === selectedCategory : product.category === selectedCategory)
           );
         }
 

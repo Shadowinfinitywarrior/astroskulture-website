@@ -205,12 +205,18 @@ const UserAccountPage = ({ onNavigate }: { onNavigate: (page: string) => void })
         <div className="space-y-6">
           <div className="bg-white rounded-lg shadow-md p-6">
             <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-            <div className="space-y-3">
+             <div className="space-y-3">
               <button 
                 onClick={() => onNavigate('orders')}
                 className="block w-full text-left bg-blue-50 text-blue-700 px-4 py-3 rounded hover:bg-blue-100 transition-colors"
               >
                 📦 View My Orders
+              </button>
+              <button 
+                onClick={() => onNavigate('custom-design')}
+                className="block w-full text-left bg-indigo-50 text-indigo-700 px-4 py-3 rounded hover:bg-indigo-100 transition-colors"
+              >
+                🎨 My Custom Designs
               </button>
               <button className="block w-full text-left bg-green-50 text-green-700 px-4 py-3 rounded hover:bg-green-100 transition-colors">
                 ❤️ My Wishlist

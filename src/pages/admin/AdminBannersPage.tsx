@@ -31,8 +31,8 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
     backgroundColor: '#dc2626',
     displayOrder: 0,
     isActive: true,
-    animationType: 'slide' as const,
-    animationSpeed: 'normal' as const,
+    animationType: 'slide' as Banner['animationType'],
+    animationSpeed: 'normal' as Banner['animationSpeed'],
     description: '',
     link: '',
     imageUrl: ''
@@ -80,8 +80,8 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
       backgroundColor: banner.backgroundColor || '#dc2626',
       displayOrder: banner.displayOrder,
       isActive: banner.isActive,
-      animationType: (banner.animationType || 'slide') as const,
-      animationSpeed: (banner.animationSpeed || 'normal') as const,
+      animationType: banner.animationType || 'slide',
+      animationSpeed: banner.animationSpeed || 'normal',
       description: (banner as any).description || '',
       link: (banner as any).link || '',
       imageUrl: (banner as any).imageUrl || ''
@@ -396,7 +396,7 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
                   </button>
                 </div>
                 <div 
-                  className={`p-4 rounded-lg overflow-hidden ${animationPreview && formData.animationType !== 'none' ? getAnimationClass(formData.animationType, formData.animationSpeed) : ''}`}
+                  className={`p-4 rounded-lg overflow-hidden ${animationPreview && formData.animationType !== 'none' ? getAnimationClass(formData.animationType || 'slide', formData.animationSpeed || 'normal') : ''}`}
                   style={{ backgroundColor: formData.backgroundColor }}
                 >
                   <p

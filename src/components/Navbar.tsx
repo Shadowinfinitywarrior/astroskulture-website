@@ -100,6 +100,16 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
             >
               Categories
             </button>
+            <button
+              onClick={() => handleNavigation('custom-design')}
+              className={`font-medium transition-colors ${
+                currentPage === 'custom-design'
+                  ? 'text-red-600'
+                  : 'text-gray-700 hover:text-red-600'
+              }`}
+            >
+              Custom Design
+            </button>
           </div>
 
           {/* User Actions */}
@@ -176,6 +186,12 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                       >
                         My Orders
+                      </button>
+                      <button
+                        onClick={() => handleNavigation('custom-design')}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        My Custom Designs
                       </button>
                       <button
                         onClick={() => handleNavigation('wishlist')}
@@ -276,6 +292,12 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
             >
               Categories
             </button>
+            <button
+              onClick={() => handleNavigation('custom-design')}
+              className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+            >
+              Custom Design
+            </button>
             
             {/* User-specific mobile menu items */}
             {user && (
@@ -292,6 +314,12 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
                   className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
                 >
                   My Orders
+                </button>
+                <button
+                  onClick={() => handleNavigation('custom-design')}
+                  className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+                >
+                  My Custom Designs
                 </button>
                 <button
                   onClick={() => handleNavigation('wishlist')}
