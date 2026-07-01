@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { Plus, Edit, Trash2, X, Image as ImageIcon } from 'lucide-react';
+import { apiService, API_BASE_URL } from '../../lib/mongodb';
 import { useAdminAuth } from '../../contexts/AdminAuthContext';
 
 interface Product {
@@ -95,12 +96,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
   const STANDARD_COLORS = ['Red', 'Blue', 'Green', 'Black', 'White', 'Yellow'];
   const [customColor, setCustomColor] = useState('');
 
-  // FIXED: Use environment-based API URL
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
-    (import.meta.env.PROD
-      ? 'https://astroskulture-website.onrender.com/api'
-      : 'http://localhost:5000/api'
-    );
+
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -548,11 +544,6 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
               >
                 {authLoading ? 'Logging in...' : 'Login'}
               </button>
-              <div className="text-center text-sm text-gray-500 mt-4">
-                <p>Demo Credentials:</p>
-                <p>Username: <strong>admin</strong></p>
-                <p>Password: <strong>admin123</strong></p>
-              </div>
             </form>
           </div>
         </div>

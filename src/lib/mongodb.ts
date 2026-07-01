@@ -552,6 +552,18 @@ class ApiService {
       body: JSON.stringify({ status, notes }),
     }, true);
   }
+
+  async deleteCustomDesign(id: string) {
+    return this.request(`/custom-designs/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async adminDeleteCustomDesign(id: string) {
+    return this.request(`/custom-designs/admin/${id}`, {
+      method: 'DELETE',
+    }, true);
+  }
 }
 
 export const apiService = new ApiService();

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { Package, ShoppingCart, Users, DollarSign, RefreshCw, AlertCircle, Trash2 } from 'lucide-react';
+import { Package, ShoppingCart, Users, DollarSign, RefreshCw, AlertCircle, Trash2, Palette } from 'lucide-react';
 import { apiService } from '../../lib/mongodb';
 import { useAdminAuth } from '../../contexts/AdminAuthContext';
 
@@ -11,6 +11,8 @@ interface Stats {
   pendingOrders: number;
   totalUsers: number;
   totalRevenue: number;
+  totalCustomDesigns?: number;
+  pendingCustomDesigns?: number;
 }
 
 interface AdminDashboardPageProps {
@@ -87,7 +89,7 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
       const result = await response.json();
 
       if (result.success && result.data) {
-        const { totalProducts, activeProducts, totalOrders, pendingOrders, totalUsers, totalRevenue } = result.data;
+        const { totalProducts, activeProducts, totalOrders, pendingOrders, totalUsers, totalRevenue, totalCustomDesigns, pendingCustomDesigns } = result.data;
         setStats({
           totalProducts: totalProducts || 0,
           activeProducts: activeProducts || 0,
@@ -95,6 +97,8 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
           pendingOrders: pendingOrders || 0,
           totalUsers: totalUsers || 0,
           totalRevenue: totalRevenue || 0,
+          totalCustomDesigns: totalCustomDesigns || 0,
+          pendingCustomDesigns: pendingCustomDesigns || 0,
         });
         setAdminAccess(true);
         setLastUpdated(new Date());
@@ -196,6 +200,15 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
       target: 'admin-orders',
       disabled: !adminAccess,
     },
+    {
+      title: 'Custom Designs',
+      value: stats.totalCustomDesigns || 0,
+      subtitle: `${stats.pendingCustomDesigns || 0} pending`,
+      icon: Palette,
+      color: 'bg-indigo-500',
+      target: 'admin-custom-designs',
+      disabled: !adminAccess,
+    },
   ];
 
   const quickActions = [
@@ -218,6 +231,13 @@ export default function AdminDashboardPage({ onNavigate }: AdminDashboardPagePro
       description: 'View and edit user accounts',
       target: 'admin-users',
       icon: Users,
+      disabled: !adminAccess,
+    },
+    {
+      title: 'Custom Designs',
+      description: 'Review custom design orders by users',
+      target: 'admin-custom-designs',
+      icon: Palette,
       disabled: !adminAccess,
     },
   ];

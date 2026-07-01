@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../lib/mongodb';
-import { Upload, CheckCircle2, XCircle, AlertCircle, Clock, Palette, Sparkles, Sliders } from 'lucide-react';
+import { Upload, CheckCircle2, XCircle, AlertCircle, Clock, Palette, Sparkles, Sliders, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface CustomDesignRequest {
@@ -137,6 +137,25 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
     }
   };
 
+  const handleDeleteRequest = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this custom design request? This will permanently remove it from the database.')) {
+      return;
+    }
+    
+    try {
+      const response = await apiService.deleteCustomDesign(id);
+      if (response.success) {
+        // Remove from local state
+        setRequests(prev => prev.filter(req => req._id !== id));
+      } else {
+        alert(response.message || 'Failed to delete request');
+      }
+    } catch (err: any) {
+      console.error('Error deleting request:', err);
+      alert(err.message || 'Error occurred while deleting request');
+    }
+  };
+
   const getStatusBadge = (status: 'pending' | 'accepted' | 'rejected') => {
     switch (status) {
       case 'accepted':
@@ -170,7 +189,7 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
       {/* Header Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl shadow-xl p-8 mb-8 text-white">
+      <div className="relative overflow-hidden bg-gradient-to-r from-red-600 to-red-800 rounded-2xl shadow-xl p-8 mb-8 text-white">
         <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
           <Sparkles className="w-48 h-48" />
         </div>
@@ -178,7 +197,7 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">
             Custom T-Shirt Design Studio
           </h1>
-          <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+          <p className="text-red-50 text-sm sm:text-base leading-relaxed">
             Bring your creative vision to life! Upload your design images, select your fit, neck and sleeve preferences, and our design team will review and tailor it to perfection.
           </p>
         </div>
@@ -190,7 +209,7 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
           onClick={() => setActiveTab('request')}
           className={`pb-4 px-2 font-semibold text-sm transition-all border-b-2 ${
             activeTab === 'request'
-              ? 'border-indigo-600 text-indigo-600'
+              ? 'border-red-600 text-red-600'
               : 'border-transparent text-slate-500 hover:text-slate-900'
           }`}
         >
@@ -200,7 +219,7 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
           onClick={() => setActiveTab('my-requests')}
           className={`pb-4 px-2 font-semibold text-sm transition-all border-b-2 ${
             activeTab === 'my-requests'
-              ? 'border-indigo-600 text-indigo-600'
+              ? 'border-red-600 text-red-600'
               : 'border-transparent text-slate-500 hover:text-slate-900'
           }`}
         >
@@ -230,7 +249,7 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col items-center">
               <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Upload className="w-5 h-5 text-indigo-600" />
+                <Upload className="w-5 h-5 text-red-600" />
                 Upload Design
               </h2>
               
@@ -255,7 +274,7 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
                     </button>
                   </div>
                 ) : (
-                  <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 hover:border-indigo-500 hover:bg-indigo-50/20 rounded-xl p-8 cursor-pointer transition-all aspect-square mb-4">
+                  <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 hover:border-red-500 hover:bg-red-50/10 rounded-xl p-8 cursor-pointer transition-all aspect-square mb-4">
                     <Upload className="w-12 h-12 text-slate-400 mb-3 group-hover:scale-110 transition-transform" />
                     <span className="text-sm font-semibold text-slate-700 text-center">
                       Click to upload image
@@ -282,7 +301,7 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
               <h2 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
-                <Sliders className="w-5 h-5 text-indigo-600" />
+                <Sliders className="w-5 h-5 text-red-600" />
                 Customize Specifications
               </h2>
 
@@ -296,7 +315,7 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
                   <select
                     value={color}
                     onChange={(e) => setColor(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-medium"
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all font-medium"
                   >
                     {colorOptions.map((c) => (
                       <option key={c} value={c}>{c}</option>
@@ -312,7 +331,7 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
                   <select
                     value={size}
                     onChange={(e) => setSize(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-medium"
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all font-medium"
                   >
                     {sizeOptions.map((s) => (
                       <option key={s} value={s}>{s}</option>
@@ -380,7 +399,7 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
                   onChange={(e) => setOtherDetails(e.target.value)}
                   placeholder="Describe your request... e.g. placement size, text to add, material suggestions, or any design placement details."
                   rows={4}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm leading-relaxed"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all text-sm leading-relaxed"
                 />
               </div>
 
@@ -388,7 +407,7 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-3 px-6 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg"
+                className="w-full py-3 px-6 rounded-lg bg-gradient-to-r from-red-600 to-red-800 hover:opacity-90 text-white font-bold transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg"
               >
                 {submitting ? (
                   <>
@@ -416,7 +435,7 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
 
           {loadingHistory ? (
             <div className="py-12 flex flex-col items-center justify-center gap-3">
-              <div className="w-8 h-8 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin"></div>
+              <div className="w-8 h-8 rounded-full border-4 border-red-600 border-t-transparent animate-spin"></div>
               <p className="text-sm text-slate-500 font-medium">Loading your requests history...</p>
             </div>
           ) : requests.length === 0 ? (
@@ -428,7 +447,7 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
               </p>
               <button
                 onClick={() => setActiveTab('request')}
-                className="px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg text-sm shadow hover:bg-indigo-700 transition-all"
+                className="px-5 py-2.5 bg-gradient-to-r from-red-600 to-red-800 hover:opacity-90 text-white font-semibold rounded-lg text-sm shadow transition-all"
               >
                 Create New Request
               </button>
@@ -469,7 +488,16 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
                             day: 'numeric'
                           })}
                         </span>
-                        {getStatusBadge(request.status)}
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(request.status)}
+                          <button
+                            onClick={() => handleDeleteRequest(request._id)}
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete Request"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
 
                       {/* Specs Tags */}

@@ -132,46 +132,46 @@ scp -r * root@YOUR_VPS_IP:/var/www/astroskulture/
 
 ## ⚙️ Step 4: Configure Environment Variables
 
-### 4.1 Backend Environment Variables
+The project uses a **single unified `.env` file** at the root of the project (`/var/www/astroskulture/.env`). This single file holds configurations for both the backend server and the frontend build tool (Vite).
 
 ```bash
-cd /var/www/astroskulture/backend
+cd /var/www/astroskulture
 
-# Copy template and edit
-cp ../deployment/.env.production.backend .env
+# Create and edit the single .env file at the root folder
 nano .env
 ```
 
-**Update these values:**
+**Populate it with all required configurations:**
 
-```bash
-# MongoDB (from MongoDB Atlas)
+```env
+# =========================================================================
+# BACKEND CONFIGURATION
+# =========================================================================
 MONGODB_URI=mongodb+srv://YOUR_USERNAME:YOUR_PASSWORD@cluster.mongodb.net/astroskulture
-
-# JWT Secret (generate with: openssl rand -base64 32)
 JWT_SECRET=your_generated_secret_here
+NODE_ENV=production
+PORT=5000
+CLIENT_URL=https://astroskulture.in
 
-# Razorpay Production Keys
+# Razorpay Configuration
 RAZORPAY_KEY_ID=rzp_live_RgHCMPiF6byxqC
-RAZORPAY_KEY_SECRET=your_razorpay_secret_key
+RAZORPAY_SECRET_KEY=your_razorpay_secret_key
 
-# Cloudinary (if using)
+# Cloudinary Configuration
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
-```
+CLOUDINARY_FOLDER=custom-designs
 
-**Save:** Press `Ctrl+X`, then `Y`, then `Enter`
-
-### 4.2 Frontend Environment Variables
-
-Already configured in `.env.production`:
-
-```bash
+# =========================================================================
+# FRONTEND CONFIGURATION (Vite will inject these into the static bundle during build)
+# =========================================================================
 VITE_API_BASE_URL=https://astroskulture.in/api
 VITE_RAZORPAY_KEY_ID=rzp_live_RgHCMPiF6byxqC
 VITE_ENVIRONMENT=production
 ```
+
+**Save:** Press `Ctrl+X`, then `Y`, then `Enter`
 
 ### 4.3 MongoDB Atlas IP Whitelist
 
@@ -538,8 +538,8 @@ sudo systemctl start fail2ban
 
 **Environment Files:** 
 ```bash
-# Backup .env files (store securely)
-tar -czf env-backup-$(date +%Y%m%d).tar.gz backend/.env .env.production
+# Backup the root .env file (store securely)
+tar -czf env-backup-$(date +%Y%m%d).tar.gz .env
 ```
 
 ---
