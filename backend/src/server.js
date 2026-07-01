@@ -124,12 +124,19 @@ const startServer = async () => {
     // Log masked URI (hide password)
     const maskedUri = MONGODB_URI.replace(/mongodb\+srv:\/\/([^:]+):([^@]+)@/, 'mongodb+srv://$1:****@');
     console.log('📦 Database:', maskedUri);
-
-    await mongoose.connect(MONGODB_URI, {
+    const connectionOptions = {
       serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
       dbName: 'astromain' // Explicitly force the database name
-    });
+    };
+
+    if (process.env.MONGODB_PROXY_HOST) {
+      connectionOptions.proxyHost = process.env.MONGODB_PROXY_HOST;
+      connectionOptions.proxyPort = parseInt(process.env.MONGODB_PROXY_PORT || '9050', 10);
+      console.log(`🔌 Routing MongoDB connection through SOCKS proxy: ${connectionOptions.proxyHost}:${connectionOptions.proxyPort}`);
+    }
+
+    await mongoose.connect(MONGODB_URI, connectionOptions);
     console.log('✅ Connected to MongoDB successfully');
     console.log(`📊 Database: ${mongoose.connection.db?.databaseName || 'Unknown'}`);
     console.log(`🏠 Host: ${mongoose.connection.host}`);
