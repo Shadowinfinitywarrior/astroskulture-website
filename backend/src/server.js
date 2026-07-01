@@ -4,13 +4,18 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import { seedInMemoryDb } from './utils/seedInMemory.js';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
 // Fix for ES modules __dirname equivalent (must be before dotenv.config!)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables using ABSOLUTE path - works regardless of launch directory
+// Load environment variables using ABSOLUTE path - checks backend/.env first, then falls back to root .env
 dotenv.config({ path: path.join(__dirname, '../.env') });
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 // Debug environment variables
 console.log('🔧 Environment Variables Check:');
@@ -52,23 +57,48 @@ if (missingEnvVars.length > 0) {
   process.exit(1);
 }
 
+// Secure HTTP headers
+app.use(helmet());
+
+// Rate Limiting
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // Limit each IP to 200 requests per window
+  message: { success: false, message: 'Too many requests from this IP, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // Limit each IP to 20 auth requests per window
+  message: { success: false, message: 'Too many login/registration attempts, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply rate limiters
+app.use('/api/', generalLimiter);
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/admin/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+
 // Enhanced CORS configuration - FIXED
 app.use(cors({
   origin: [
     'https://astroskulture.in',
     'https://www.astroskulture.in',
-    'https://astroskulture-website.onrender.com',
-    'https://astrokulture-fullstack.onrender.com',
-    'http://localhost:5173'
-  ],
+    'http://localhost:5173',
+    process.env.CLIENT_URL
+  ].filter(Boolean),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-razorpay-signature'],
   optionsSuccessStatus: 200
 }));
 
-app.use(express.json({ limit: '10mb' })); // Increased limit for image uploads
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '1mb' })); // Standard limit to prevent JSON payload DoS
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 app.use((req, res, next) => {
   if (req.path === '/api/payments/webhook') {
@@ -86,47 +116,95 @@ app.use((req, res, next) => {
   }
 });
 
-// MongoDB connection with comprehensive error handling
-const MONGODB_URI = process.env.MONGODB_URI;
+// Start server function definition (starts listening ONLY after database is connected)
+const startServer = async () => {
+  try {
+    const MONGODB_URI = process.env.MONGODB_URI;
+    console.log('🔗 Attempting MongoDB connection...');
+    // Log masked URI (hide password)
+    const maskedUri = MONGODB_URI.replace(/mongodb\+srv:\/\/([^:]+):([^@]+)@/, 'mongodb+srv://$1:****@');
+    console.log('📦 Database:', maskedUri);
 
-console.log('🔗 Attempting MongoDB connection...');
-// Log masked URI (hide password)
-const maskedUri = MONGODB_URI.replace(/mongodb\+srv:\/\/([^:]+):([^@]+)@/, 'mongodb+srv://$1:****@');
-console.log('📦 Database:', maskedUri);
-
-mongoose.connect(MONGODB_URI, {
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
-  dbName: 'astromain' // Explicitly force the database name
-})
-  .then(() => {
+    await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+      dbName: 'astromain' // Explicitly force the database name
+    });
     console.log('✅ Connected to MongoDB successfully');
     console.log(`📊 Database: ${mongoose.connection.db?.databaseName || 'Unknown'}`);
     console.log(`🏠 Host: ${mongoose.connection.host}`);
-  })
-  .catch((err) => {
+  } catch (err) {
     console.error('❌ MongoDB connection failed:');
     console.error('   Error:', err.message);
-    console.error('   Code:', err.code);
-    console.error('   Name:', err.name);
-
-    if (err.code === 'ENOTFOUND') {
-      console.error('💡 Network issue: Cannot connect to MongoDB Atlas');
-      console.error('💡 Check your internet connection and MongoDB Atlas IP whitelist');
-    } else if (err.code === 'ETIMEOUT') {
-      console.error('💡 Connection timeout: MongoDB server is not responding');
-    } else if (err.code === 'ECONNREFUSED') {
-      console.error('💡 Connection refused: Check if MongoDB is running');
+    console.warn('⚠️ Cloud MongoDB connection failed. Falling back to local in-memory database for testing...');
+    try {
+      console.log('📦 Starting in-memory MongoDB server...');
+      const mongoServer = await MongoMemoryServer.create();
+      const uri = mongoServer.getUri();
+      console.log('🔗 Connecting to in-memory MongoDB at:', uri);
+      await mongoose.disconnect(); // clean up previous attempt
+      await mongoose.connect(uri, {
+        dbName: 'astromain'
+      });
+      console.log('✅ Connected to in-memory MongoDB successfully');
+      
+      // Run seed data
+      await seedInMemoryDb();
+    } catch (inMemErr) {
+      console.error('❌ Failed to start and connect to in-memory MongoDB:', inMemErr.message);
+      process.exit(1);
     }
+  }
 
-    console.error('💡 Troubleshooting tips:');
-    console.error('   1. Check your MongoDB connection string in .env file');
-    console.error('   2. Verify your MongoDB Atlas cluster is running');
-    console.error('   3. Check your network connection');
-    console.error('   4. Ensure IP is whitelisted in MongoDB Atlas');
+  // Start Express server after database connection is ready
+  app.listen(PORT, () => {
+    console.log('\n🚀 ASTRO-MAIN Server Started Successfully');
+    console.log('═'.repeat(60));
+    console.log(`📍 Server Port: ${PORT}`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔗 Client URL: ${process.env.CLIENT_URL || 'Not set'}`);
+    console.log(`📡 API Base URL: http://localhost:${PORT}/api`);
+    console.log(`❤️  Health Check: http://localhost:${PORT}/api/health`);
+    console.log(`🛜 Server Ready: http://localhost:${PORT}`);
+    console.log('═'.repeat(60));
+    console.log('🌐 CORS Allowed Origins:');
+    console.log('   • https://astroskulture.in');
+    console.log('   • http://localhost:5173');
+    if (process.env.CLIENT_URL) {
+      console.log(`   • ${process.env.CLIENT_URL}`);
+    }
+    console.log('═'.repeat(60));
+    console.log('📋 Available Routes:');
+    console.log('   AUTH       /api/auth');
+    console.log('   PRODUCTS   /api/products');
+    console.log('   ORDERS     /api/orders');
+    console.log('   USERS      /api/users');
+    console.log('   CATEGORIES /api/categories');
+    console.log('   ADMIN      /api/admin');
+    console.log('   WISHLIST   /api/wishlist'); // ADDED WISHLIST ROUTE
+    console.log('   BLOGS      /api/blogs'); // ADDED BLOG ROUTE
+    console.log('   BANNERS    /api/banners'); // ADDED BANNER ROUTE
+    console.log('   ANALYTICS  /api/analytics'); // ADDED ANALYTICS ROUTE
+    console.log('   PAYMENTS   /api/payments'); // ADDED PAYMENT ROUTE
+    console.log('═'.repeat(60));
+    console.log('🔐 Protected Routes (require JWT):');
+    console.log('   • /api/orders/*');
+    console.log('   • /api/users/profile');
+    console.log('   • /api/users/address');
+    console.log('   • /api/admin/*');
+    console.log('   • /api/wishlist/*'); // ADDED WISHLIST PROTECTED ROUTES
+    console.log('   • /api/blogs (POST/PUT/DELETE)'); // ADDED BLOG PROTECTED ROUTES
+    console.log('   • /api/banners (POST/PUT/DELETE)'); // ADDED BANNER PROTECTED ROUTES
+    console.log('   • /api/analytics/* (admin only)'); // ADDED ANALYTICS PROTECTED ROUTES
+    console.log('   • /api/payments/*'); // ADDED PAYMENT PROTECTED ROUTES
+    console.log('═'.repeat(60));
 
-    process.exit(1);
+    // Additional production info
+    if (process.env.NODE_ENV === 'production') {
+      console.log('🏗️  Production Mode: Serving React frontend from /dist');
+    }
   });
+};
 
 // MongoDB connection event handlers
 mongoose.connection.on('connected', () => {
@@ -235,10 +313,11 @@ app.get('/api/health', (req, res) => {
     staticFiles: process.env.NODE_ENV === 'production' ? 'serving React build' : 'development mode',
     cors: {
       allowedOrigins: [
-        'https://astroskulture-website.onrender.com',
-        'https://astrokulture-fullstack.onrender.com',
-        'http://localhost:5173'
-      ]
+        'https://astroskulture.in',
+        'https://www.astroskulture.in',
+        'http://localhost:5173',
+        process.env.CLIENT_URL
+      ].filter(Boolean)
     },
     routes: {
       auth: '/api/auth',
@@ -265,10 +344,11 @@ app.get('/api', (req, res) => {
     deployment: process.env.NODE_ENV === 'production' ? 'production' : 'development',
     cors: {
       allowedOrigins: [
-        'https://astroskulture-website.onrender.com',
-        'https://astrokulture-fullstack.onrender.com',
-        'http://localhost:5173'
-      ]
+        'https://astroskulture.in',
+        'https://www.astroskulture.in',
+        'http://localhost:5173',
+        process.env.CLIENT_URL
+      ].filter(Boolean)
     },
     endpoints: {
       auth: {
@@ -404,48 +484,5 @@ app.use('*', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log('\n🚀 ASTRO-MAIN Server Started Successfully');
-  console.log('═'.repeat(60));
-  console.log(`📍 Server Port: ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Client URL: ${process.env.CLIENT_URL || 'Not set'}`);
-  console.log(`📡 API Base URL: http://localhost:${PORT}/api`);
-  console.log(`❤️  Health Check: http://localhost:${PORT}/api/health`);
-  console.log(`🛜 Server Ready: http://localhost:${PORT}`);
-  console.log('═'.repeat(60));
-  console.log('🌐 CORS Allowed Origins:');
-  console.log('   • https://astroskulture-website.onrender.com');
-  console.log('   • https://astrokulture-fullstack.onrender.com');
-  console.log('   • http://localhost:5173');
-  console.log('═'.repeat(60));
-  console.log('📋 Available Routes:');
-  console.log('   AUTH       /api/auth');
-  console.log('   PRODUCTS   /api/products');
-  console.log('   ORDERS     /api/orders');
-  console.log('   USERS      /api/users');
-  console.log('   CATEGORIES /api/categories');
-  console.log('   ADMIN      /api/admin');
-  console.log('   WISHLIST   /api/wishlist'); // ADDED WISHLIST ROUTE
-  console.log('   BLOGS      /api/blogs'); // ADDED BLOG ROUTE
-  console.log('   BANNERS    /api/banners'); // ADDED BANNER ROUTE
-  console.log('   ANALYTICS  /api/analytics'); // ADDED ANALYTICS ROUTE
-  console.log('   PAYMENTS   /api/payments'); // ADDED PAYMENT ROUTE
-  console.log('═'.repeat(60));
-  console.log('🔐 Protected Routes (require JWT):');
-  console.log('   • /api/orders/*');
-  console.log('   • /api/users/profile');
-  console.log('   • /api/users/address');
-  console.log('   • /api/admin/*');
-  console.log('   • /api/wishlist/*'); // ADDED WISHLIST PROTECTED ROUTES
-  console.log('   • /api/blogs (POST/PUT/DELETE)'); // ADDED BLOG PROTECTED ROUTES
-  console.log('   • /api/banners (POST/PUT/DELETE)'); // ADDED BANNER PROTECTED ROUTES
-  console.log('   • /api/analytics/* (admin only)'); // ADDED ANALYTICS PROTECTED ROUTES
-  console.log('   • /api/payments/*'); // ADDED PAYMENT PROTECTED ROUTES
-  console.log('═'.repeat(60));
-
-  // Additional production info
-  if (process.env.NODE_ENV === 'production') {
-    console.log('🏗️  Production Mode: Serving React frontend from /dist');
-  }
-});
+// Invoke the startServer function
+startServer();

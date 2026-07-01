@@ -20,18 +20,21 @@ const upload = multer({
   }
 });
 
-// Configure Cloudinary
-const hasCloudinaryCreds = process.env.CLOUDINARY_CLOUD_NAME && 
-                          process.env.CLOUDINARY_API_KEY && 
-                          process.env.CLOUDINARY_API_SECRET;
-
-if (hasCloudinaryCreds) {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-  });
-}
+// Helper to dynamically check Cloudinary credentials and configure it
+const getCloudinarySetup = () => {
+  const hasCloudinaryCreds = process.env.CLOUDINARY_CLOUD_NAME && 
+                            process.env.CLOUDINARY_API_KEY && 
+                            process.env.CLOUDINARY_API_SECRET;
+  if (hasCloudinaryCreds) {
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET
+    });
+    return true;
+  }
+  return false;
+};
 
 const uploadToCloudinary = (fileBuffer) => {
   return new Promise((resolve, reject) => {
@@ -66,7 +69,8 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
     }
 
     let imageUrl;
-    if (hasCloudinaryCreds) {
+    const isCloudinaryActive = getCloudinarySetup();
+    if (isCloudinaryActive) {
       console.log('☁️ Uploading to Cloudinary...');
       const uploadResult = await uploadToCloudinary(req.file.buffer);
       imageUrl = uploadResult.secure_url;
@@ -183,6 +187,62 @@ router.put('/admin/:id/status', authenticateAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to update custom design status',
+      error: error.message
+    });
+  }
+});
+
+// 5. Delete a custom design request (User)
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const design = await CustomDesign.findOne({ _id: req.params.id, userId: req.user._id });
+
+    if (!design) {
+      return res.status(404).json({
+        success: false,
+        message: 'Custom design request not found or unauthorized'
+      });
+    }
+
+    await CustomDesign.deleteOne({ _id: req.params.id });
+
+    res.json({
+      success: true,
+      message: 'Custom design request deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting custom design request:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete custom design request',
+      error: error.message
+    });
+  }
+});
+
+// 6. Delete any custom design request (Admin)
+router.delete('/admin/:id', authenticateAdmin, async (req, res) => {
+  try {
+    const design = await CustomDesign.findById(req.params.id);
+
+    if (!design) {
+      return res.status(404).json({
+        success: false,
+        message: 'Custom design request not found'
+      });
+    }
+
+    await CustomDesign.deleteOne({ _id: req.params.id });
+
+    res.json({
+      success: true,
+      message: 'Custom design request deleted successfully by Admin'
+    });
+  } catch (error) {
+    console.error('Error deleting custom design request (Admin):', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete custom design request',
       error: error.message
     });
   }

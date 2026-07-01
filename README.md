@@ -124,22 +124,21 @@ Frontend will run on `http://localhost:5173`
 - `PUT /api/users/:id` - Update user
 - `DELETE /api/users/:id` - Delete user
 
-## Database Configuration
+## Environment & Database Configuration
 
-The MongoDB connection is already configured in `backend/.env`
+All configurations (including MongoDB, JWT, Cloudinary, Razorpay, and Vite frontend variables) are unified in a single `.env` file at the root folder of the project.
 
 ## Project Structure
 
 ```
 astros-kulture/
+├── .env                     # Unified environment variables (frontend & backend)
 ├── backend/
 │   ├── src/
-│   │   ├── controllers/     # Request handlers
 │   │   ├── middleware/      # Auth middleware
 │   │   ├── models/          # MongoDB schemas
 │   │   ├── routes/          # API routes
 │   │   └── server.js        # Express server
-│   ├── .env                 # Environment variables
 │   └── package.json
 ├── src/
 │   ├── components/

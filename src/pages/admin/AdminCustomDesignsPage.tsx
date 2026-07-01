@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { apiService } from '../../lib/mongodb';
-import { CheckCircle2, XCircle, Clock, Search, Filter, MessageSquare, AlertCircle, Eye, User, FileText } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Search, Filter, MessageSquare, AlertCircle, Eye, User, FileText, Trash2 } from 'lucide-react';
 
 interface CustomDesignRequest {
   _id: string;
@@ -87,6 +87,25 @@ export default function AdminCustomDesignsPage({ onNavigate }: { onNavigate: (pa
     }
 
     setFilteredDesigns(result);
+  };
+
+  const handleDeleteRequest = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this custom design request? This will permanently remove it from the database.')) {
+      return;
+    }
+    
+    try {
+      const response = await apiService.adminDeleteCustomDesign(id);
+      if (response.success) {
+        // Remove from local state
+        setDesigns(prev => prev.filter(design => design._id !== id));
+      } else {
+        setError(response.message || 'Failed to delete request');
+      }
+    } catch (err: any) {
+      console.error('Error deleting request:', err);
+      setError(err.message || 'An error occurred while deleting request');
+    }
   };
 
   const handleOpenActionModal = (design: CustomDesignRequest, action: 'accept' | 'reject') => {
@@ -255,7 +274,16 @@ export default function AdminCustomDesignsPage({ onNavigate }: { onNavigate: (pa
                         <span className="text-xs text-slate-500">{design.userId?.email}</span>
                       </div>
                     </div>
-                    {getStatusBadge(design.status)}
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(design.status)}
+                      <button
+                        onClick={() => handleDeleteRequest(design._id)}
+                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete Request"
+                      >
+                        <Trash2 className="w-4.5 h-4.5" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Body Grid: Image + Specifications */}

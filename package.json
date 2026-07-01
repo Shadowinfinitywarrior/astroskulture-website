@@ -14,8 +14,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "start": "cd backend && npm start",
     "start:backend": "cd backend && npm start",
-    "install:all": "npm install && cd backend && npm install",
-    "render-build": "npm run install:all && npm run build"
+    "install:all": "npm install && cd backend && npm install"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",

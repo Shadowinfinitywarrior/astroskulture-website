@@ -6,6 +6,7 @@ import Order from '../models/Order.js';
 import User from '../models/User.js';
 import Category from '../models/Category.js';
 import DeletedProduct from '../models/DeletedProduct.js';
+import CustomDesign from '../models/CustomDesign.js';
 
 const router = express.Router();
 
@@ -526,14 +527,18 @@ router.get('/stats', async (req, res) => {
       totalUsers,
       totalOrders,
       pendingOrders,
-      totalCategories
+      totalCategories,
+      totalCustomDesigns,
+      pendingCustomDesigns
     ] = await Promise.all([
       Product.countDocuments(),
       Product.countDocuments({ isActive: true }),
       User.countDocuments(),
       Order.countDocuments(),
       Order.countDocuments({ status: 'pending' }),
-      Category.countDocuments({ isActive: true })
+      Category.countDocuments({ isActive: true }),
+      CustomDesign.countDocuments(),
+      CustomDesign.countDocuments({ status: 'pending' })
     ]);
 
     // Get recent orders
@@ -576,7 +581,9 @@ router.get('/stats', async (req, res) => {
         totalCategories,
         totalRevenue,
         recentOrders,
-        lowStockProducts
+        lowStockProducts,
+        totalCustomDesigns,
+        pendingCustomDesigns
       }
     });
   } catch (error) {
