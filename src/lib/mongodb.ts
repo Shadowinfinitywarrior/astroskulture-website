@@ -553,6 +553,13 @@ class ApiService {
     }, true);
   }
 
+  async adminUploadCompletedDesign(id: string, formData: FormData) {
+    return this.request(`/custom-designs/admin/${id}/completed`, {
+      method: 'PUT',
+      body: formData,
+    }, true);
+  }
+
   async deleteCustomDesign(id: string) {
     return this.request(`/custom-designs/${id}`, {
       method: 'DELETE',

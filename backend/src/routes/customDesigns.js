@@ -52,7 +52,7 @@ const uploadToCloudinary = (fileBuffer) => {
 // 1. Submit a custom design request (User)
 router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
-    const { color, size, neckStyle, sleeveStyle, otherDetails } = req.body;
+    const { color, size, neckStyle, sleeveStyle, otherDetails, whatsappNumber } = req.body;
 
     if (!req.file) {
       return res.status(400).json({
@@ -61,10 +61,10 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
       });
     }
 
-    if (!color || !size || !neckStyle || !sleeveStyle) {
+    if (!color || !size || !neckStyle || !sleeveStyle || !whatsappNumber) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required specifications: color, size, neckStyle, sleeveStyle'
+        message: 'Missing required specifications: color, size, neckStyle, sleeveStyle, and WhatsApp number'
       });
     }
 
@@ -88,6 +88,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
       size,
       neckStyle,
       sleeveStyle,
+      whatsappNumber,
       otherDetails: otherDetails || '',
       status: 'pending'
     });
@@ -243,6 +244,64 @@ router.delete('/admin/:id', authenticateAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to delete custom design request',
+      error: error.message
+    });
+  }
+});
+
+// 7. Upload completed design image (Admin)
+router.put('/admin/:id/completed', authenticateAdmin, upload.single('completedImage'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please upload a completed design image file (JPG/PNG)'
+      });
+    }
+
+    const design = await CustomDesign.findById(req.params.id);
+    if (!design) {
+      return res.status(404).json({
+        success: false,
+        message: 'Custom design request not found'
+      });
+    }
+
+    let completedDesignUrl;
+    const isCloudinaryActive = getCloudinarySetup();
+    if (isCloudinaryActive) {
+      console.log('☁️ Uploading completed design to Cloudinary...');
+      const uploadResult = await uploadToCloudinary(req.file.buffer);
+      completedDesignUrl = uploadResult.secure_url;
+      console.log('✅ Cloudinary completed URL generated:', completedDesignUrl);
+    } else {
+      console.warn('⚠️ Cloudinary not configured. Storing base64 Data URL fallback.');
+      const base64Image = req.file.buffer.toString('base64');
+      completedDesignUrl = `data:${req.file.mimetype};base64,${base64Image}`;
+    }
+
+    design.completedDesignUrl = completedDesignUrl;
+    // Automatically accept the request if it was pending
+    if (design.status === 'pending') {
+      design.status = 'accepted';
+      if (!design.adminNotes) {
+        design.adminNotes = 'Completed design uploaded by admin.';
+      }
+    }
+    design.updatedAt = Date.now();
+
+    await design.save();
+
+    res.json({
+      success: true,
+      message: 'Completed design uploaded successfully',
+      data: design
+    });
+  } catch (error) {
+    console.error('Error uploading completed design (Admin):', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to upload completed design',
       error: error.message
     });
   }

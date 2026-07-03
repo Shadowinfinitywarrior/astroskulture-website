@@ -32,6 +32,14 @@ const customDesignSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  whatsappNumber: {
+    type: String,
+    required: true
+  },
+  completedDesignUrl: {
+    type: String,
+    default: ''
+  },
   status: {
     type: String,
     enum: ['pending', 'accepted', 'rejected'],

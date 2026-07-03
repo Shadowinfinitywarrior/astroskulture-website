@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { apiService } from '../../lib/mongodb';
-import { CheckCircle2, XCircle, Clock, Search, Filter, MessageSquare, AlertCircle, Eye, User, FileText, Trash2 } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Search, Filter, MessageSquare, AlertCircle, Eye, User, FileText, Trash2, Upload, Sparkles } from 'lucide-react';
 
 interface CustomDesignRequest {
   _id: string;
@@ -11,6 +11,8 @@ interface CustomDesignRequest {
   neckStyle: string;
   sleeveStyle: string;
   otherDetails: string;
+  whatsappNumber: string;
+  completedDesignUrl?: string;
   status: 'pending' | 'accepted' | 'rejected';
   adminNotes?: string;
   createdAt: string;
@@ -37,6 +39,55 @@ export default function AdminCustomDesignsPage({ onNavigate }: { onNavigate: (pa
   const [modalAction, setModalAction] = useState<'accept' | 'reject' | null>(null);
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingDesignId, setUploadingDesignId] = useState<string | null>(null);
+
+  const handleCompletedDesignUpload = async (id: string, file: File) => {
+    if (!file) return;
+    
+    // Check file type
+    if (!['image/png', 'image/jpeg', 'image/jpg'].includes(file.type)) {
+      alert('Please upload a valid PNG or JPG image file.');
+      return;
+    }
+
+    // Check size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB.');
+      return;
+    }
+
+    setUploadingDesignId(id);
+    setError('');
+
+    try {
+      const formData = new FormData();
+      formData.append('completedImage', file);
+
+      const response = await apiService.adminUploadCompletedDesign(id, formData);
+      if (response.success) {
+        // Update local state
+        setDesigns((prev) =>
+          prev.map((d) =>
+            d._id === id
+              ? {
+                  ...d,
+                  completedDesignUrl: response.data.completedDesignUrl,
+                  status: response.data.status,
+                  adminNotes: response.data.adminNotes || d.adminNotes
+                }
+              : d
+          )
+        );
+      } else {
+        setError(response.message || 'Failed to upload completed design');
+      }
+    } catch (err: any) {
+      console.error('Error uploading completed design:', err);
+      setError(err.message || 'Error occurred while uploading completed design');
+    } finally {
+      setUploadingDesignId(null);
+    }
+  };
 
   useEffect(() => {
     fetchDesigns();
@@ -322,6 +373,9 @@ export default function AdminCustomDesignsPage({ onNavigate }: { onNavigate: (pa
                         <span className="font-bold text-slate-800">Sleeve:</span> {design.sleeveStyle}
                       </div>
                       <div>
+                        <span className="font-bold text-slate-800">WhatsApp:</span> {design.whatsappNumber}
+                      </div>
+                      <div>
                         <span className="font-bold text-slate-800">Date:</span> {new Date(design.createdAt).toLocaleDateString()}
                       </div>
                     </div>
@@ -352,6 +406,80 @@ export default function AdminCustomDesignsPage({ onNavigate }: { onNavigate: (pa
                       </div>
                     </div>
                   )}
+
+                  {/* Completed Design Delivery Section */}
+                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 mt-2 space-y-3">
+                    <p className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-650" />
+                      Completed Design Delivery (Cloudinary CDN)
+                    </p>
+
+                    {design.completedDesignUrl ? (
+                      <div className="flex gap-4 items-center">
+                        <div className="w-16 h-16 rounded-lg overflow-hidden border border-slate-300 bg-white flex items-center justify-center flex-shrink-0 relative group">
+                          <img
+                            src={design.completedDesignUrl}
+                            alt="Completed Design"
+                            className="w-full h-full object-contain p-1"
+                          />
+                          <a
+                            href={design.completedDesignUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-semibold"
+                          >
+                            View
+                          </a>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-emerald-700 font-bold flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            Design Uploaded
+                          </p>
+                          <p className="text-[10px] text-slate-500 truncate" title={design.completedDesignUrl}>
+                            {design.completedDesignUrl}
+                          </p>
+                          <label className="inline-block mt-1 cursor-pointer text-[10px] font-bold text-indigo-600 hover:text-indigo-800">
+                            Upload Replace Image
+                            <input
+                              type="file"
+                              accept="image/png, image/jpeg, image/jpg"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleCompletedDesignUpload(design._id, file);
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        {uploadingDesignId === design._id ? (
+                          <div className="py-3 flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin"></div>
+                            <span className="text-xs font-semibold text-slate-500">Uploading to Cloudinary...</span>
+                          </div>
+                        ) : (
+                          <label className="flex items-center justify-center gap-2 border-2 border-dashed border-slate-350 hover:border-indigo-500 hover:bg-slate-100/50 rounded-lg p-4 cursor-pointer transition-all">
+                            <Upload className="w-4 h-4 text-slate-400" />
+                            <span className="text-xs font-semibold text-slate-600">
+                              Upload Final Completed Design
+                            </span>
+                            <input
+                              type="file"
+                              accept="image/png, image/jpeg, image/jpg"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleCompletedDesignUpload(design._id, file);
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Footer Buttons (Action Bar if Pending) */}

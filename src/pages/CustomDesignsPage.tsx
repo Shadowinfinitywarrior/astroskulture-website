@@ -11,6 +11,8 @@ interface CustomDesignRequest {
   neckStyle: string;
   sleeveStyle: string;
   otherDetails: string;
+  whatsappNumber: string;
+  completedDesignUrl?: string;
   status: 'pending' | 'accepted' | 'rejected';
   adminNotes?: string;
   createdAt: string;
@@ -32,6 +34,7 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
   const [size, setSize] = useState('M');
   const [neckStyle, setNeckStyle] = useState('With Neck');
   const [sleeveStyle, setSleeveStyle] = useState('Sleeve');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
   const [otherDetails, setOtherDetails] = useState('');
 
   // Dropdown options
@@ -99,6 +102,11 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
       return;
     }
 
+    if (!whatsappNumber.trim()) {
+      setError('Please enter your WhatsApp number (mandatory).');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -108,6 +116,7 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
       formData.append('size', size);
       formData.append('neckStyle', neckStyle);
       formData.append('sleeveStyle', sleeveStyle);
+      formData.append('whatsappNumber', whatsappNumber.trim());
       formData.append('otherDetails', otherDetails);
 
       const response = await apiService.createCustomDesign(formData);
@@ -120,6 +129,7 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
         setSize('M');
         setNeckStyle('With Neck');
         setSleeveStyle('Sleeve');
+        setWhatsappNumber('');
         setOtherDetails('');
         // Switch to history tab after a small delay
         setTimeout(() => {
@@ -389,6 +399,21 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
                 </div>
               </div>
 
+              {/* WhatsApp Number */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  WhatsApp Number <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={whatsappNumber}
+                  onChange={(e) => setWhatsappNumber(e.target.value)}
+                  placeholder="Enter your WhatsApp number (e.g. +91 9876543210)"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all text-sm"
+                  required
+                />
+              </div>
+
               {/* Other Details */}
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -515,6 +540,9 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
                         <span className="text-xs font-bold text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-lg">
                           {request.sleeveStyle}
                         </span>
+                        <span className="text-xs font-bold text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-lg">
+                          WhatsApp: {request.whatsappNumber}
+                        </span>
                       </div>
 
                       {/* Description */}
@@ -537,6 +565,46 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
                       }`}>
                         <p className="text-xs font-bold uppercase tracking-wider mb-1">Admin Response</p>
                         <p className="font-medium">{request.adminNotes}</p>
+                      </div>
+                    )}
+
+                    {/* Completed Design */}
+                    {request.completedDesignUrl && (
+                      <div className="mt-4 p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
+                        <p className="text-xs font-bold text-indigo-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-indigo-600 animate-pulse" />
+                          Completed Design Delivered
+                        </p>
+                        <div className="flex gap-4 items-center">
+                          <div className="w-20 h-20 rounded-lg overflow-hidden border border-indigo-200 bg-white flex items-center justify-center flex-shrink-0 relative group">
+                            <img
+                              src={request.completedDesignUrl}
+                              alt="Completed Design"
+                              className="w-full h-full object-contain p-1"
+                            />
+                            <a
+                              href={request.completedDesignUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-semibold"
+                            >
+                              View
+                            </a>
+                          </div>
+                          <div>
+                            <p className="text-xs text-indigo-900 font-medium mb-2">
+                              Your completed design is ready! Click below to view or download it.
+                            </p>
+                            <a
+                              href={request.completedDesignUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm"
+                            >
+                              Download Design
+                            </a>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
