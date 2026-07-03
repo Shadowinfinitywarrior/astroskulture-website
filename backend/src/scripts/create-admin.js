@@ -8,10 +8,17 @@ import Admin from '../models/Admin.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables from the root backend directory
-const envPath = path.resolve(__dirname, '../../.env');
-console.log('📁 Loading environment from:', envPath);
+// Load environment variables from the root backend directory or project root
+let envPath = path.resolve(__dirname, '../../.env');
 dotenv.config({ path: envPath });
+
+if (!process.env.MONGODB_URI) {
+    envPath = path.resolve(__dirname, '../../../.env');
+    console.log('📁 MONGODB_URI not found in backend/.env, checking project root:', envPath);
+    dotenv.config({ path: envPath });
+} else {
+    console.log('📁 Loaded environment from:', envPath);
+}
 
 const createAdmin = async () => {
     try {
@@ -41,10 +48,10 @@ const createAdmin = async () => {
             console.log('⚠️ Admin user already exists');
             console.log('Username:', existingAdmin.username);
 
-            // Optional: Update password if needed
-            // existingAdmin.password = adminData.password;
-            // await existingAdmin.save();
-            // console.log('✅ Admin password reset to default');
+            // Update password
+            existingAdmin.password = adminData.password;
+            await existingAdmin.save();
+            console.log('✅ Admin password updated/reset to default: admin123');
         } else {
             const newAdmin = new Admin(adminData);
             await newAdmin.save();
