@@ -34,7 +34,7 @@ const customDesignSchema = new mongoose.Schema({
   },
   whatsappNumber: {
     type: String,
-    required: true
+    default: ''
   },
   completedDesignUrl: {
     type: String,
