@@ -4,7 +4,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import { seedInMemoryDb } from './utils/seedInMemory.js';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -146,6 +145,7 @@ const startServer = async () => {
     console.warn('⚠️ Cloud MongoDB connection failed. Falling back to local in-memory database for testing...');
     try {
       console.log('📦 Starting in-memory MongoDB server...');
+      const { MongoMemoryServer } = await import('mongodb-memory-server');
       const mongoServer = await MongoMemoryServer.create();
       const uri = mongoServer.getUri();
       console.log('🔗 Connecting to in-memory MongoDB at:', uri);
