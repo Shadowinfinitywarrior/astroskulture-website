@@ -4,6 +4,7 @@ import Admin from '../models/Admin.js';
 
 // Regular user authentication
 const auth = async (req, res, next) => {
+  let decoded;
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
@@ -14,20 +15,9 @@ const auth = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('-password');
-    
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Token is not valid - user not found'
-      });
-    }
-
-    req.user = user;
-    next();
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
   } catch (error) {
-    console.error('Auth middleware error:', error.message);
+    console.error('Auth token verification error:', error.message);
     
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({
@@ -43,15 +33,37 @@ const auth = async (req, res, next) => {
       });
     }
     
-    res.status(401).json({
+    return res.status(401).json({
       success: false,
       message: 'Authentication failed'
+    });
+  }
+
+  // Token is verified successfully. Fetch user from DB.
+  try {
+    const user = await User.findById(decoded.id).select('-password');
+    
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token is not valid - user not found'
+      });
+    }
+
+    req.user = user;
+    next();
+  } catch (dbError) {
+    console.error('Auth database query error (Tor timeout):', dbError.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Database query timeout. Please try again in a few moments.'
     });
   }
 };
 
 // Admin authentication
 const authenticateAdmin = async (req, res, next) => {
+  let decoded;
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
@@ -62,9 +74,32 @@ const authenticateAdmin = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (error) {
+    console.error('Admin auth token verification error:', error.message);
     
-    // Look for admin in Admin collection
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token'
+      });
+    }
+    
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Token expired'
+      });
+    }
+    
+    return res.status(401).json({
+      success: false,
+      message: 'Admin authentication failed'
+    });
+  }
+
+  // Token is verified successfully. Fetch admin from DB.
+  try {
     const admin = await Admin.findById(decoded.id).select('-password');
     
     if (!admin) {
@@ -77,47 +112,36 @@ const authenticateAdmin = async (req, res, next) => {
     req.user = admin;
     req.admin = admin;
     next();
-  } catch (error) {
-    console.error('Admin auth middleware error:', error.message);
-    
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid token'
-      });
-    }
-    
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        success: false,
-        message: 'Token expired'
-      });
-    }
-    
-    res.status(401).json({
+  } catch (dbError) {
+    console.error('Admin auth database query error (Tor timeout):', dbError.message);
+    return res.status(500).json({
       success: false,
-      message: 'Admin authentication failed'
+      message: 'Database query timeout. Please try again in a few moments.'
     });
   }
 };
 
 // Optional: Combined middleware that works for both users and admins
 const authenticateOptional = async (req, res, next) => {
+  let decoded;
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
     if (!token) {
-      // No token, but continue (for public routes that optionally need user info)
       return next();
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Try to find user first
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (error) {
+    console.error('Optional auth token verification error:', error.message);
+    return next();
+  }
+
+  // Token is verified successfully. Fetch user/admin from DB.
+  try {
     let user = await User.findById(decoded.id).select('-password');
     
     if (!user) {
-      // If not a regular user, try admin
       user = await Admin.findById(decoded.id).select('-password');
       if (user) {
         req.admin = user;
@@ -129,9 +153,8 @@ const authenticateOptional = async (req, res, next) => {
     }
     
     next();
-  } catch (error) {
-    // For optional auth, we don't block the request on token errors
-    console.error('Optional auth middleware error:', error.message);
+  } catch (dbError) {
+    console.error('Optional auth database query error (Tor timeout):', dbError.message);
     next();
   }
 };
