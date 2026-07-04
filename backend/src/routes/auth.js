@@ -10,7 +10,15 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    console.log('🔍 [USER LOGIN ATTEMPT]', {
+      email,
+      emailLength: email?.length,
+      passwordLength: password?.length,
+      hasPassword: !!password
+    });
+
     if (!email || !password) {
+      console.log('❌ User login failed: Missing email or password');
       return res.status(400).json({
         success: false,
         message: 'Email and password are required'
@@ -19,6 +27,7 @@ router.post('/login', async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
+      console.log(`❌ User login failed: Email '${email}' not found in database`);
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -27,11 +36,14 @@ router.post('/login', async (req, res) => {
 
     const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) {
+      console.log(`❌ User login failed: Incorrect password for email '${email}'`);
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
       });
     }
+
+    console.log(`✅ User credentials verified for: ${email}`);
 
     const token = jwt.sign(
       {
@@ -69,7 +81,15 @@ router.post('/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
+    console.log('🔍 [ADMIN LOGIN ATTEMPT]', {
+      username,
+      usernameLength: username?.length,
+      passwordLength: password?.length,
+      hasPassword: !!password
+    });
+
     if (!username || !password) {
+      console.log('❌ Admin login failed: Missing username or password');
       return res.status(400).json({
         success: false,
         message: 'Username and password are required'
@@ -78,6 +98,7 @@ router.post('/admin/login', async (req, res) => {
 
     const admin = await Admin.findOne({ username });
     if (!admin) {
+      console.log(`❌ Admin login failed: Username '${username}' not found in database`);
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -86,12 +107,14 @@ router.post('/admin/login', async (req, res) => {
 
     const isValidPassword = await admin.comparePassword(password);
     if (!isValidPassword) {
+      console.log(`❌ Admin login failed: Incorrect password for username '${username}'`);
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
       });
     }
 
+    console.log(`✅ Admin credentials verified for: ${username}`);
     admin.lastLogin = new Date();
     await admin.save();
 
