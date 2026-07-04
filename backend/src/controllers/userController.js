@@ -179,6 +179,7 @@ export const updateAddress = async (req, res) => {
       _id: user.addresses[addressIndex]._id
     };
 
+    user.markModified('addresses');
     await user.save();
 
     res.json({

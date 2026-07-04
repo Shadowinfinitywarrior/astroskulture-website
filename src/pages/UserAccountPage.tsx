@@ -218,7 +218,10 @@ const UserAccountPage = ({ onNavigate }: { onNavigate: (page: string) => void })
               >
                 🎨 My Custom Designs
               </button>
-              <button className="block w-full text-left bg-green-50 text-green-700 px-4 py-3 rounded hover:bg-green-100 transition-colors">
+              <button 
+                onClick={() => onNavigate('wishlist')}
+                className="block w-full text-left bg-green-50 text-green-700 px-4 py-3 rounded hover:bg-green-100 transition-colors"
+              >
                 ❤️ My Wishlist
               </button>
               <button className="block w-full text-left bg-purple-50 text-purple-700 px-4 py-3 rounded hover:bg-purple-100 transition-colors">

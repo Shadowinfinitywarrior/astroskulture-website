@@ -401,7 +401,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
             <button
-              onClick={() => onNavigate('/shop')}
+              onClick={() => onNavigate('shop')}
               className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
             >
               Continue Shopping
@@ -431,14 +431,14 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Login Required</h2>
                 <p className="text-gray-600 mb-6">Please log in to complete your purchase</p>
                 <button
-                  onClick={() => onNavigate('/login')}
+                  onClick={() => onNavigate('login')}
                   className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 mb-4 font-medium"
                 >
                   Log In
                 </button>
                 <p className="text-sm text-gray-600 mb-2">Don't have an account?</p>
                 <button
-                  onClick={() => onNavigate('/register')}
+                  onClick={() => onNavigate('register')}
                   className="text-blue-600 hover:text-blue-700 font-medium underline"
                 >
                   Sign Up Here

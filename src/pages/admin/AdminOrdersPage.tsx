@@ -185,7 +185,7 @@ export default function AdminOrdersPage({ onNavigate }: AdminOrdersPageProps) {
     try {
       console.log('💰 Updating order prices:', editingPrices);
 
-      const response = await fetch(`${API_BASE_URL}/orders/${selectedOrder._id}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/orders/${selectedOrder._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

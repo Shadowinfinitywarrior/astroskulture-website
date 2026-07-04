@@ -150,7 +150,7 @@ export function OrderConfirmationPage({
                 {error}
               </h1>
               <button
-                onClick={() => onNavigate("/orders")}
+                onClick={() => onNavigate("orders")}
                 className="mt-6 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
               >
                 View My Orders
@@ -311,13 +311,13 @@ export function OrderConfirmationPage({
           {isPaid ? (
             <>
               <button
-                onClick={() => onNavigate("/orders")}
+                onClick={() => onNavigate("orders")}
                 className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700"
               >
                 View My Orders
               </button>
               <button
-                onClick={() => onNavigate("/shop")}
+                onClick={() => onNavigate("shop")}
                 className="flex-1 bg-gray-200 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-300"
               >
                 Continue Shopping
@@ -326,13 +326,13 @@ export function OrderConfirmationPage({
           ) : isFailed ? (
             <>
               <button
-                onClick={() => onNavigate("/checkout")}
+                onClick={() => onNavigate("checkout")}
                 className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700"
               >
                 Try Again
               </button>
               <button
-                onClick={() => onNavigate("/cart")}
+                onClick={() => onNavigate("cart")}
                 className="flex-1 bg-gray-200 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-300"
               >
                 Back to Cart

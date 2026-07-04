@@ -155,14 +155,8 @@ export const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
     
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      { status, updatedAt: Date.now() },
-      { new: true, runValidators: true }
-    )
-      .populate('userId', 'email fullName phone')
-      .populate('items.productId', 'name images');
-    
+    // Find the order first to check ownership and state
+    const order = await Order.findById(req.params.id);
     if (!order) {
       return res.status(404).json({ 
         success: false,
@@ -170,15 +164,65 @@ export const updateOrderStatus = async (req, res) => {
       });
     }
 
+    // Check ownership unless admin
+    const isAdmin = req.user && req.user.role === 'admin';
+    if (!isAdmin && order.userId.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to update this order'
+      });
+    }
+
+    // Regular users can only cancel pending orders
+    if (!isAdmin) {
+      if (status !== 'cancelled') {
+        return res.status(400).json({
+          success: false,
+          message: 'Users can only cancel orders'
+        });
+      }
+      if (order.status !== 'pending') {
+        return res.status(400).json({
+          success: false,
+          message: 'Only pending orders can be cancelled'
+        });
+      }
+    }
+
+    const oldStatus = order.status;
+    order.status = status;
+    order.updatedAt = Date.now();
+    await order.save();
+
+    // Restore stock if status changed to cancelled
+    if (status === 'cancelled' && oldStatus !== 'cancelled') {
+      for (const item of order.items) {
+        const product = await Product.findById(item.productId);
+        if (product) {
+          const sizeIndex = product.sizes?.findIndex(s => s.size === item.size);
+          if (sizeIndex !== -1) {
+            product.sizes[sizeIndex].stock += item.quantity;
+            await product.save();
+            console.log(`✅ Restored stock for ${product.name} (size: ${item.size}): +${item.quantity}`);
+          }
+        }
+      }
+    }
+
+    // Populate for response
+    const populatedOrder = await Order.findById(order._id)
+      .populate('userId', 'email fullName phone')
+      .populate('items.productId', 'name images');
+
     res.json({
       success: true,
-      data: order
+      data: populatedOrder
     });
   } catch (error) {
     console.error('Update order error:', error);
     res.status(400).json({ 
       success: false,
-      message: 'Invalid order data', 
+      message: 'Invalid order status update', 
       error: error.message 
     });
   }

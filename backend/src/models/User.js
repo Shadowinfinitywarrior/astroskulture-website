@@ -33,6 +33,9 @@ const userSchema = new mongoose.Schema({
   },
   addresses: [{
     fullName: String,
+    flatHouseNumber: String,
+    areaStreetSector: String,
+    landmark: String,
     address: String,
     city: String,
     state: String,

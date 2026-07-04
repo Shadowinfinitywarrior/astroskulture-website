@@ -46,9 +46,8 @@ export function CustomDesignsPage({ onNavigate }: { onNavigate: (page: string) =
       onNavigate('login');
       return;
     }
-    if (activeTab === 'my-requests') {
-      fetchRequests();
-    }
+    // Fetch requests on mount or tab switch to keep request count accurate
+    fetchRequests();
   }, [activeTab, user]);
 
   const fetchRequests = async () => {

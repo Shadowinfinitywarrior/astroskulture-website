@@ -340,6 +340,13 @@ class ApiService {
     }); // FIXED: No isAdmin flag
   }
 
+  async updateAddress(addressId: string, addressData: any) {
+    return this.request(`/users/address/${addressId}`, {
+      method: 'PUT',
+      body: JSON.stringify(addressData),
+    });
+  }
+
   // Order methods - regular user auth
   async createOrder(orderData: any) {
     return this.request('/orders', {
@@ -354,6 +361,13 @@ class ApiService {
 
   async getOrder(id: string) {
     return this.request(`/orders/${id}`); // FIXED: No isAdmin flag
+  }
+
+  async updateOrderStatus(id: string, status: string) {
+    return this.request(`/orders/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
   }
 
   // Category methods - public

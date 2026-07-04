@@ -60,6 +60,9 @@ const orderSchema = new mongoose.Schema({
   razorpayOrderId: String,
   shippingAddress: {
     fullName: String,
+    flatHouseNumber: String,
+    areaStreetSector: String,
+    landmark: String,
     address: String,
     city: String,
     state: String,

@@ -351,9 +351,65 @@ router.get('/orders', async (req, res) => {
 router.put('/orders/:id/status', async (req, res) => {
   try {
     const { status } = req.body;
+    
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    const oldStatus = order.status;
+    order.status = status;
+    order.updatedAt = Date.now();
+    await order.save();
+
+    // Restore stock if status changed to cancelled
+    if (status === 'cancelled' && oldStatus !== 'cancelled') {
+      for (const item of order.items) {
+        const product = await Product.findById(item.productId);
+        if (product) {
+          const sizeIndex = product.sizes?.findIndex(s => s.size === item.size);
+          if (sizeIndex !== -1) {
+            product.sizes[sizeIndex].stock += item.quantity;
+            await product.save();
+            console.log(`✅ Restored stock for ${product.name} (size: ${item.size}): +${item.quantity}`);
+          }
+        }
+      }
+    }
+
+    const populatedOrder = await Order.findById(order._id)
+      .populate('userId', 'email fullName')
+      .populate('items.productId', 'name images');
+
+    res.json({
+      success: true,
+      data: populatedOrder
+    });
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    res.status(400).json({
+      success: false,
+      message: 'Error updating order status',
+      error: error.message
+    });
+  }
+});
+
+router.put('/orders/:id', async (req, res) => {
+  try {
+    const { subtotal, tax, shipping, total } = req.body;
     const order = await Order.findByIdAndUpdate(
       req.params.id,
-      { status, updatedAt: Date.now() },
+      { 
+        subtotal: subtotal !== undefined ? subtotal : undefined,
+        tax: tax !== undefined ? tax : undefined,
+        shipping: shipping !== undefined ? shipping : undefined,
+        total: total !== undefined ? total : undefined,
+        updatedAt: Date.now() 
+      },
       { new: true }
     )
       .populate('userId', 'email fullName')
@@ -371,10 +427,10 @@ router.put('/orders/:id/status', async (req, res) => {
       data: order
     });
   } catch (error) {
-    console.error('Error updating order status:', error);
+    console.error('Error updating order prices:', error);
     res.status(400).json({
       success: false,
-      message: 'Error updating order status',
+      message: 'Error updating order prices',
       error: error.message
     });
   }

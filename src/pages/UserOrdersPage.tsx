@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { apiService } from '../lib/mongodb';
 
 interface OrderItem {
   productId: {
@@ -22,11 +23,16 @@ interface Order {
   createdAt: string;
   items: OrderItem[];
   shippingAddress: {
-    street: string;
+    fullName: string;
+    flatHouseNumber?: string;
+    areaStreetSector?: string;
+    landmark?: string;
+    address: string;
     city: string;
     state: string;
-    zipCode: string;
+    postalCode: string;
     country: string;
+    phone?: string;
   };
 }
 
@@ -47,17 +53,8 @@ const UserOrdersPage = ({ onNavigate }: { onNavigate: (page: string) => void }) 
 
   const fetchUserOrders = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-      const response = await fetch(`${apiBaseUrl}/orders/my-orders`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
+      const result = await apiService.getOrders();
+      if (result.success) {
         setOrders(result.data || []);
       } else {
         setError('Failed to fetch orders');
@@ -66,6 +63,29 @@ const UserOrdersPage = ({ onNavigate }: { onNavigate: (page: string) => void }) 
       console.error('Error fetching orders:', error);
       setError('Error fetching orders');
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelOrder = async (orderId: string) => {
+    if (!confirm('Are you sure you want to cancel this order? This will restore the stock of the items.')) {
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setError('');
+      const result = await apiService.updateOrderStatus(orderId, 'cancelled');
+      if (result.success) {
+        alert('Order cancelled successfully!');
+        await fetchUserOrders();
+      } else {
+        alert(result.message || 'Failed to cancel order');
+        setLoading(false);
+      }
+    } catch (err: any) {
+      console.error('Error cancelling order:', err);
+      alert(err.message || 'Error occurred while cancelling order');
       setLoading(false);
     }
   };
@@ -161,8 +181,8 @@ const UserOrdersPage = ({ onNavigate }: { onNavigate: (page: string) => void }) 
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
-                        <p className="text-gray-600 text-sm">${item.price.toFixed(2)} each</p>
+                        <p className="font-semibold">₹{(item.price * item.quantity).toFixed(2)}</p>
+                        <p className="text-gray-600 text-sm">₹{item.price.toFixed(2)} each</p>
                       </div>
                     </div>
                   ))}
@@ -170,25 +190,30 @@ const UserOrdersPage = ({ onNavigate }: { onNavigate: (page: string) => void }) 
 
                 {/* Order Summary */}
                 <div className="mt-6 pt-6 border-t">
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-start md:items-center flex-col md:flex-row gap-4">
                     <div>
-                      <p className="text-sm text-gray-600">
-                        Shipped to: {order.shippingAddress.street}, {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}
+                      <p className="text-sm text-gray-600 text-left">
+                        <span className="font-semibold">Shipped to:</span>{' '}
+                        {order.shippingAddress.fullName || user?.fullName} -{' '}
+                        {order.shippingAddress.flatHouseNumber ? `${order.shippingAddress.flatHouseNumber}, ` : ''}
+                        {order.shippingAddress.areaStreetSector ? `${order.shippingAddress.areaStreetSector}, ` : ''}
+                        {order.shippingAddress.landmark ? `(Near: ${order.shippingAddress.landmark}), ` : ''}
+                        {order.shippingAddress.address}, {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.postalCode}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-lg font-semibold">Total: ${order.total.toFixed(2)}</p>
-                      <div className="flex gap-2 mt-3">
-                        <button className="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600">
-                          View Details
-                        </button>
+                    <div className="text-right w-full md:w-auto">
+                      <p className="text-lg font-semibold">Total: ₹{order.total.toFixed(2)}</p>
+                      <div className="flex gap-2 mt-3 justify-end">
                         {order.status === 'delivered' && (
                           <button className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600">
                             Reorder
                           </button>
                         )}
                         {order.status === 'pending' && (
-                          <button className="bg-red-500 text-white px-4 py-2 rounded text-sm hover:bg-red-600">
+                          <button 
+                            onClick={() => handleCancelOrder(order._id)}
+                            className="bg-red-500 text-white px-4 py-2 rounded text-sm hover:bg-red-600"
+                          >
                             Cancel Order
                           </button>
                         )}
