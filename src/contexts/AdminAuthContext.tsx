@@ -119,7 +119,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     console.log('🔐 Admin logged out');
   };
 
-  const isAuthenticated = !!admin && !!localStorage.getItem('adminToken');
+  const isAuthenticated = !!admin || (!!localStorage.getItem('adminToken') && !!localStorage.getItem('admin'));
 
   return (
     <AdminAuthContext.Provider value={{ 
