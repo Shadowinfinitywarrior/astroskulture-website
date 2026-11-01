@@ -6,6 +6,7 @@ import { useWishlist } from '../contexts/WishlistContext';
 import { useAuth } from '../contexts/AuthContext';
 import { optimizeImageUrl } from '../utils/imageUtils';
 import { updatePageSeo } from '../utils/seoUtils';
+import { ProductCardSkeleton } from './ProductCard';
 
 interface Product {
   _id: string;
@@ -318,11 +319,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
   };
 
 
-  if (loading) {
-    return <LoadingSpinner fullScreen />;
-  }
-
-  if (error) {
+  if (error && !loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -347,12 +344,14 @@ export function HomePage({ onNavigate }: HomePageProps) {
       <section className="relative min-h-[480px] md:h-[500px] bg-gradient-to-r from-red-600 to-red-800 text-white overflow-hidden">
         <div className="absolute inset-0 opacity-20 pointer-events-none">
           <img
-            src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200"
+            src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&auto=format&fit=crop&q=75"
             alt="Hero background"
             className="w-full h-full object-cover"
             width={1200}
             height={500}
             loading="eager"
+            fetchPriority="high"
+            decoding="async"
           />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 min-h-[500px] md:h-full flex flex-col justify-center py-8 md:py-0">
@@ -431,48 +430,20 @@ export function HomePage({ onNavigate }: HomePageProps) {
           </div>
           
           {/* Desktop Grid */}
-          <div className="hidden md:grid grid-cols-4 gap-6">
-            {categories.map((category) => (
-              <button
-                key={category._id}
-                onClick={() => onNavigate('shop', { category: category.slug })}
-                aria-label={`Shop ${category.name} collection`}
-                className="group relative h-48 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-              >
-                <img
-                  src={category.imageUrl ? optimizeImageUrl(category.imageUrl, { width: 400, quality: 'auto' }) : 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}
-                  alt=""
-                  aria-hidden="true"
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                  decoding="async"
-                  width={400}
-                  height={192}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
-                  <div className="p-4 w-full">
-                    <h3 className="text-white font-semibold text-lg line-clamp-2">
-                      {category.name}
-                    </h3>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* Mobile Horizontal Scroll */}
-          <div className="md:hidden relative">
-            <div
-              id="categoryScroll"
-              className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 scroll-smooth"
-              style={{ scrollBehavior: 'smooth' }}
-            >
+          {loading ? (
+            <div className="hidden md:grid grid-cols-4 gap-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-48 rounded-lg bg-gray-200 animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <div className="hidden md:grid grid-cols-4 gap-6">
               {categories.map((category) => (
                 <button
                   key={category._id}
                   onClick={() => onNavigate('shop', { category: category.slug })}
                   aria-label={`Shop ${category.name} collection`}
-                  className="group relative h-32 w-40 flex-shrink-0 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
+                  className="group relative h-48 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                 >
                   <img
                     src={category.imageUrl ? optimizeImageUrl(category.imageUrl, { width: 400, quality: 'auto' }) : 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}
@@ -481,12 +452,12 @@ export function HomePage({ onNavigate }: HomePageProps) {
                     className="w-full h-full object-cover"
                     loading="lazy"
                     decoding="async"
-                    width={160}
-                    height={128}
+                    width={400}
+                    height={192}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
-                    <div className="p-2 w-full">
-                      <h3 className="text-white font-semibold text-xs line-clamp-2">
+                    <div className="p-4 w-full">
+                      <h3 className="text-white font-semibold text-lg line-clamp-2">
                         {category.name}
                       </h3>
                     </div>
@@ -494,31 +465,75 @@ export function HomePage({ onNavigate }: HomePageProps) {
                 </button>
               ))}
             </div>
-            {categories.length > 3 && (
-              <div className="flex gap-2 justify-center mt-4">
-                <button
-                  onClick={() => {
-                    const element = document.getElementById('categoryScroll');
-                    if (element) element.scrollBy({ left: -300, behavior: 'smooth' });
-                  }}
-                  className="p-2 rounded-full bg-red-600 text-white hover:bg-red-700"
-                  aria-label="Scroll categories left"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => {
-                    const element = document.getElementById('categoryScroll');
-                    if (element) element.scrollBy({ left: 300, behavior: 'smooth' });
-                  }}
-                  className="p-2 rounded-full bg-red-600 text-white hover:bg-red-700"
-                  aria-label="Scroll categories right"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+          )}
+
+          {/* Mobile Horizontal Scroll */}
+          {loading ? (
+            <div className="md:hidden flex gap-3 overflow-x-hidden pb-4 -mx-4 px-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-32 w-40 flex-shrink-0 rounded-lg bg-gray-200 animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <div className="md:hidden relative">
+              <div
+                id="categoryScroll"
+                className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 scroll-smooth"
+                style={{ scrollBehavior: 'smooth' }}
+              >
+                {categories.map((category) => (
+                  <button
+                    key={category._id}
+                    onClick={() => onNavigate('shop', { category: category.slug })}
+                    aria-label={`Shop ${category.name} collection`}
+                    className="group relative h-32 w-40 flex-shrink-0 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
+                  >
+                    <img
+                      src={category.imageUrl ? optimizeImageUrl(category.imageUrl, { width: 400, quality: 'auto' }) : 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}
+                      alt=""
+                      aria-hidden="true"
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                      width={160}
+                      height={128}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
+                      <div className="p-2 w-full">
+                        <h3 className="text-white font-semibold text-xs line-clamp-2">
+                          {category.name}
+                        </h3>
+                      </div>
+                    </div>
+                  </button>
+                ))}
               </div>
-            )}
-          </div>
+              {categories.length > 3 && (
+                <div className="flex gap-2 justify-center mt-4">
+                  <button
+                    onClick={() => {
+                      const element = document.getElementById('categoryScroll');
+                      if (element) element.scrollBy({ left: -300, behavior: 'smooth' });
+                    }}
+                    className="p-2 rounded-full bg-red-600 text-white hover:bg-red-700"
+                    aria-label="Scroll categories left"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      const element = document.getElementById('categoryScroll');
+                      if (element) element.scrollBy({ left: 300, behavior: 'smooth' });
+                    }}
+                    className="p-2 rounded-full bg-red-600 text-white hover:bg-red-700"
+                    aria-label="Scroll categories right"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
@@ -532,7 +547,13 @@ export function HomePage({ onNavigate }: HomePageProps) {
             <p className="text-xs md:text-sm text-gray-600">Handpicked for your vibe</p>
           </div>
           
-          {featuredProducts.length === 0 ? (
+          {loading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : featuredProducts.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 text-sm md:text-lg">No featured products available</p>
               <button
@@ -543,20 +564,18 @@ export function HomePage({ onNavigate }: HomePageProps) {
               </button>
             </div>
           ) : (
-            <>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                {featuredProducts.slice(0, 8).map((product) => (
-                  <ProductCard 
-                    key={product._id} 
-                    product={product} 
-                    onNavigate={onNavigate}
-                    onWishlistToggle={handleWishlistToggle}
-                    isInWishlist={isInWishlist}
-                    wishlistLoading={wishlistLoading}
-                  />
-                ))}
-              </div>
-            </>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {featuredProducts.slice(0, 8).map((product) => (
+                <ProductCard 
+                  key={product._id} 
+                  product={product} 
+                  onNavigate={onNavigate}
+                  onWishlistToggle={handleWishlistToggle}
+                  isInWishlist={isInWishlist}
+                  wishlistLoading={wishlistLoading}
+                />
+              ))}
+            </div>
           )}
           
           <div className="text-center mt-6 md:mt-8">
@@ -570,6 +589,26 @@ export function HomePage({ onNavigate }: HomePageProps) {
           </div>
         </div>
       </section>
+
+      {/* Category-wise Product Sections Loading Skeleton */}
+      {loading && (
+        <section className="py-6 md:py-10 bg-white">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex items-center justify-between mb-6 md:mb-8">
+              <div className="h-8 bg-gray-200 rounded w-48 animate-pulse" />
+            </div>
+            <div className="overflow-x-auto pb-2 -mx-4 px-4">
+              <div className="flex gap-4 md:gap-6 min-w-min">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="w-48 md:w-56 flex-shrink-0">
+                    <ProductCardSkeleton />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Category-wise Product Sections */}
       {categories.slice(0, 4).map((category, index) => {

@@ -1,36 +1,54 @@
 {
-  "$schema": "https://agenticresourcediscovery.org/spec/v1/schema.json",
+  "$schema": "https://raw.githubusercontent.com/ards-project/ard-spec/main/spec/schemas/ard-manifest.schema.json",
   "name": "Astros Kulture",
   "description": "Premium 240 GSM Oversized Streetwear & Custom Apparel Pan-India",
   "url": "https://astroskulture.in",
-  "resources": [
+  "entries": [
     {
-      "name": "Products Catalog",
-      "type": "catalog",
-      "format": "application/xml",
+      "identifier": "urn:air:astroskulture.in:catalog:google-merchant",
+      "displayName": "Google Merchant Product Feed",
+      "type": "application/xml",
       "url": "https://astroskulture.in/feeds/google-merchant.xml",
-      "description": "Full product catalog with pricing, stock availability, sizes, and images"
+      "description": "Official RSS 2.0 XML product feed containing all streetwear apparel, sizes, real-time stock, pricing, and images.",
+      "representativeQueries": [
+        "oversized streetwear t-shirts",
+        "240 gsm drop shoulder t-shirts india",
+        "anime graphic tees collection",
+        "buy custom designed t-shirts online"
+      ]
     },
     {
-      "name": "Meta Product Catalog",
-      "type": "catalog",
-      "format": "text/csv",
+      "identifier": "urn:air:astroskulture.in:catalog:meta-catalog",
+      "displayName": "Meta Product Catalog Feed",
+      "type": "text/csv",
       "url": "https://astroskulture.in/feeds/meta-catalog.csv",
-      "description": "CSV product catalog feed"
+      "description": "Meta / Instagram Shops CSV product catalog with unique product IDs, categories, and inventory.",
+      "representativeQueries": [
+        "instagram streetwear shop catalog",
+        "aesthetic graphic tees prices"
+      ]
     },
     {
-      "name": "Sitemap",
-      "type": "sitemap",
-      "format": "application/xml",
+      "identifier": "urn:air:astroskulture.in:sitemap:xml",
+      "displayName": "XML Sitemap",
+      "type": "application/xml",
       "url": "https://astroskulture.in/sitemap.xml",
-      "description": "Complete site map containing all products and blog posts"
+      "description": "Complete site map containing all crawlable product URLs, categories, policies, and blog articles.",
+      "representativeQueries": [
+        "astros kulture all products sitemap",
+        "streetwear blog articles"
+      ]
     },
     {
-      "name": "LLM Instructions",
-      "type": "documentation",
-      "format": "text/plain",
+      "identifier": "urn:air:astroskulture.in:documentation:llms-txt",
+      "displayName": "LLM Instructions and Documentation",
+      "type": "text/plain",
       "url": "https://astroskulture.in/llms.txt",
-      "description": "Machine-readable context and entity information"
+      "description": "Machine-readable context, store capabilities, and navigation links for AI agents.",
+      "representativeQueries": [
+        "about astros kulture brand",
+        "astros kulture contact and customer support"
+      ]
     }
   ]
 }
