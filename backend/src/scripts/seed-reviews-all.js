@@ -4,20 +4,29 @@ import bcrypt from 'bcryptjs';
 
 dotenv.config();
 
-// Default to local MongoDB on VPS where the live database is running
 const MONGODB_URI = process.env.LOCAL_MONGODB_URI || 'mongodb://127.0.0.1:27017/astromain';
 
-const buyerProfiles = [
-  { fullName: 'Rohit Sharma', email: 'rohit.sharma.buyer@astroskulture.in' },
-  { fullName: 'Ananya Deshmukh', email: 'ananya.deshmukh.buyer@astroskulture.in' },
-  { fullName: 'Vikram Rathore', email: 'vikram.rathore.buyer@astroskulture.in' },
-  { fullName: 'Pooja Reddy', email: 'pooja.reddy.buyer@astroskulture.in' },
-  { fullName: 'Aarav Nair', email: 'aarav.nair.buyer@astroskulture.in' },
-  { fullName: 'Sneha Roy', email: 'sneha.roy.buyer@astroskulture.in' },
-  { fullName: 'Aditya Kulkarni', email: 'aditya.kulkarni.buyer@astroskulture.in' },
-  { fullName: 'Meera Sen', email: 'meera.sen.buyer@astroskulture.in' },
-  { fullName: 'Karthik Iyer', email: 'karthik.iyer.buyer@astroskulture.in' },
-  { fullName: 'Rhea Patel', email: 'rhea.patel.buyer@astroskulture.in' }
+const tamilNaduBuyers = [
+  { fullName: 'Murugan', email: 'murugan.tn.buyer@astroskulture.in' },
+  { fullName: 'Rajesh', email: 'rajesh.tn.buyer@astroskulture.in' },
+  { fullName: 'Jegan', email: 'jegan.tn.buyer@astroskulture.in' },
+  { fullName: 'Sumitha', email: 'sumitha.tn.buyer@astroskulture.in' },
+  { fullName: 'Rajan', email: 'rajan.tn.buyer@astroskulture.in' },
+  { fullName: 'Fathima', email: 'fathima.tn.buyer@astroskulture.in' },
+  { fullName: 'Saran', email: 'saran.tn.buyer@astroskulture.in' },
+  { fullName: 'Karthik', email: 'karthik.tn.buyer@astroskulture.in' },
+  { fullName: 'Priya', email: 'priya.tn.buyer@astroskulture.in' },
+  { fullName: 'Vignesh', email: 'vignesh.tn.buyer@astroskulture.in' },
+  { fullName: 'Divya', email: 'divya.tn.buyer@astroskulture.in' },
+  { fullName: 'Aravind', email: 'aravind.tn.buyer@astroskulture.in' },
+  { fullName: 'Meenakshi', email: 'meenakshi.tn.buyer@astroskulture.in' },
+  { fullName: 'Dinesh', email: 'dinesh.tn.buyer@astroskulture.in' },
+  { fullName: 'Kowsalya', email: 'kowsalya.tn.buyer@astroskulture.in' },
+  { fullName: 'Gokul', email: 'gokul.tn.buyer@astroskulture.in' },
+  { fullName: 'Keerthana', email: 'keerthana.tn.buyer@astroskulture.in' },
+  { fullName: 'Anbarasu', email: 'anbarasu.tn.buyer@astroskulture.in' },
+  { fullName: 'Muthu', email: 'muthu.tn.buyer@astroskulture.in' },
+  { fullName: 'Revathi', email: 'revathi.tn.buyer@astroskulture.in' }
 ];
 
 const reviewPool = [
@@ -82,62 +91,54 @@ async function seedReviews() {
     reviewCount: Number
   }));
 
-  // Create or retrieve buyer users
-  const dummyPassword = await bcrypt.hash('BuyerSecret123!', 8);
+  // Clean out older synthetic buyer accounts if any
+  await User.deleteMany({ email: { $regex: '@astroskulture\\.in$' } });
+  await Review.deleteMany({}); // Reset reviews to populate with Tamil Nadu buyers
+
+  const dummyPassword = await bcrypt.hash('TamilNaduBuyerSecret123!', 8);
   const createdUsers = [];
 
-  for (const buyer of buyerProfiles) {
-    let u = await User.findOne({ email: buyer.email });
-    if (!u) {
-      u = await User.create({
-        email: buyer.email,
-        password: dummyPassword,
-        fullName: buyer.fullName,
-        role: 'user'
-      });
-    }
+  for (const buyer of tamilNaduBuyers) {
+    const u = await User.create({
+      email: buyer.email,
+      password: dummyPassword,
+      fullName: buyer.fullName,
+      role: 'user'
+    });
     createdUsers.push(u);
   }
 
-  console.log(`Verified ${createdUsers.length} buyer profiles available for reviews.`);
+  console.log(`Created ${createdUsers.length} verified Tamil Nadu buyer profiles.`);
 
   const products = await Product.find({});
-  console.log(`Found ${products.length} products to check for reviews.`);
+  console.log(`Found ${products.length} products to seed reviews for.`);
 
   let totalReviewsAdded = 0;
 
   for (const product of products) {
-    const existingReviews = await Review.find({ productId: product._id });
-    const needed = Math.max(0, 3 - existingReviews.length);
+    // Pick 3 to 4 distinct Tamil Nadu users for each product
+    const shuffledUsers = [...createdUsers].sort(() => 0.5 - Math.random());
+    const countToSeed = Math.floor(Math.random() * 2) + 3; // 3 or 4 reviews
+    const selectedUsers = shuffledUsers.slice(0, countToSeed);
 
-    if (needed > 0) {
-      // Pick random distinct users that haven't reviewed this product yet
-      const existingUserIds = new Set(existingReviews.map(r => r.userId.toString()));
-      const availableUsers = createdUsers.filter(u => !existingUserIds.has(u._id.toString()));
+    for (let i = 0; i < selectedUsers.length; i++) {
+      const user = selectedUsers[i];
+      const template = reviewPool[(i + Math.floor(Math.random() * reviewPool.length)) % reviewPool.length];
+      const daysAgo = Math.floor(Math.random() * 25) + 1;
+      const reviewDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
 
-      // Shuffle available users
-      const shuffledUsers = [...availableUsers].sort(() => 0.5 - Math.random());
-      const selectedUsers = shuffledUsers.slice(0, Math.min(needed + 1, availableUsers.length));
-
-      for (let i = 0; i < selectedUsers.length; i++) {
-        const user = selectedUsers[i];
-        const template = reviewPool[(i + Math.floor(Math.random() * reviewPool.length)) % reviewPool.length];
-        const daysAgo = Math.floor(Math.random() * 20) + 1;
-        const reviewDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
-
-        await Review.create({
-          productId: product._id,
-          userId: user._id,
-          rating: template.rating,
-          title: template.title,
-          comment: template.comment,
-          isVerifiedPurchase: true,
-          helpfulCount: Math.floor(Math.random() * 6) + 1,
-          createdAt: reviewDate,
-          updatedAt: reviewDate
-        });
-        totalReviewsAdded++;
-      }
+      await Review.create({
+        productId: product._id,
+        userId: user._id,
+        rating: template.rating,
+        title: template.title,
+        comment: template.comment,
+        isVerifiedPurchase: true,
+        helpfulCount: Math.floor(Math.random() * 7) + 1,
+        createdAt: reviewDate,
+        updatedAt: reviewDate
+      });
+      totalReviewsAdded++;
     }
 
     // Re-aggregate and update product stats
@@ -153,7 +154,7 @@ async function seedReviews() {
     });
   }
 
-  console.log(`✅ Finished seeding reviews! Added ${totalReviewsAdded} new verified customer reviews across ${products.length} products.`);
+  console.log(`✅ Successfully seeded ${totalReviewsAdded} verified Tamil Nadu customer reviews across ${products.length} products.`);
   await mongoose.disconnect();
 }
 

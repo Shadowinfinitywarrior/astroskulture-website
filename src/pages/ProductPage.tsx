@@ -36,6 +36,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
   const [giftMessage, setGiftMessage] = useState('');
   const [pincode, setPincode] = useState('');
   const [pincodeStatus, setPincodeStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [suggestedProducts, setSuggestedProducts] = useState<Product[]>([]);
   const [settings, setSettings] = useState<AppSettings>({
     gstPercentage: 18,
     gstEnabled: true,
@@ -209,6 +210,18 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
         if (data.data.colors && data.data.colors.length > 0) {
           setSelectedColor(data.data.colors[0]);
         }
+
+        // Fetch suggestions for upsell/cross-sell
+        try {
+          const sugRes = await apiService.getProducts({ limit: 12 });
+          if (sugRes && sugRes.success) {
+            const list = Array.isArray(sugRes.data) ? sugRes.data : (sugRes.data?.products || []);
+            const others = list.filter((p: any) => p._id !== data.data._id && p.slug !== slug);
+            setSuggestedProducts(others.slice(0, 6));
+          }
+        } catch (e) {
+          console.error('Failed to load suggestions:', e);
+        }
       } else {
         setError('Product not found');
       }
@@ -372,6 +385,9 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                   : product.images
               }
               productName={product.name}
+              isWishlist={isProductInWishlist}
+              onWishlistToggle={handleWishlistToggle}
+              isWishlistLoading={operationLoading}
             />
           </div>
 
@@ -545,8 +561,8 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
               )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-2 md:gap-4 items-center">
+            {/* Desktop Action Buttons (Hidden on mobile because bottom bar is docked) */}
+            <div className="hidden md:flex flex-col sm:flex-row gap-2 md:gap-4 items-center">
               <button
                 onClick={handleAddToCart}
                 disabled={product.totalStock === 0 || !selectedSize || (product.colors && product.colors.length > 0 && !selectedColor) || isAdded}
@@ -575,21 +591,6 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                 className="w-full sm:flex-1 bg-red-600 text-white py-3 md:py-4 px-4 md:px-6 rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium shadow-sm text-sm md:text-base"
               >
                 Buy Now
-              </button>
-              <button
-                onClick={handleWishlistToggle}
-                disabled={operationLoading}
-                className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 md:h-auto md:w-auto md:px-4 md:py-3 border-2 rounded-lg transition-colors shadow-sm flex items-center justify-center ${isProductInWishlist
-                  ? 'border-red-600 bg-red-50 text-red-600 hover:bg-red-100'
-                  : 'border-gray-300 text-gray-600 hover:border-red-600 hover:text-red-600 hover:bg-red-50'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                title={isProductInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
-              >
-                {operationLoading ? (
-                  <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <Heart className={`w-5 h-5 md:w-6 md:h-6 ${isProductInWishlist ? 'fill-current' : ''}`} />
-                )}
               </button>
             </div>
 
@@ -836,6 +837,80 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
             </div>
           </div>
         </div>
+
+        {/* Upsell & Cross-Sell Recommendations */}
+        {suggestedProducts.length > 0 && (
+          <div className="mt-12 md:mt-16 border-t border-gray-200 pt-8 md:pt-10">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-2">
+              <div>
+                <span className="text-xs uppercase font-extrabold text-red-600 tracking-wider">Complete Your Look</span>
+                <h2 className="text-xl sm:text-2xl font-black text-gray-950 mt-1">
+                  You May Also Like
+                </h2>
+              </div>
+              <button
+                onClick={() => onNavigate('shop')}
+                className="text-xs sm:text-sm font-semibold text-red-600 hover:text-red-700 underline"
+              >
+                View all streetwear drops →
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+              {suggestedProducts.slice(0, 4).map((item) => {
+                const itemPrice = item.discountPrice || item.price;
+                const itemDiscount = item.discountPrice
+                  ? Math.round((1 - item.discountPrice / item.price) * 100)
+                  : 0;
+                return (
+                  <div
+                    key={item._id}
+                    onClick={() => {
+                      onNavigate('product', { slug: item.slug });
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer"
+                  >
+                    <div className="relative aspect-square overflow-hidden bg-gray-50">
+                      <img
+                        src={item.images?.[0]?.url || '/placeholder-image.jpg'}
+                        alt={item.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                      {itemDiscount > 0 && (
+                        <span className="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">
+                          {itemDiscount}% OFF
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-3 flex-1 flex flex-col justify-between">
+                      <div>
+                        <span className="text-[10px] text-gray-400 uppercase font-semibold">
+                          {typeof item.category === 'object' ? item.category?.name : (item.category || 'Streetwear')}
+                        </span>
+                        <h3 className="font-bold text-xs sm:text-sm text-gray-900 group-hover:text-red-600 transition-colors line-clamp-1 mt-0.5">
+                          {item.name}
+                        </h3>
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="font-black text-sm sm:text-base text-gray-900">₹{itemPrice}</span>
+                          {item.discountPrice && (
+                            <span className="text-[11px] text-gray-400 line-through">₹{item.price}</span>
+                          )}
+                        </div>
+                        <span className="text-[11px] font-bold text-red-600 group-hover:translate-x-0.5 transition-transform">
+                          View →
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Product Reviews Section */}
         <div className="mt-8 md:mt-12">

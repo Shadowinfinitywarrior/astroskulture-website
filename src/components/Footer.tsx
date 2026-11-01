@@ -89,10 +89,10 @@ export function Footer() {
                 <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 <div>
                   <a 
-                    href="tel:+917871658830" 
+                    href="tel:+918148269916" 
                     className="hover:text-white transition-colors"
                   >
-                    +91 78716 58830
+                    +91 81482 69916
                   </a>
                   <p className="text-xs text-gray-400 mt-1">WhatsApp orders & queries</p>
                 </div>

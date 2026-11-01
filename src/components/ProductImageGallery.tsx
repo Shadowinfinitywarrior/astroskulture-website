@@ -1,15 +1,21 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ZoomIn, Heart } from 'lucide-react';
 import { optimizeImageUrl } from '../utils/imageUtils';
 
 interface ProductImageGalleryProps {
   images: Array<{ url: string; alt?: string }>;
   productName: string;
+  isWishlist?: boolean;
+  onWishlistToggle?: () => void;
+  isWishlistLoading?: boolean;
 }
 
 const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ 
   images, 
-  productName 
+  productName,
+  isWishlist,
+  onWishlistToggle,
+  isWishlistLoading
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
@@ -108,13 +114,37 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
             }}
           />
           
+          {/* Wishlist Heart Button - On swiping product image */}
+          {onWishlistToggle && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onWishlistToggle();
+              }}
+              disabled={isWishlistLoading}
+              className={`absolute top-3 right-3 sm:top-4 sm:right-4 p-2 sm:p-2.5 rounded-full transition-all duration-200 z-20 shadow-md ${
+                isWishlist
+                  ? 'bg-red-50 text-red-600 border border-red-200 scale-105'
+                  : 'bg-white/95 backdrop-blur-md text-gray-700 hover:text-red-600 border border-gray-200/90 hover:bg-white'
+              }`}
+              title={isWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
+              aria-label={isWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
+            >
+              {isWishlistLoading ? (
+                <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Heart className={`w-5 h-5 ${isWishlist ? 'fill-red-600 text-red-600' : 'text-gray-700'}`} />
+              )}
+            </button>
+          )}
+
           {/* Zoom Button */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               setIsZoomed(!isZoomed);
             }}
-            className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-black bg-opacity-60 hover:bg-opacity-80 text-white p-2 rounded-full transition-all z-10 shadow-lg"
+            className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-all z-10 shadow-md backdrop-blur-sm"
             title="Zoom image"
           >
             <ZoomIn className="w-4 h-4 sm:w-5 sm:h-5" />

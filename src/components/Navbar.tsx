@@ -39,17 +39,17 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14 sm:h-16">
+        <div className="flex items-center justify-between h-16 sm:h-16 md:h-18">
           {/* Left section: Mobile Menu Hamburger & Brand Logo */}
-          <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
             {/* Mobile Menu Button - defined on the Left */}
             <button
               onClick={() => setIsMenuOpen(true)}
-              className="md:hidden p-1.5 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+              className="md:hidden p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
               title="Menu"
               aria-label="Toggle mobile menu"
             >
-              <Menu className="w-5 h-5 text-gray-800" />
+              <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-gray-900" />
             </button>
 
             {/* Logo */}
@@ -59,23 +59,23 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
                 e.preventDefault();
                 handleNavigation('home');
               }}
-              className="flex items-center gap-1 sm:gap-2 group min-w-0"
+              className="flex items-center gap-2 sm:gap-2.5 group min-w-0"
               aria-label="Astros Kulture Home"
             >
-              {/* Circular Logo */}
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden border-2 border-red-600 flex items-center justify-center bg-white flex-shrink-0">
+              {/* Circular Logo - Enlarged for high visibility */}
+              <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full overflow-hidden border-2 border-red-600 flex items-center justify-center bg-white flex-shrink-0 shadow-sm">
                 <picture>
                   <source srcSet="/logo.webp" type="image/webp" />
                   <img 
                     src="/logo.png" 
                     alt="Astros Kulture Logo" 
-                    className="w-6 h-6 sm:w-7 sm:h-7 object-contain"
-                    width={28}
-                    height={28}
+                    className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 object-contain"
+                    width={36}
+                    height={36}
                   />
                 </picture>
               </div>
-              <span className="text-xs sm:text-sm md:text-base font-bold text-gray-900 group-hover:text-red-600 transition-colors truncate">
+              <span className="text-sm sm:text-base md:text-lg font-black tracking-tight text-gray-950 group-hover:text-red-600 transition-colors truncate">
                 ASTROS KULTURE
               </span>
             </a>
@@ -327,9 +327,9 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
         >
           {/* Drawer Header */}
           <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/80">
-            <div className="flex items-center gap-2">
-              <img src="/logo.png" alt="Astros Kulture" className="w-7 h-7 object-contain rounded-full border border-red-600" />
-              <span className="font-bold text-sm tracking-wide text-gray-900">ASTROS KULTURE</span>
+            <div className="flex items-center gap-2.5">
+              <img src="/logo.png" alt="Astros Kulture" className="w-9 h-9 object-contain rounded-full border-2 border-red-600 shadow-sm" />
+              <span className="font-black text-base tracking-wide text-gray-950">ASTROS KULTURE</span>
             </div>
             <button
               onClick={() => setIsMenuOpen(false)}

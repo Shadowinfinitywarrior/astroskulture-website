@@ -103,7 +103,7 @@ export function PolicyPage({ type }: PolicyPageProps) {
           <p>
             Send your order ID and photos of the item to{' '}
             <a href="mailto:help.astroskulture@gmail.com" className="text-red-600 underline">help.astroskulture@gmail.com</a>{' '}
-            or WhatsApp our support team at <strong>+91 78716 58830</strong>.
+            or WhatsApp our support team at <strong>+91 81482 69916</strong>.
           </p>
           <h2 className="text-lg font-bold text-gray-900 mt-6">3. Refund Timeline</h2>
           <p>
