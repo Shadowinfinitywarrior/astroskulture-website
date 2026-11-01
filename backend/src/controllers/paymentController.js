@@ -2,6 +2,7 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import AbandonedCart from '../models/AbandonedCart.js';
 import { sendCapi } from '../services/metaCapi.js';
 
 const validateRazorpayConfig = () => {
@@ -204,6 +205,22 @@ export const verifyPayment = async (req, res) => {
       }).catch(err => console.error('[CAPI verify error]', err.message));
 
       await Order.findByIdAndUpdate(updatedOrder._id, { purchaseTracked: true });
+    }
+
+    // Clear abandoned cart reminders for this customer upon verified payment
+    const customerPhone = updatedOrder.userId?.phone || updatedOrder.shippingAddress?.phone;
+    const customerEmail = updatedOrder.userId?.email || updatedOrder.shippingAddress?.email;
+    if (razorpayOrderId || customerPhone || customerEmail) {
+      AbandonedCart.updateMany(
+        {
+          $or: [
+            ...(razorpayOrderId ? [{ razorpayOrderId }] : []),
+            ...(customerPhone ? [{ 'customer.phone': customerPhone }] : []),
+            ...(customerEmail ? [{ 'customer.email': customerEmail }] : [])
+          ]
+        },
+        { $set: { status: 'recovered', recoveredAt: new Date() } }
+      ).catch(() => {});
     }
 
     res.json({
@@ -434,6 +451,23 @@ export const handlePaymentWebhook = async (req, res) => {
       }).catch(err => console.error('[CAPI webhook error]', err.message));
 
       await Order.findByIdAndUpdate(updatedOrder._id, { purchaseTracked: true });
+    }
+
+    if (paymentStatus === 'paid') {
+      const customerPhone = updatedOrder.userId?.phone || updatedOrder.shippingAddress?.phone;
+      const customerEmail = updatedOrder.userId?.email || updatedOrder.shippingAddress?.email;
+      if (razorpayOrderId || customerPhone || customerEmail) {
+        AbandonedCart.updateMany(
+          {
+            $or: [
+              ...(razorpayOrderId ? [{ razorpayOrderId }] : []),
+              ...(customerPhone ? [{ 'customer.phone': customerPhone }] : []),
+              ...(customerEmail ? [{ 'customer.email': customerEmail }] : [])
+            ]
+          },
+          { $set: { status: 'recovered', recoveredAt: new Date() } }
+        ).catch(() => {});
+      }
     }
 
     res.status(200).json({

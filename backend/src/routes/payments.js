@@ -10,7 +10,10 @@ import {
   createMagicOrder,
   getPromotions,
   applyPromotion,
-  getShippingInfo
+  getShippingInfo,
+  handleAbandonedCartWebhook,
+  handleOrderCreatedWebhook,
+  recoverAbandonedCart
 } from '../controllers/magicCheckoutController.js';
 import { auth } from '../middleware/auth.js';
 
@@ -28,5 +31,10 @@ router.post('/magic/create-order', createMagicOrder);
 router.all('/magic/promotions', getPromotions);
 router.all('/magic/apply-promotion', applyPromotion);
 router.all('/magic/shipping-info', getShippingInfo);
+
+// Razorpay Magic Webhooks & Recovery
+router.all('/magic/abandoned-cart', handleAbandonedCartWebhook);
+router.all('/magic/order-created', handleOrderCreatedWebhook);
+router.get('/magic/recover/:token', recoverAbandonedCart);
 
 export default router;

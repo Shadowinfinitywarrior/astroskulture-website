@@ -34,17 +34,18 @@ import orderRoutes from './routes/orders.js';
 import userRoutes from './routes/users.js';
 import categoryRoutes from './routes/categories.js';
 import adminRoutes from './routes/admin.js';
-import wishlistRoutes from './routes/wishlist.js'; // ADDED WISHLIST ROUTES
-import blogRoutes from './routes/blogs.js'; // ADDED BLOG ROUTES
-import bannerRoutes from './routes/banners.js'; // ADDED BANNER ROUTES
-import analyticsRoutes from './routes/analytics.js'; // ADDED ANALYTICS ROUTES
-import reviewRoutes from './routes/reviews.js'; // ADDED REVIEW ROUTES
-import paymentRoutes from './routes/payments.js'; // ADDED PAYMENT ROUTES
-import settingsRoutes from './routes/settings.js'; // ADDED SETTINGS ROUTES
-import paymentVerificationRoutes from './routes/paymentVerification.js'; // ADDED PAYMENT VERIFICATION ROUTES
+import wishlistRoutes from './routes/wishlist.js';
+import blogRoutes from './routes/blogs.js';
+import bannerRoutes from './routes/banners.js';
+import analyticsRoutes from './routes/analytics.js';
+import reviewRoutes from './routes/reviews.js';
+import paymentRoutes from './routes/payments.js';
+import settingsRoutes from './routes/settings.js';
+import paymentVerificationRoutes from './routes/paymentVerification.js';
 import customDesignRoutes from './routes/customDesigns.js';
 import feedRoutes from './routes/feeds.js';
 import homepageRoutes from './routes/homepage.js';
+import { startAbandonedCartWorker } from './services/abandonedCartRecovery.js';
 
 const app = express();
 app.set('trust proxy', 1); // Trust first proxy (Nginx)
@@ -236,6 +237,7 @@ const startServer = async () => {
 
   // Start Express server after database connection is ready
   app.listen(PORT, () => {
+    startAbandonedCartWorker();
     console.log('\n🚀 ASTRO-MAIN Server Started Successfully');
     console.log('═'.repeat(60));
     console.log(`📍 Server Port: ${PORT}`);

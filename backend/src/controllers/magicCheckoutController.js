@@ -1,8 +1,10 @@
 // backend/src/controllers/magicCheckoutController.js
 // Headless endpoints for Razorpay 1-Click Magic Checkout integration
 
+import crypto from 'crypto';
 import Razorpay from 'razorpay';
 import Product from '../models/Product.js';
+import AbandonedCart from '../models/AbandonedCart.js';
 
 const getRazorpayInstance = () => {
   if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_SECRET_KEY) {
@@ -193,5 +195,147 @@ export const getShippingInfo = async (req, res) => {
   } catch (error) {
     console.error('[Magic getShippingInfo Error]', error);
     return res.status(500).json({ status: 'error', serviceable: false, message: error.message });
+  }
+};
+
+/**
+ * 5. Abandoned Cart Webhook: POST /api/payments/magic/abandoned-cart
+ * Receives dropped checkout events from Razorpay Magic Checkout
+ * Schedules 1st reminder at 30 minutes, 2nd reminder at 24 hours
+ */
+export const handleAbandonedCartWebhook = async (req, res) => {
+  try {
+    const payload = req.body || {};
+    const customer = payload.customer || payload.user || {};
+    const contact = (customer.contact || customer.phone || payload.contact || '').toString().trim();
+    const email = (customer.email || payload.email || '').toString().trim();
+    const name = customer.name || customer.fullName || 'Customer';
+
+    const lineItems = payload.line_items || payload.items || [];
+    const orderAmount = Number(payload.order_amount || payload.amount || 0);
+
+    const formattedItems = Array.isArray(lineItems)
+      ? lineItems.map((item) => ({
+          name: item.name || item.title || 'Astros Kulture Apparel',
+          price: (Number(item.price || item.unit_amount || 0) > 1000) ? Math.round(Number(item.price || item.unit_amount) / 100) : Number(item.price || 0),
+          quantity: Number(item.quantity || 1),
+          size: item.size || 'M',
+          color: item.color || '',
+          image: item.image_url || item.image || '',
+        }))
+      : [];
+
+    const now = new Date();
+    const firstNotificationScheduledAt = new Date(now.getTime() + 30 * 60 * 1000); // 30 minutes
+    const secondNotificationScheduledAt = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours
+    const recoveryToken = crypto.randomBytes(16).toString('hex');
+    const recoveryUrl = `https://astroskulture.in/api/payments/magic/recover/${recoveryToken}`;
+
+    const cartTotalRupees = orderAmount > 1000 ? Math.round(orderAmount / 100) : orderAmount;
+
+    // Save or update abandoned cart record
+    const cart = await AbandonedCart.findOneAndUpdate(
+      {
+        $or: [
+          ...(contact ? [{ 'customer.phone': contact, status: { $ne: 'recovered' } }] : []),
+          ...(email ? [{ 'customer.email': email, status: { $ne: 'recovered' } }] : []),
+          ...(payload.order_id ? [{ razorpayOrderId: payload.order_id }] : []),
+        ],
+      },
+      {
+        $setOnInsert: {
+          recoveryToken,
+          recoveryUrl,
+          firstNotificationScheduledAt,
+          secondNotificationScheduledAt,
+          status: 'abandoned',
+        },
+        customer: { name, phone: contact, email },
+        items: formattedItems,
+        cartTotal: cartTotalRupees,
+        razorpayOrderId: payload.order_id || payload.razorpay_order_id,
+        metadata: payload,
+      },
+      { upsert: true, new: true }
+    );
+
+    console.log(`🛒 [Abandoned Cart Captured] ID: ${cart._id} | Contact: ${contact || email} | 1st reminder in 30m, 2nd in 24h`);
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Abandoned cart logged and recovery schedule activated',
+      cartId: cart._id,
+    });
+  } catch (error) {
+    console.error('[Abandoned Cart Webhook Error]', error);
+    return res.status(500).json({ status: 'error', message: error.message });
+  }
+};
+
+/**
+ * 6. Order Creation Webhook: POST /api/payments/magic/order-created
+ * Fired by Razorpay when an order is created or confirmed
+ * Immediately clears pending abandoned cart reminders for this customer
+ */
+export const handleOrderCreatedWebhook = async (req, res) => {
+  try {
+    const payload = req.body || {};
+    const customer = payload.customer || {};
+    const phone = customer.contact || customer.phone || payload.phone || '';
+    const email = customer.email || payload.email || '';
+    const rzpOrderId = payload.order_id || payload.razorpay_order_id || payload.id;
+
+    // Mark matching abandoned carts as recovered so no further reminder messages are sent
+    const recoveryFilter = {
+      $or: [
+        ...(rzpOrderId ? [{ razorpayOrderId: rzpOrderId }] : []),
+        ...(phone ? [{ 'customer.phone': phone }] : []),
+        ...(email ? [{ 'customer.email': email }] : []),
+      ],
+    };
+
+    if (recoveryFilter.$or.length > 0) {
+      const recovered = await AbandonedCart.updateMany(recoveryFilter, {
+        $set: {
+          status: 'recovered',
+          recoveredAt: new Date(),
+        },
+      });
+      if (recovered.modifiedCount > 0) {
+        console.log(`✅ [Cart Recovered] Customer completed order! Cleared ${recovered.modifiedCount} abandoned cart reminder(s).`);
+      }
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Order creation webhook processed',
+    });
+  } catch (error) {
+    console.error('[Order Created Webhook Error]', error);
+    return res.status(500).json({ status: 'error', message: error.message });
+  }
+};
+
+/**
+ * 7. Recovery Link Click Tracker: GET /api/payments/magic/recover/:token
+ * Marks the cart as opened when the customer clicks the notification link
+ * Then redirects the customer back to the website checkout
+ */
+export const recoverAbandonedCart = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const cart = await AbandonedCart.findOne({ recoveryToken: token });
+
+    if (cart) {
+      cart.customerOpenedAt = new Date();
+      cart.status = 'opened';
+      await cart.save();
+      console.log(`🔗 [Cart Opened] Customer clicked recovery link for cart ${cart._id}`);
+    }
+
+    return res.redirect('https://astroskulture.in/cart?recovered=true');
+  } catch (error) {
+    console.error('[Recover Cart Error]', error);
+    return res.redirect('https://astroskulture.in/cart');
   }
 };
