@@ -4,7 +4,8 @@ import bcrypt from 'bcryptjs';
 
 dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/astromain';
+// Default to local MongoDB on VPS where the live database is running
+const MONGODB_URI = process.env.LOCAL_MONGODB_URI || 'mongodb://127.0.0.1:27017/astromain';
 
 const buyerProfiles = [
   { fullName: 'Rohit Sharma', email: 'rohit.sharma.buyer@astroskulture.in' },
