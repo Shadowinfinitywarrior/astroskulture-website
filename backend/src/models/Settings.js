@@ -25,6 +25,18 @@ const settingsSchema = new mongoose.Schema({
     default: 999,
     min: 0
   },
+  heroBannerDesktop: {
+    type: String,
+    default: '/hero-banner.webp'
+  },
+  heroBannerMobile: {
+    type: String,
+    default: '/hero-banner-mobile.webp'
+  },
+  announcementText: {
+    type: String,
+    default: '✨ FREE SHIPPING ON ORDERS ABOVE ₹999 | 100% PREMIUM COTTON'
+  },
   createdAt: {
     type: Date,
     default: Date.now

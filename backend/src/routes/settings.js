@@ -4,7 +4,8 @@ import { authenticateAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get('/', authenticateAdmin, async (req, res) => {
+// GET settings - Publicly accessible so visitors and storefront see correct banners and shipping rules
+router.get('/', async (req, res) => {
   try {
     // Find ALL settings documents
     let allSettings = await Settings.find().sort({ updatedAt: -1 });
@@ -22,9 +23,7 @@ router.get('/', authenticateAdmin, async (req, res) => {
       // If there are duplicates (more than 1), delete older ones
       if (allSettings.length > 1) {
         console.warn(`⚠️ Found ${allSettings.length} settings documents. Cleaning up ${allSettings.length - 1} duplicates.`);
-        const idskeep = settings._id;
         const idsToDelete = allSettings.slice(1).map(s => s._id);
-
         await Settings.deleteMany({ _id: { $in: idsToDelete } });
         console.log('✅ Duplicates removed');
       }
@@ -46,7 +45,16 @@ router.get('/', authenticateAdmin, async (req, res) => {
 
 router.put('/', authenticateAdmin, async (req, res) => {
   try {
-    const { gstPercentage, gstEnabled, shippingFee, shippingEnabled, freeShippingAbove } = req.body;
+    const { 
+      gstPercentage, 
+      gstEnabled, 
+      shippingFee, 
+      shippingEnabled, 
+      freeShippingAbove,
+      heroBannerDesktop,
+      heroBannerMobile,
+      announcementText
+    } = req.body;
 
     // Find ALL settings documents
     let allSettings = await Settings.find().sort({ updatedAt: -1 });
@@ -68,6 +76,9 @@ router.put('/', authenticateAdmin, async (req, res) => {
     if (shippingFee !== undefined) settings.shippingFee = shippingFee;
     if (shippingEnabled !== undefined) settings.shippingEnabled = shippingEnabled;
     if (freeShippingAbove !== undefined) settings.freeShippingAbove = freeShippingAbove;
+    if (heroBannerDesktop !== undefined) settings.heroBannerDesktop = heroBannerDesktop;
+    if (heroBannerMobile !== undefined) settings.heroBannerMobile = heroBannerMobile;
+    if (announcementText !== undefined) settings.announcementText = announcementText;
 
     settings.updatedAt = new Date();
     await settings.save();

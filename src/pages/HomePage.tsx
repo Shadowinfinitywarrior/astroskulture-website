@@ -298,6 +298,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
   const [categoryProducts, setCategoryProducts] = useState<Record<string, Product[]>>({});
   const [categories, setCategories] = useState<Category[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
+  const [settings, setSettings] = useState<{ heroBannerDesktop?: string; heroBannerMobile?: string; announcementText?: string }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [wishlistLoading, setWishlistLoading] = useState<string | null>(null);
@@ -341,6 +342,13 @@ export function HomePage({ onNavigate }: HomePageProps) {
   const loadData = async () => {
     try {
       setError('');
+
+      // Fetch public store settings (hero banners, announcements)
+      apiService.getSettings().then((res: any) => {
+        if (res && res.success && res.data) {
+          setSettings(res.data);
+        }
+      }).catch(() => {});
       
       // Fast path: Unified high-performance homepage endpoint (single roundtrip, lean MongoDB projection)
       try {
@@ -456,20 +464,76 @@ export function HomePage({ onNavigate }: HomePageProps) {
 
   return (
     <div className="min-h-screen">
+      {/* Top Announcement / Dynamic Banners Section (Above Hero) */}
+      {loading ? (
+        <section className="py-2 md:py-2.5 overflow-hidden bg-red-700 min-h-[38px] flex items-center justify-center">
+          <p className="font-bold text-xs md:text-sm text-white tracking-wide">
+            {settings.announcementText || '✨ Free Shipping on orders above ₹999 Pan-India | 100% Premium Cotton'}
+          </p>
+        </section>
+      ) : banners.length > 0 ? (
+        <section className="py-2 md:py-2.5 overflow-hidden min-h-[38px]">
+          {banners.map((banner) => (
+            <div
+              key={banner._id}
+              className="relative py-2 md:py-2 text-white overflow-hidden shadow-inner"
+              style={{
+                backgroundColor: banner.backgroundColor || '#dc2626',
+                color: banner.textColor || '#ffffff',
+              }}
+            >
+              <div className="relative whitespace-nowrap animate-scroll-text">
+                <p className="font-bold text-xs md:text-sm inline-block pr-8 tracking-wide">
+                  ✨ {banner.displayText || `Special Offer: Get ${banner.discountPercentage}% OFF on your order today!`}
+                </p>
+                <p className="font-bold text-xs md:text-sm inline-block pr-8 tracking-wide">
+                  ✨ {banner.displayText || `Special Offer: Get ${banner.discountPercentage}% OFF on your order today!`}
+                </p>
+              </div>
+              <style>{`
+                @keyframes scroll-text {
+                  0% { transform: translateX(0); }
+                  100% { transform: translateX(-50%); }
+                }
+                .animate-scroll-text {
+                  animation: scroll-text 15s linear infinite;
+                }
+              `}</style>
+            </div>
+          ))}
+        </section>
+      ) : (
+        <section className="py-2 md:py-2.5 overflow-hidden bg-red-700 min-h-[38px] flex items-center justify-center">
+          <p className="font-bold text-xs md:text-sm text-white tracking-wide">
+            {settings.announcementText || '✨ Free Shipping on orders above ₹999 Pan-India | 100% Premium Cotton'}
+          </p>
+        </section>
+      )}
+
       {/* Hero Section */}
       <section className="relative min-h-[480px] md:h-[500px] bg-gradient-to-r from-red-600 to-red-800 text-white overflow-hidden">
-        <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="absolute inset-0 opacity-25 pointer-events-none">
           <picture>
-            <source media="(max-width: 640px)" srcSet="/hero-banner-mobile.webp" type="image/webp" />
+            <source 
+              media="(max-width: 640px)" 
+              srcSet={settings.heroBannerMobile || '/hero-banner-mobile.webp'} 
+              type="image/webp" 
+            />
             <img
-              src="/hero-banner.webp"
-              alt="Astros Kulture fashion collection"
+              src={settings.heroBannerDesktop || '/hero-banner.webp'}
+              alt="Astros Kulture streetwear collection"
               className="w-full h-full object-cover"
               width={1200}
               height={500}
               loading="eager"
               fetchPriority="high"
               decoding="async"
+              onError={(e) => {
+                const img = e.target as HTMLImageElement;
+                if (!img.src.endsWith('/hero-banner.webp')) {
+                  img.src = '/hero-banner.webp';
+                }
+              }}
             />
           </picture>
         </div>
@@ -503,46 +567,6 @@ export function HomePage({ onNavigate }: HomePageProps) {
           </div>
         </div>
       </section>
-
-      {/* Dynamic Banners Section */}
-      {loading ? (
-        <section className="py-2 md:py-3 overflow-hidden bg-red-700 min-h-[38px] flex items-center justify-center">
-          <p className="font-bold text-xs md:text-sm text-white opacity-95">
-            ✨ Free Shipping on orders above ₹999 Pan-India
-          </p>
-        </section>
-      ) : banners.length > 0 ? (
-        <section className="py-2 md:py-3 overflow-hidden min-h-[38px]">
-          {banners.map((banner) => (
-            <div
-              key={banner._id}
-              className="relative py-2 md:py-3 text-white overflow-hidden"
-              style={{
-                backgroundColor: banner.backgroundColor || '#dc2626',
-                color: banner.textColor || '#ffffff',
-              }}
-            >
-              <div className="relative whitespace-nowrap animate-scroll-text">
-                <p className="font-bold text-xs md:text-sm inline-block pr-8">
-                  ✨ {banner.displayText || `Special Offer: Get ${banner.discountPercentage}% OFF on your order today!`}
-                </p>
-                <p className="font-bold text-xs md:text-sm inline-block pr-8">
-                  ✨ {banner.displayText || `Special Offer: Get ${banner.discountPercentage}% OFF on your order today!`}
-                </p>
-              </div>
-              <style>{`
-                @keyframes scroll-text {
-                  0% { transform: translateX(0); }
-                  100% { transform: translateX(-50%); }
-                }
-                .animate-scroll-text {
-                  animation: scroll-text 15s linear infinite;
-                }
-              `}</style>
-            </div>
-          ))}
-        </section>
-      ) : null}
 
       {/* Categories Section - Horizontal Carousel */}
       <section className="py-6 md:py-10">
