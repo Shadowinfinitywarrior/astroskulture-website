@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Heart, Star, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, Star, ArrowRight, ChevronLeft, ChevronRight, ShoppingCart, Check } from 'lucide-react';
 import { apiService } from '../lib/mongodb';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { useWishlist } from '../contexts/WishlistContext';
+import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { optimizeImageUrl } from '../utils/imageUtils';
 import { updatePageSeo } from '../utils/seoUtils';
@@ -67,6 +68,9 @@ function ProductCard({
   isInWishlist: (productId: string) => boolean;
   wishlistLoading: string | null;
 }) {
+  const { addToCart } = useCart();
+  const [isAdded, setIsAdded] = useState(false);
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN').format(price);
   };
@@ -75,6 +79,49 @@ function ProductCard({
   const discountPercentage = hasDiscount 
     ? Math.round((1 - product.discountPrice! / product.price) * 100)
     : 0;
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (product.totalStock === 0) return;
+
+    const defaultSize = product.sizes?.find((s: any) => s.stock > 0)?.size || 'M';
+    addToCart({
+      productId: product._id,
+      name: product.name,
+      price: product.price,
+      discountPrice: product.discountPrice,
+      gstPercentage: 0,
+      gstApplicable: false,
+      shippingFee: 0,
+      freeShippingAbove: 0,
+      size: defaultSize,
+      image: product.images[0]?.url || '',
+    });
+
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 2000);
+  };
+
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (product.totalStock === 0) return;
+
+    const defaultSize = product.sizes?.find((s: any) => s.stock > 0)?.size || 'M';
+    addToCart({
+      productId: product._id,
+      name: product.name,
+      price: product.price,
+      discountPrice: product.discountPrice,
+      gstPercentage: 0,
+      gstApplicable: false,
+      shippingFee: 0,
+      freeShippingAbove: 0,
+      size: defaultSize,
+      image: product.images[0]?.url || '',
+    });
+
+    onNavigate('checkout');
+  };
 
   return (
     <div className="bg-white rounded-lg overflow-hidden group hover:shadow-lg transition-all duration-300 h-full flex flex-col border border-gray-200">
@@ -198,6 +245,49 @@ function ProductCard({
         {product.totalStock === 0 && (
           <p className="text-red-600 text-xs mb-2 font-semibold">Out of Stock</p>
         )}
+
+        {/* Action Buttons: Add to Cart & Buy Now */}
+        <div className="mt-auto pt-2.5 border-t border-gray-100 flex flex-col sm:flex-row gap-2">
+          {product.totalStock === 0 ? (
+            <button
+              disabled
+              className="w-full py-1.5 px-3 rounded-lg text-xs font-semibold bg-gray-100 text-gray-400 cursor-not-allowed"
+            >
+              Out of Stock
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={handleAddToCart}
+                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center transition-all border ${
+                  isAdded
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                    : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50 active:scale-95'
+                }`}
+                aria-label={`Add ${product.name} to cart`}
+              >
+                {isAdded ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+                    Added
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="w-3.5 h-3.5 mr-1" />
+                    Add to Cart
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handleBuyNow}
+                className="flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold bg-red-600 text-white hover:bg-red-700 active:scale-95 flex items-center justify-center transition-all shadow-sm"
+                aria-label={`Buy ${product.name} now`}
+              >
+                Buy Now
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -345,16 +435,19 @@ export function HomePage({ onNavigate }: HomePageProps) {
       {/* Hero Section */}
       <section className="relative min-h-[480px] md:h-[500px] bg-gradient-to-r from-red-600 to-red-800 text-white overflow-hidden">
         <div className="absolute inset-0 opacity-20 pointer-events-none">
-          <img
-            src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&auto=format&fit=crop&q=75"
-            alt="Hero background"
-            className="w-full h-full object-cover"
-            width={1200}
-            height={500}
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-          />
+          <picture>
+            <source media="(max-width: 640px)" srcSet="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=640&auto=format&fit=crop&q=70" />
+            <img
+              src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&auto=format&fit=crop&q=75"
+              alt="Hero background"
+              className="w-full h-full object-cover"
+              width={1200}
+              height={500}
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+            />
+          </picture>
         </div>
         <div className="relative max-w-7xl mx-auto px-4 min-h-[500px] md:h-full flex flex-col justify-center py-8 md:py-0">
           <div className="max-w-2xl">
@@ -388,8 +481,14 @@ export function HomePage({ onNavigate }: HomePageProps) {
       </section>
 
       {/* Dynamic Banners Section */}
-      {banners.length > 0 && (
-        <section className="py-2 md:py-3 overflow-hidden">
+      {loading ? (
+        <section className="py-2 md:py-3 overflow-hidden bg-red-700 min-h-[38px] flex items-center justify-center">
+          <p className="font-bold text-xs md:text-sm text-white opacity-95">
+            ✨ Free Shipping on orders above ₹999 Pan-India
+          </p>
+        </section>
+      ) : banners.length > 0 ? (
+        <section className="py-2 md:py-3 overflow-hidden min-h-[38px]">
           {banners.map((banner) => (
             <div
               key={banner._id}
@@ -419,7 +518,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
             </div>
           ))}
         </section>
-      )}
+      ) : null}
 
       {/* Categories Section - Horizontal Carousel */}
       <section className="py-6 md:py-10">
@@ -491,7 +590,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                     className="group relative h-32 w-40 flex-shrink-0 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
                   >
                     <img
-                      src={category.imageUrl ? optimizeImageUrl(category.imageUrl, { width: 400, quality: 'auto' }) : 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}
+                      src={category.imageUrl ? optimizeImageUrl(category.imageUrl, { width: 220, quality: 'auto' }) : 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=220&auto=format'}
                       alt=""
                       aria-hidden="true"
                       className="w-full h-full object-cover"

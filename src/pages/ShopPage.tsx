@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Heart, Search, SlidersHorizontal, X } from 'lucide-react';
+import { Heart, Search, SlidersHorizontal, X, ShoppingCart, Check } from 'lucide-react';
 import { apiService } from '../lib/mongodb';
 
 import { useWishlist } from '../contexts/WishlistContext';
+import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import type { Product, Category, ProductSize } from '../lib/types';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -50,7 +51,54 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
   const [showFilters, setShowFilters] = useState(false);
 
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { addToCart } = useCart();
   const { user } = useAuth();
+  const [addedProductId, setAddedProductId] = useState<string | null>(null);
+
+  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
+    e.stopPropagation();
+    if (product.totalStock === 0) return;
+
+    const defaultSize = product.sizes?.find((s: any) => s.stock > 0)?.size || 'M';
+    addToCart({
+      productId: product._id,
+      name: product.name,
+      price: product.price,
+      discountPrice: product.discountPrice,
+      gstPercentage: product.gstPercentage ?? 0,
+      gstApplicable: product.gstApplicable ?? false,
+      shippingFee: product.shippingFee ?? 0,
+      freeShippingAbove: product.freeShippingAbove ?? 0,
+      size: defaultSize,
+      image: product.images[0]?.url || '',
+    });
+
+    setAddedProductId(product._id);
+    setTimeout(() => {
+      setAddedProductId((current) => (current === product._id ? null : current));
+    }, 2000);
+  };
+
+  const handleBuyNow = (e: React.MouseEvent, product: Product) => {
+    e.stopPropagation();
+    if (product.totalStock === 0) return;
+
+    const defaultSize = product.sizes?.find((s: any) => s.stock > 0)?.size || 'M';
+    addToCart({
+      productId: product._id,
+      name: product.name,
+      price: product.price,
+      discountPrice: product.discountPrice,
+      gstPercentage: product.gstPercentage ?? 0,
+      gstApplicable: product.gstApplicable ?? false,
+      shippingFee: product.shippingFee ?? 0,
+      freeShippingAbove: product.freeShippingAbove ?? 0,
+      size: defaultSize,
+      image: product.images[0]?.url || '',
+    });
+
+    onNavigate('checkout');
+  };
 
   useEffect(() => {
     // Update selected category if initialCategory changes
@@ -600,6 +648,49 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
                           {stockStatus === 'out-of-stock' && (
                             <p className="text-red-600 text-xs mb-2 font-semibold">Out of Stock</p>
                           )}
+
+                          {/* Action Buttons: Add to Cart & Buy Now */}
+                          <div className="mt-auto pt-3 border-t border-gray-100 flex flex-col sm:flex-row gap-2">
+                            {product.totalStock === 0 ? (
+                              <button
+                                disabled
+                                className="w-full py-2 px-3 rounded-lg text-xs font-semibold bg-gray-100 text-gray-400 cursor-not-allowed"
+                              >
+                                Out of Stock
+                              </button>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={(e) => handleAddToCart(e, product)}
+                                  className={`flex-1 py-2 px-2.5 rounded-lg text-xs font-semibold flex items-center justify-center transition-all border ${
+                                    addedProductId === product._id
+                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                                      : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50 active:scale-95'
+                                  }`}
+                                  aria-label={`Add ${product.name} to cart`}
+                                >
+                                  {addedProductId === product._id ? (
+                                    <>
+                                      <Check className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+                                      Added
+                                    </>
+                                  ) : (
+                                    <>
+                                      <ShoppingCart className="w-3.5 h-3.5 mr-1" />
+                                      Add to Cart
+                                    </>
+                                  )}
+                                </button>
+                                <button
+                                  onClick={(e) => handleBuyNow(e, product)}
+                                  className="flex-1 py-2 px-2.5 rounded-lg text-xs font-semibold bg-red-600 text-white hover:bg-red-700 active:scale-95 flex items-center justify-center transition-all shadow-sm"
+                                  aria-label={`Buy ${product.name} now`}
+                                >
+                                  Buy Now
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );

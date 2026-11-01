@@ -82,6 +82,28 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
     setTimeout(() => setIsAdded(false), 2000);
   };
 
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (product.totalStock === 0) return;
+
+    const defaultSize = product.sizes?.find(size => size.stock > 0)?.size || 'M';
+
+    addToCart({
+      productId: product._id,
+      name: product.name,
+      price: product.price,
+      discountPrice: product.discountPrice,
+      gstPercentage: product.gstPercentage ?? 0,
+      gstApplicable: product.gstApplicable ?? false,
+      shippingFee: product.shippingFee ?? 0,
+      freeShippingAbove: product.freeShippingAbove ?? 0,
+      size: defaultSize,
+      image: product.images[0]?.url || '',
+    });
+
+    onNavigate('checkout');
+  };
+
   const handleProductClick = () => {
     onNavigate('product', { slug: product.slug });
   };
@@ -222,30 +244,6 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
               </div>
             )}
           </div>
-
-          {/* Add to Cart Overlay */}
-          <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-95 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 p-3">
-            <button
-              onClick={handleAddToCart}
-              disabled={!isAvailable || isAdded}
-              className={`w-full py-2 px-4 rounded-lg transition-colors flex items-center justify-center font-medium text-sm ${isAdded
-                ? 'bg-green-600 text-white hover:bg-green-700'
-                : 'bg-red-600 text-white hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed'
-                }`}
-            >
-              {isAdded ? (
-                <>
-                  <Check className="w-4 h-4 mr-2" />
-                  Added
-                </>
-              ) : (
-                <>
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  {isAvailable ? 'Add to Cart' : 'Out of Stock'}
-                </>
-              )}
-            </button>
-          </div>
         </div>
       </div>
 
@@ -341,6 +339,49 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
             ))}
           </div>
         )}
+
+        {/* Action Buttons: Add to Cart & Buy Now */}
+        <div className="mt-3 pt-2.5 border-t border-gray-100 flex flex-col sm:flex-row gap-2">
+          {!isAvailable ? (
+            <button
+              disabled
+              className="w-full py-1.5 px-3 rounded-lg text-xs font-semibold bg-gray-100 text-gray-400 cursor-not-allowed"
+            >
+              Out of Stock
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={handleAddToCart}
+                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center transition-all border ${
+                  isAdded
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                    : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50 active:scale-95'
+                }`}
+                aria-label={`Add ${product.name} to cart`}
+              >
+                {isAdded ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+                    Added
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="w-3.5 h-3.5 mr-1" />
+                    Add to Cart
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handleBuyNow}
+                className="flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold bg-red-600 text-white hover:bg-red-700 active:scale-95 flex items-center justify-center transition-all shadow-sm"
+                aria-label={`Buy ${product.name} now`}
+              >
+                Buy Now
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
