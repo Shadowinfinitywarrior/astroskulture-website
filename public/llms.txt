@@ -1,22 +1,21 @@
 # Astros Kulture — Streetwear Brand
 > Premium Heavyweight 240 GSM Cotton Streetwear, Oversized Drop-Shoulder Tees & Custom Apparel Pan-India.
 
-## Brand & Entity Information
-- Brand Name: ASTROS KULTURE
-- Domain: https://astroskulture.in
-- Tagline: Wear the Universe
-- Target Market: Pan-India (Affordable Premium Streetwear)
-- Specialization: 240 GSM Combed Cotton, Drop Shoulder Fits, Graphic Tees, Custom Design Prints
+## About
+Astros Kulture is an Indian streetwear apparel brand specializing in 240 GSM combed cotton drop-shoulder oversized t-shirts, anime graphic collections, and interactive custom t-shirt design prints.
 
-## Key Links
-- Home: https://astroskulture.in/
-- Shop: https://astroskulture.in/shop
-- Categories: https://astroskulture.in/categories
-- Custom T-Shirt Design Studio: https://astroskulture.in/custom-design
-- Official Blog: https://astroskulture.in/blog
-- Support Email: help.astroskulture@gmail.com
-- WhatsApp Support: +91 78716 58830
-- Instagram: https://www.instagram.com/astroskulture.in
+## Core Links
+- [Astros Kulture Storefront](https://astroskulture.in/): Official homepage and new streetwear drops.
+- [All Products & Streetwear Catalog](https://astroskulture.in/shop): Complete catalog of oversized graphic tees.
+- [Apparel Categories](https://astroskulture.in/categories): Explore anime, space, minimalism, and oversized collections.
+- [Custom T-Shirt Design Studio](https://astroskulture.in/custom-design): Interactive front and back t-shirt customization.
+- [Official Blog & Streetwear Journal](https://astroskulture.in/blog): Fashion guides, sizing advice, and streetwear trends.
+- [Privacy Policy](https://astroskulture.in/privacy-policy): Customer data protection and privacy policies.
+- [Terms of Service](https://astroskulture.in/terms-of-service): E-commerce store terms and conditions.
+- [Shipping Policy](https://astroskulture.in/shipping-policy): Domestic shipping timelines and free delivery thresholds.
+- [Return and Refund Policy](https://astroskulture.in/return-refund-policy): 7-day hassle-free return and replacement policy.
 
-## Product Catalog Feed
-- Meta / Google Product Catalog: https://astroskulture.in/feeds/meta-catalog.csv
+## Feeds & Machine-Readable APIs
+- [Google Merchant Center XML Feed](https://astroskulture.in/feeds/google-merchant.xml): Standard RSS 2.0 product feed for search crawlers.
+- [Meta Catalog CSV Feed](https://astroskulture.in/feeds/meta-catalog.csv): Product catalog feed for Instagram/Facebook shops.
+- [XML Sitemap](https://astroskulture.in/sitemap.xml): Dynamic index of all live product and blog URLs.

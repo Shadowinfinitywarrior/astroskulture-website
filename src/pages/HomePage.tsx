@@ -115,6 +115,7 @@ function ProductCard({
           }}
           disabled={wishlistLoading === product._id}
           className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-600 disabled:opacity-50"
+          aria-label={isInWishlist(product._id) ? `Remove ${product.name} from Wishlist` : `Add ${product.name} to Wishlist`}
         >
           {wishlistLoading === product._id ? (
             <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
@@ -150,10 +151,10 @@ function ProductCard({
         
         {/* Rating */}
         <div className="flex items-center gap-1 mb-3">
-          <div className="flex items-center bg-green-600 text-white px-2 py-0.5 rounded text-xs font-semibold">
+          <div className="flex items-center bg-green-700 text-white px-2 py-0.5 rounded text-xs font-semibold">
             <span>{(product.rating || 0).toFixed(1)}★</span>
           </div>
-          <span className="text-xs text-gray-500">| {product.reviewCount || 0}</span>
+          <span className="text-xs text-gray-600">| {product.reviewCount || 0}</span>
         </div>
         
         {/* Price Section */}
@@ -164,10 +165,10 @@ function ProductCard({
             </span>
             {hasDiscount && (
               <>
-                <span className="text-xs md:text-sm text-gray-400 line-through">
+                <span className="text-xs md:text-sm text-gray-500 line-through">
                   ₹{formatPrice(product.price)}
                 </span>
-                <span className="text-xs md:text-sm font-semibold text-green-600">
+                <span className="text-xs md:text-sm font-bold text-emerald-700">
                   {discountPercentage}% off
                 </span>
               </>
@@ -177,7 +178,7 @@ function ProductCard({
           {/* Offer Price Label */}
           {hasDiscount && (
             <div className="flex items-center gap-1 mt-1">
-              <div className="bg-green-50 text-green-700 px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1">
+              <div className="bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1">
                 <span>✓</span>
                 <span>Offer Price: ₹{formatPrice(product.discountPrice!)}</span>
               </div>
@@ -187,7 +188,7 @@ function ProductCard({
         
         {/* Stock Warning */}
         {product.totalStock > 0 && product.totalStock < 10 && (
-          <p className="text-orange-600 text-xs mb-2 font-medium">Only {product.totalStock} left</p>
+          <p className="text-amber-800 text-xs mb-2 font-semibold">Only {product.totalStock} left</p>
         )}
         
         {/* Out of Stock */}
@@ -435,14 +436,18 @@ export function HomePage({ onNavigate }: HomePageProps) {
               <button
                 key={category._id}
                 onClick={() => onNavigate('shop', { category: category.slug })}
+                aria-label={`Shop ${category.name} collection`}
                 className="group relative h-48 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105"
               >
                 <img
-                  src={category.imageUrl || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}
-                  alt={category.name}
+                  src={category.imageUrl ? optimizeImageUrl(category.imageUrl, { width: 400, quality: 'auto' }) : 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}
+                  alt=""
+                  aria-hidden="true"
                   className="w-full h-full object-cover"
                   loading="lazy"
                   decoding="async"
+                  width={400}
+                  height={192}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
                   <div className="p-4 w-full">
@@ -466,14 +471,18 @@ export function HomePage({ onNavigate }: HomePageProps) {
                 <button
                   key={category._id}
                   onClick={() => onNavigate('shop', { category: category.slug })}
+                  aria-label={`Shop ${category.name} collection`}
                   className="group relative h-32 w-40 flex-shrink-0 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
                 >
                   <img
-                    src={category.imageUrl || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}
-                    alt={category.name}
+                    src={category.imageUrl ? optimizeImageUrl(category.imageUrl, { width: 400, quality: 'auto' }) : 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}
+                    alt=""
+                    aria-hidden="true"
                     className="w-full h-full object-cover"
                     loading="lazy"
                     decoding="async"
+                    width={160}
+                    height={128}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
                     <div className="p-2 w-full">
@@ -493,6 +502,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                     if (element) element.scrollBy({ left: -300, behavior: 'smooth' });
                   }}
                   className="p-2 rounded-full bg-red-600 text-white hover:bg-red-700"
+                  aria-label="Scroll categories left"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -502,6 +512,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                     if (element) element.scrollBy({ left: 300, behavior: 'smooth' });
                   }}
                   className="p-2 rounded-full bg-red-600 text-white hover:bg-red-700"
+                  aria-label="Scroll categories right"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>

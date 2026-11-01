@@ -12,6 +12,10 @@ export function Footer() {
                 src="/logo.png" 
                 alt="AstroSkulture" 
                 className="w-10 h-10 object-contain"
+                width={40}
+                height={40}
+                loading="lazy"
+                decoding="async"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
@@ -75,7 +79,7 @@ export function Footer() {
                   >
                     help.astroskulture@gmail.com
                   </a>
-                  <p className="text-xs text-gray-500 mt-1">Orders & customer support</p>
+                  <p className="text-xs text-gray-400 mt-1">Orders & customer support</p>
                 </div>
               </li>
               <li className="flex items-start space-x-2">
@@ -87,7 +91,7 @@ export function Footer() {
                   >
                     +91 78716 58830
                   </a>
-                  <p className="text-xs text-gray-500 mt-1">WhatsApp orders & queries</p>
+                  <p className="text-xs text-gray-400 mt-1">WhatsApp orders & queries</p>
                 </div>
               </li>
               <li className="flex items-center space-x-2 pt-2">
@@ -106,18 +110,18 @@ export function Footer() {
         </div>
 
         {/* Copyright & Disclaimer */}
-        <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-4">
+        <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-400 gap-4">
           <p>
             &copy; {new Date().getFullYear()} Astros Kulture. All rights reserved.
           </p>
           <div className="flex gap-4">
-            <a href="/privacy-policy" className="hover:text-gray-400">Privacy</a>
+            <a href="/privacy-policy" className="text-gray-400 hover:text-white transition-colors">Privacy</a>
             <span>•</span>
-            <a href="/terms-of-service" className="hover:text-gray-400">Terms</a>
+            <a href="/terms-of-service" className="text-gray-400 hover:text-white transition-colors">Terms</a>
             <span>•</span>
-            <a href="/shipping-policy" className="hover:text-gray-400">Shipping</a>
+            <a href="/shipping-policy" className="text-gray-400 hover:text-white transition-colors">Shipping</a>
             <span>•</span>
-            <a href="/return-refund-policy" className="hover:text-gray-400">Returns</a>
+            <a href="/return-refund-policy" className="text-gray-400 hover:text-white transition-colors">Returns</a>
           </div>
           <p className="font-bold tracking-wider text-gray-400">
             WEAR THE UNIVERSE ✨

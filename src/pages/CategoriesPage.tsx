@@ -3,6 +3,8 @@ import { ArrowRight, Package } from 'lucide-react';
 import { apiService } from '../lib/mongodb';
 import type { Category } from '../lib/types';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { optimizeImageUrl } from '../utils/imageUtils';
+import { updatePageSeo } from '../utils/seoUtils';
 
 interface CategoriesPageProps {
   onNavigate: (page: string, params?: any) => void;
@@ -94,13 +96,19 @@ export function CategoriesPage({ onNavigate }: CategoriesPageProps) {
                 <button
                   key={category._id}
                   onClick={() => onNavigate('shop', { category: category.slug })}
+                  aria-label={`Shop ${category.name} collection`}
                   className="group relative h-64 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                 >
                   {/* Category Image */}
                   <img
-                    src={category.imageUrl || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600'}
-                    alt={category.name}
+                    src={category.imageUrl ? optimizeImageUrl(category.imageUrl, { width: 500, quality: 'auto' }) : 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600'}
+                    alt=""
+                    aria-hidden="true"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    loading="lazy"
+                    decoding="async"
+                    width={500}
+                    height={256}
                   />
                   
                   {/* Overlay */}

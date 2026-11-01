@@ -1,0 +1,36 @@
+{
+  "$schema": "https://agenticresourcediscovery.org/spec/v1/schema.json",
+  "name": "Astros Kulture",
+  "description": "Premium 240 GSM Oversized Streetwear & Custom Apparel Pan-India",
+  "url": "https://astroskulture.in",
+  "resources": [
+    {
+      "name": "Products Catalog",
+      "type": "catalog",
+      "format": "application/xml",
+      "url": "https://astroskulture.in/feeds/google-merchant.xml",
+      "description": "Full product catalog with pricing, stock availability, sizes, and images"
+    },
+    {
+      "name": "Meta Product Catalog",
+      "type": "catalog",
+      "format": "text/csv",
+      "url": "https://astroskulture.in/feeds/meta-catalog.csv",
+      "description": "CSV product catalog feed"
+    },
+    {
+      "name": "Sitemap",
+      "type": "sitemap",
+      "format": "application/xml",
+      "url": "https://astroskulture.in/sitemap.xml",
+      "description": "Complete site map containing all products and blog posts"
+    },
+    {
+      "name": "LLM Instructions",
+      "type": "documentation",
+      "format": "text/plain",
+      "url": "https://astroskulture.in/llms.txt",
+      "description": "Machine-readable context and entity information"
+    }
+  ]
+}
