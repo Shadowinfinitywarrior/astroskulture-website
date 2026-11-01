@@ -41,9 +41,14 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Logo */}
-          <button
-            onClick={() => handleNavigation('home')}
+          <a
+            href="/"
+            onClick={(e) => {
+              e.preventDefault();
+              handleNavigation('home');
+            }}
             className="flex items-center gap-1 sm:gap-2 group min-w-0"
+            aria-label="Astros Kulture Home"
           >
             {/* Circular Logo */}
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden border-2 border-red-600 flex items-center justify-center bg-white flex-shrink-0">
@@ -56,12 +61,16 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
             <span className="text-xs sm:text-sm md:text-base font-bold text-gray-900 group-hover:text-red-600 transition-colors truncate">
               ASTROS KULTURE
             </span>
-          </button>
+          </a>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <button
-              onClick={() => handleNavigation('home')}
+            <a
+              href="/"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation('home');
+              }}
               className={`font-medium transition-colors ${
                 currentPage === 'home'
                   ? 'text-red-600'
@@ -69,9 +78,13 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
               }`}
             >
               Home
-            </button>
-            <button
-              onClick={() => handleNavigation('shop')}
+            </a>
+            <a
+              href="/shop"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation('shop');
+              }}
               className={`font-medium transition-colors ${
                 currentPage === 'shop'
                   ? 'text-red-600'
@@ -79,9 +92,13 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
               }`}
             >
               Shop
-            </button>
-            <button
-              onClick={() => handleNavigation('blog')}
+            </a>
+            <a
+              href="/blog"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation('blog');
+              }}
               className={`font-medium transition-colors ${
                 currentPage === 'blog' || currentPage === 'blog-detail'
                   ? 'text-red-600'
@@ -89,9 +106,13 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
               }`}
             >
               Blog
-            </button>
-            <button
-              onClick={() => handleNavigation('categories')}
+            </a>
+            <a
+              href="/categories"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation('categories');
+              }}
               className={`font-medium transition-colors ${
                 currentPage === 'categories'
                   ? 'text-red-600'
@@ -99,9 +120,13 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
               }`}
             >
               Categories
-            </button>
-            <button
-              onClick={() => handleNavigation('custom-design')}
+            </a>
+            <a
+              href="/custom-design"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation('custom-design');
+              }}
               className={`font-medium transition-colors ${
                 currentPage === 'custom-design'
                   ? 'text-red-600'
@@ -109,7 +134,7 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
               }`}
             >
               Custom Design
-            </button>
+            </a>
           </div>
 
           {/* User Actions */}
@@ -118,16 +143,22 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
             <button 
               className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors"
               title="Search"
+              aria-label="Search products"
             >
               <Search className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
             </button>
 
             {/* Wishlist */}
             {user && (
-              <button
-                onClick={() => handleNavigation('wishlist')}
-                className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors relative"
+              <a
+                href="/wishlist"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigation('wishlist');
+                }}
+                className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors relative block"
                 title="Wishlist"
+                aria-label="View Wishlist"
               >
                 <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
                 {wishlistCount > 0 && (
@@ -135,14 +166,19 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
                     {wishlistCount > 99 ? '99+' : wishlistCount}
                   </span>
                 )}
-              </button>
+              </a>
             )}
 
             {/* Cart */}
-            <button
-              onClick={() => handleNavigation('cart')}
-              className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors relative"
+            <a
+              href="/cart"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation('cart');
+              }}
+              className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors relative block"
               title="Shopping Cart"
+              aria-label="View Shopping Cart"
             >
               <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
               {cartCount > 0 && (
@@ -150,7 +186,7 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
                   {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
-            </button>
+            </a>
 
             {/* User Menu */}
             <div className="relative">
@@ -158,6 +194,7 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
                 onClick={handleUserMenuClick}
                 className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors flex items-center space-x-1"
                 title="User Menu"
+                aria-label="User Account Menu"
               >
                 <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
               </button>
@@ -253,6 +290,7 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="md:hidden p-1.5 hover:bg-gray-100 rounded-full transition-colors"
               title="Menu"
+              aria-label="Toggle mobile menu"
             >
               {isMenuOpen ? (
                 <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
@@ -268,36 +306,56 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
       {isMenuOpen && (
         <div className="md:hidden border-t border-gray-200 bg-white overflow-y-auto max-h-[calc(100vh-4rem)] shadow-lg">
           <div className="px-3 py-2 space-y-1">
-            <button
-              onClick={() => handleNavigation('home')}
+            <a
+              href="/"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation('home');
+              }}
               className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
             >
               Home
-            </button>
-            <button
-              onClick={() => handleNavigation('shop')}
+            </a>
+            <a
+              href="/shop"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation('shop');
+              }}
               className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
             >
               Shop
-            </button>
-            <button
-              onClick={() => handleNavigation('blog')}
+            </a>
+            <a
+              href="/blog"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation('blog');
+              }}
               className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
             >
               Blog
-            </button>
-            <button
-              onClick={() => handleNavigation('categories')}
+            </a>
+            <a
+              href="/categories"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation('categories');
+              }}
               className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
             >
               Categories
-            </button>
-            <button
-              onClick={() => handleNavigation('custom-design')}
+            </a>
+            <a
+              href="/custom-design"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation('custom-design');
+              }}
               className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
             >
               Custom Design
-            </button>
+            </a>
             
             {/* User-specific mobile menu items */}
             {user && (

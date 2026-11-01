@@ -1,17 +1,10 @@
 import express from 'express';
 import Settings from '../models/Settings.js';
+import { authenticateAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-const adminAuthMiddleware = async (req, res, next) => {
-  const adminAuth = req.headers.authorization?.startsWith('Bearer ');
-  if (!adminAuth) {
-    return res.status(401).json({ success: false, message: 'Unauthorized' });
-  }
-  next();
-};
-
-router.get('/', async (req, res) => {
+router.get('/', authenticateAdmin, async (req, res) => {
   try {
     // Find ALL settings documents
     let allSettings = await Settings.find().sort({ updatedAt: -1 });
@@ -51,7 +44,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.put('/', adminAuthMiddleware, async (req, res) => {
+router.put('/', authenticateAdmin, async (req, res) => {
   try {
     const { gstPercentage, gstEnabled, shippingFee, shippingEnabled, freeShippingAbove } = req.body;
 

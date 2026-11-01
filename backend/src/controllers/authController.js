@@ -15,7 +15,12 @@ export const adminLogin = async (req, res) => {
       });
     }
 
-    const admin = await Admin.findOne({ username });
+    const admin = await Admin.findOne({
+      $or: [
+        { username: { $regex: new RegExp(`^${username}$`, 'i') } },
+        { email: username.toLowerCase() }
+      ]
+    });
     if (!admin) {
       return res.status(401).json({ 
         success: false,

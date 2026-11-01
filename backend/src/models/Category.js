@@ -41,4 +41,8 @@ categorySchema.pre('save', function(next) {
   next();
 });
 
+// Indexes for frequently filtered columns
+categorySchema.index({ isActive: 1, displayOrder: 1 });
+categorySchema.index({ slug: 1 });
+
 export default mongoose.model('Category', categorySchema);

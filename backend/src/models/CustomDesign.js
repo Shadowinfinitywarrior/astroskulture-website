@@ -6,9 +6,19 @@ const customDesignSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  // Front and Back views for customer uploads
+  frontImageUrl: {
+    type: String,
+    default: ''
+  },
+  backImageUrl: {
+    type: String,
+    default: ''
+  },
+  // Legacy / primary fallback image URL
   imageUrl: {
     type: String,
-    required: true
+    default: ''
   },
   color: {
     type: String,
@@ -20,12 +30,12 @@ const customDesignSchema = new mongoose.Schema({
   },
   neckStyle: {
     type: String,
-    enum: ['With Neck', 'Without Neck'],
+    enum: ['Oversized', 'Normal', 'oversized', 'normal', 'With Neck', 'Without Neck'],
     required: true
   },
   sleeveStyle: {
     type: String,
-    enum: ['Sleeve', 'Sleeveless'],
+    enum: ['Full Sleeve', 'Half Sleeve', 'full sleeve', 'half sleeve', 'Sleeve', 'Sleeveless'],
     required: true
   },
   otherDetails: {
@@ -36,6 +46,16 @@ const customDesignSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  // Completed design deliveries by Admin (Front and Back views)
+  completedFrontDesignUrl: {
+    type: String,
+    default: ''
+  },
+  completedBackDesignUrl: {
+    type: String,
+    default: ''
+  },
+  // Legacy completed design fallback
   completedDesignUrl: {
     type: String,
     default: ''

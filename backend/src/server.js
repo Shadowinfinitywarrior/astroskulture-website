@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { seedInMemoryDb } from './utils/seedInMemory.js';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import { sanitizeInput } from './middleware/sanitize.js';
 
 // Fix for ES modules __dirname equivalent (must be before dotenv.config!)
 const __filename = fileURLToPath(import.meta.url);
@@ -42,6 +43,7 @@ import paymentRoutes from './routes/payments.js'; // ADDED PAYMENT ROUTES
 import settingsRoutes from './routes/settings.js'; // ADDED SETTINGS ROUTES
 import paymentVerificationRoutes from './routes/paymentVerification.js'; // ADDED PAYMENT VERIFICATION ROUTES
 import customDesignRoutes from './routes/customDesigns.js';
+import feedRoutes from './routes/feeds.js';
 
 const app = express();
 app.set('trust proxy', 1); // Trust first proxy (Nginx)
@@ -57,8 +59,50 @@ if (missingEnvVars.length > 0) {
   process.exit(1);
 }
 
-// Secure HTTP headers
-app.use(helmet());
+// Secure HTTP headers with Content Security Policy
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://checkout.razorpay.com",
+        "https://www.googletagmanager.com",
+        "https://connect.facebook.net"
+      ],
+      frameSrc: ["'self'", "https://api.razorpay.com", "https://checkout.razorpay.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      imgSrc: [
+        "'self'",
+        "data:",
+        "blob:",
+        "https://res.cloudinary.com",
+        "https://images.unsplash.com",
+        "https://www.facebook.com",
+        "https://www.google-analytics.com",
+        "https://*.google-analytics.com",
+        "https://*.googletagmanager.com"
+      ],
+      connectSrc: [
+        "'self'",
+        "https://api.razorpay.com",
+        "https://lumberjack.razorpay.com",
+        "https://astroskulture.in",
+        "https://www.google-analytics.com",
+        "https://analytics.google.com",
+        "https://stats.g.doubleclick.net",
+        "https://www.facebook.com",
+        "https://graph.facebook.com"
+      ],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"]
+    }
+  },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  crossOriginEmbedderPolicy: false
+}));
 
 // Rate Limiting
 const generalLimiter = rateLimit({
@@ -77,11 +121,32 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const paymentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 15, // Limit payment order creations
+  message: { success: false, message: 'Too many payment requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit admin operations
+  message: { success: false, message: 'Too many admin requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Apply rate limiters
 app.use('/api/', generalLimiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/admin/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
+app.use('/api/payments/create-order', paymentLimiter);
+app.use('/api/admin/', adminLimiter);
+
+// Input Sanitization
+app.use(sanitizeInput);
 
 // Enhanced CORS configuration - FIXED
 app.use(cors({
@@ -97,24 +162,16 @@ app.use(cors({
   optionsSuccessStatus: 200
 }));
 
-app.use(express.json({ limit: '1mb' })); // Standard limit to prevent JSON payload DoS
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
-
-app.use((req, res, next) => {
-  if (req.path === '/api/payments/webhook') {
-    let data = '';
-    req.on('data', chunk => {
-      data += chunk;
-    });
-    req.on('end', () => {
-      req.rawBody = data;
-      req.body = JSON.parse(data);
-      next();
-    });
-  } else {
-    next();
+// SEC-03: Capture raw body buffer for Razorpay HMAC signature verification
+app.use(express.json({
+  limit: '2mb',
+  verify: (req, res, buf) => {
+    if (req.originalUrl && req.originalUrl.startsWith('/api/payments/webhook')) {
+      req.rawBody = buf.toString('utf8');
+    }
   }
-});
+}));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
 // Start server function definition (starts listening ONLY after database is connected)
 const startServer = async () => {
@@ -125,8 +182,8 @@ const startServer = async () => {
     const maskedUri = MONGODB_URI.replace(/mongodb\+srv:\/\/([^:]+):([^@]+)@/, 'mongodb+srv://$1:****@');
     console.log('📦 Database:', maskedUri);
     const connectionOptions = {
-      serverSelectionTimeoutMS: 30000,
-      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 15000,
       dbName: 'astromain' // Explicitly force the database name
     };
 
@@ -141,26 +198,38 @@ const startServer = async () => {
     console.log(`📊 Database: ${mongoose.connection.db?.databaseName || 'Unknown'}`);
     console.log(`🏠 Host: ${mongoose.connection.host}`);
   } catch (err) {
-    console.error('❌ MongoDB connection failed:');
+    console.error('❌ Cloud MongoDB connection failed:');
     console.error('   Error:', err.message);
-    console.warn('⚠️ Cloud MongoDB connection failed. Falling back to local in-memory database for testing...');
+    
+    // Attempt local MongoDB fallback
     try {
-      console.log('📦 Starting in-memory MongoDB server...');
-      const { MongoMemoryServer } = await import('mongodb-memory-server');
-      const mongoServer = await MongoMemoryServer.create();
-      const uri = mongoServer.getUri();
-      console.log('🔗 Connecting to in-memory MongoDB at:', uri);
-      await mongoose.disconnect(); // clean up previous attempt
-      await mongoose.connect(uri, {
+      console.log('🔄 Attempting fallback to local persistent MongoDB (mongodb://127.0.0.1:27017/astromain)...');
+      await mongoose.disconnect();
+      await mongoose.connect('mongodb://127.0.0.1:27017/astromain', {
+        serverSelectionTimeoutMS: 5000,
         dbName: 'astromain'
       });
-      console.log('✅ Connected to in-memory MongoDB successfully');
-      
-      // Run seed data
-      await seedInMemoryDb();
-    } catch (inMemErr) {
-      console.error('❌ Failed to start and connect to in-memory MongoDB:', inMemErr.message);
-      process.exit(1);
+      console.log('✅ Connected to local MongoDB successfully as fallback!');
+    } catch (localErr) {
+      console.warn('⚠️ Local MongoDB fallback failed. Falling back to in-memory database...');
+      try {
+        console.log('📦 Starting in-memory MongoDB server...');
+        const { MongoMemoryServer } = await import('mongodb-memory-server');
+        const mongoServer = await MongoMemoryServer.create();
+        const uri = mongoServer.getUri();
+        console.log('🔗 Connecting to in-memory MongoDB at:', uri);
+        await mongoose.disconnect();
+        await mongoose.connect(uri, {
+          dbName: 'astromain'
+        });
+        console.log('✅ Connected to in-memory MongoDB successfully');
+        
+        // Run seed data
+        await seedInMemoryDb();
+      } catch (inMemErr) {
+        console.error('❌ Failed to start and connect to in-memory MongoDB:', inMemErr.message);
+        process.exit(1);
+      }
     }
   }
 
@@ -268,6 +337,8 @@ app.use('/api/analytics', analyticsRoutes); // ADDED ANALYTICS ROUTES
 app.use('/api/payments', paymentRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/custom-designs', customDesignRoutes); // ADDED SETTINGS ROUTES
+app.use('/feeds', feedRoutes); // Public Meta / Google Product Catalog CSV feed
+app.use('/api/feeds', feedRoutes);
 
 // Serve static files from React build in production
 if (process.env.NODE_ENV === 'production') {

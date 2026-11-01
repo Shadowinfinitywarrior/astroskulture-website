@@ -163,4 +163,9 @@ productSchema.pre('save', function (next) {
   next();
 });
 
+// Indexes for frequently filtered and sorted columns
+productSchema.index({ category: 1, isActive: 1 });
+productSchema.index({ isActive: 1, isFeatured: 1 });
+productSchema.index({ createdAt: -1 });
+
 export default mongoose.model('Product', productSchema);

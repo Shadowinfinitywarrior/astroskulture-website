@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../contexts/AuthContext";
 import { apiService } from "../lib/mongodb";
+import { trackEcommerce, getCookie } from "../lib/analytics";
 
 interface AppSettings {
   gstPercentage: number;
@@ -99,6 +100,22 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
     }
 
     loadSettings();
+
+    // TRK-05: Track InitiateCheckout / begin_checkout
+    if (items.length > 0) {
+      trackEcommerce(
+        'begin_checkout',
+        items.map(i => ({
+          id: `${i.productId}_${i.size}`,
+          groupId: i.productId,
+          name: i.name,
+          price: i.discountPrice || i.price,
+          quantity: i.quantity,
+          variant: i.size,
+        })),
+        { value: cartTotal, contentType: 'product' }
+      );
+    }
 
     return () => {
       document.body.removeChild(script);
@@ -265,6 +282,8 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
 
       const total = cartTotal + tax + shipping;
 
+      const eventId = crypto.randomUUID();
+
       const orderData = {
         items: items.map(item => ({
           productId: item.productId,
@@ -290,7 +309,10 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
           country: formData.country,
           phone: formData.phone
         },
-        paymentStatus: 'pending' as const
+        paymentStatus: 'pending' as const,
+        eventId,
+        fbp: getCookie('_fbp'),
+        fbc: getCookie('_fbc')
       };
 
       console.log('📦 Creating order...');
@@ -345,6 +367,21 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
 
       const razorpay = new window.Razorpay(options);
       razorpay.on('payment.failed', handlePaymentFailure);
+
+      // TRK-05: Track AddPaymentInfo when Razorpay modal opens
+      trackEcommerce(
+        'add_payment_info',
+        items.map(i => ({
+          id: `${i.productId}_${i.size}`,
+          groupId: i.productId,
+          name: i.name,
+          price: i.discountPrice || i.price,
+          quantity: i.quantity,
+          variant: i.size,
+        })),
+        { value: total, eventId, contentType: 'product' }
+      );
+
       razorpay.open();
 
       if (formData.saveAddress && user && selectedAddress === "new") {

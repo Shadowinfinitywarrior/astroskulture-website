@@ -75,4 +75,7 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
+// Index for role-based queries (admin listing)
+userSchema.index({ role: 1 });
+
 export default mongoose.model('User', userSchema);

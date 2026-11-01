@@ -49,15 +49,37 @@ const uploadToCloudinary = (fileBuffer) => {
   });
 };
 
-// 1. Submit a custom design request (User)
-router.post('/', auth, upload.single('image'), async (req, res) => {
+const processImageBuffer = async (file) => {
+  const isCloudinaryActive = getCloudinarySetup();
+  if (isCloudinaryActive) {
+    console.log('☁️ Uploading to Cloudinary...');
+    const uploadResult = await uploadToCloudinary(file.buffer);
+    return uploadResult.secure_url;
+  } else {
+    console.warn('⚠️ Cloudinary not configured. Storing base64 Data URL fallback.');
+    const base64Image = file.buffer.toString('base64');
+    return `data:${file.mimetype};base64,${base64Image}`;
+  }
+};
+
+const userDesignUpload = upload.fields([
+  { name: 'frontImage', maxCount: 1 },
+  { name: 'backImage', maxCount: 1 },
+  { name: 'image', maxCount: 1 }
+]);
+
+// 1. Submit a custom design request (User) - Supports Front View and Back View
+router.post('/', auth, userDesignUpload, async (req, res) => {
   try {
     const { color, size, neckStyle, sleeveStyle, otherDetails, whatsappNumber } = req.body;
 
-    if (!req.file) {
+    const frontFile = req.files?.['frontImage']?.[0] || req.files?.['image']?.[0] || req.file;
+    const backFile = req.files?.['backImage']?.[0];
+
+    if (!frontFile && !backFile) {
       return res.status(400).json({
         success: false,
-        message: 'Please upload an image file (JPG/PNG)'
+        message: 'Please upload at least one design image (Front View or Back View in JPG/PNG)'
       });
     }
 
@@ -68,22 +90,23 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
       });
     }
 
-    let imageUrl;
-    const isCloudinaryActive = getCloudinarySetup();
-    if (isCloudinaryActive) {
-      console.log('☁️ Uploading to Cloudinary...');
-      const uploadResult = await uploadToCloudinary(req.file.buffer);
-      imageUrl = uploadResult.secure_url;
-      console.log('✅ Cloudinary URL generated:', imageUrl);
-    } else {
-      console.warn('⚠️ Cloudinary not configured. Storing base64 Data URL fallback.');
-      const base64Image = req.file.buffer.toString('base64');
-      imageUrl = `data:${req.file.mimetype};base64,${base64Image}`;
+    let frontImageUrl = '';
+    let backImageUrl = '';
+
+    if (frontFile) {
+      frontImageUrl = await processImageBuffer(frontFile);
     }
+    if (backFile) {
+      backImageUrl = await processImageBuffer(backFile);
+    }
+
+    const primaryImageUrl = frontImageUrl || backImageUrl;
 
     const newDesign = new CustomDesign({
       userId: req.user._id,
-      imageUrl,
+      frontImageUrl,
+      backImageUrl,
+      imageUrl: primaryImageUrl,
       color,
       size,
       neckStyle,
@@ -249,13 +272,22 @@ router.delete('/admin/:id', authenticateAdmin, async (req, res) => {
   }
 });
 
-// 7. Upload completed design image (Admin)
-router.put('/admin/:id/completed', authenticateAdmin, upload.single('completedImage'), async (req, res) => {
+const adminCompletedUpload = upload.fields([
+  { name: 'completedFrontImage', maxCount: 1 },
+  { name: 'completedBackImage', maxCount: 1 },
+  { name: 'completedImage', maxCount: 1 }
+]);
+
+// 7. Upload completed design images (Front View and/or Back View by Admin)
+router.put('/admin/:id/completed', authenticateAdmin, adminCompletedUpload, async (req, res) => {
   try {
-    if (!req.file) {
+    const frontFile = req.files?.['completedFrontImage']?.[0] || req.files?.['completedImage']?.[0] || req.file;
+    const backFile = req.files?.['completedBackImage']?.[0];
+
+    if (!frontFile && !backFile) {
       return res.status(400).json({
         success: false,
-        message: 'Please upload a completed design image file (JPG/PNG)'
+        message: 'Please upload at least one completed design image file (Front View or Back View)'
       });
     }
 
@@ -267,20 +299,20 @@ router.put('/admin/:id/completed', authenticateAdmin, upload.single('completedIm
       });
     }
 
-    let completedDesignUrl;
-    const isCloudinaryActive = getCloudinarySetup();
-    if (isCloudinaryActive) {
-      console.log('☁️ Uploading completed design to Cloudinary...');
-      const uploadResult = await uploadToCloudinary(req.file.buffer);
-      completedDesignUrl = uploadResult.secure_url;
-      console.log('✅ Cloudinary completed URL generated:', completedDesignUrl);
-    } else {
-      console.warn('⚠️ Cloudinary not configured. Storing base64 Data URL fallback.');
-      const base64Image = req.file.buffer.toString('base64');
-      completedDesignUrl = `data:${req.file.mimetype};base64,${base64Image}`;
+    if (frontFile) {
+      const frontUrl = await processImageBuffer(frontFile);
+      design.completedFrontDesignUrl = frontUrl;
+      design.completedDesignUrl = frontUrl;
     }
 
-    design.completedDesignUrl = completedDesignUrl;
+    if (backFile) {
+      const backUrl = await processImageBuffer(backFile);
+      design.completedBackDesignUrl = backUrl;
+      if (!design.completedDesignUrl) {
+        design.completedDesignUrl = backUrl;
+      }
+    }
+
     // Automatically accept the request if it was pending
     if (design.status === 'pending') {
       design.status = 'accepted';
@@ -294,7 +326,7 @@ router.put('/admin/:id/completed', authenticateAdmin, upload.single('completedIm
 
     res.json({
       success: true,
-      message: 'Completed design uploaded successfully',
+      message: 'Completed design(s) uploaded successfully',
       data: design
     });
   } catch (error) {

@@ -1,5 +1,8 @@
+import mongoose from 'mongoose';
+import crypto from 'crypto';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import Settings from '../models/Settings.js';
 
 export const getAllOrders = async (req, res) => {
   try {
@@ -41,14 +44,18 @@ export const getAllOrders = async (req, res) => {
 
 export const getOrderById = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id)
+    const isAdmin = req.user && req.user.role === 'admin';
+
+    const order = await Order.findOne(
+      isAdmin ? { _id: req.params.id } : { _id: req.params.id, userId: req.user.id }
+    )
       .populate('userId', 'email fullName phone addresses')
       .populate('items.productId', 'name images slug');
     
     if (!order) {
       return res.status(404).json({ 
         success: false,
-        message: 'Order not found' 
+        message: 'Order not found or not authorized' 
       });
     }
 
@@ -99,27 +106,118 @@ export const getUserOrders = async (req, res) => {
 };
 
 export const createOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    // Update product stock
-    for (const item of req.body.items) {
-      const product = await Product.findById(item.productId);
-      if (product) {
-        const sizeIndex = product.sizes.findIndex(s => s.size === item.size);
-        if (sizeIndex !== -1 && product.sizes[sizeIndex].stock >= item.quantity) {
-          product.sizes[sizeIndex].stock -= item.quantity;
-          await product.save();
-        } else {
-          return res.status(400).json({
-            success: false,
-            message: `Insufficient stock for ${product.name} (size: ${item.size})`
-          });
-        }
-      }
+    const { items, shippingAddress, paymentStatus = 'pending' } = req.body;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: 'Order must contain at least one item'
+      });
     }
 
+    // Fetch settings for GST and shipping
+    let settings = await Settings.findOne().sort({ updatedAt: -1 });
+    if (!settings) {
+      settings = await Settings.create({});
+    }
+    const gstEnabled = settings.gstEnabled !== undefined ? settings.gstEnabled : true;
+    const gstPercentage = settings.gstPercentage !== undefined ? settings.gstPercentage : 18;
+    const shippingFee = settings.shippingFee !== undefined ? settings.shippingFee : 0;
+    const freeShippingAbove = settings.freeShippingAbove !== undefined ? settings.freeShippingAbove : 999;
+
+    // Validate items and calculate server-side totals
+    let subtotal = 0;
+    const validatedItems = [];
+
+    for (const item of items) {
+      if (!item.productId || !item.quantity || !item.size) {
+        await session.abortTransaction();
+        return res.status(400).json({
+          success: false,
+          message: 'Each item must have productId, quantity, and size'
+        });
+      }
+
+      const product = await Product.findById(item.productId).session(session);
+      if (!product || !product.isActive) {
+        await session.abortTransaction();
+        return res.status(400).json({
+          success: false,
+          message: `Product not found or inactive: ${item.productId}`
+        });
+      }
+
+      const sizeIndex = product.sizes.findIndex(s => s.size === item.size);
+      if (sizeIndex === -1) {
+        await session.abortTransaction();
+        return res.status(400).json({
+          success: false,
+          message: `Size ${item.size} not available for ${product.name}`
+        });
+      }
+
+      if (product.sizes[sizeIndex].stock < item.quantity) {
+        await session.abortTransaction();
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient stock for ${product.name} (size: ${item.size})`
+        });
+      }
+
+      // Atomic stock decrement
+      product.sizes[sizeIndex].stock -= item.quantity;
+      product.totalStock -= item.quantity;
+      await product.save({ session });
+
+      // SEC-02: Authoritative price extracted solely from verified database record
+      const verifiedUnitPrice = (product.discountPrice && product.discountPrice > 0 && product.discountPrice < product.price)
+        ? product.discountPrice
+        : product.price;
+      const itemSubtotal = verifiedUnitPrice * item.quantity;
+      subtotal += itemSubtotal;
+
+      validatedItems.push({
+        productId: product._id,
+        name: product.name,
+        price: verifiedUnitPrice,
+        quantity: item.quantity,
+        size: item.size,
+        color: item.color || ''
+      });
+    }
+
+    // Calculate tax and shipping server-side
+    let tax = 0;
+    if (gstEnabled) {
+      tax = Math.round(subtotal * (gstPercentage / 100));
+    }
+
+    let shipping = 0;
+    if (subtotal < freeShippingAbove) {
+      shipping = shippingFee;
+    }
+
+    const total = subtotal + tax + shipping;
+
     const orderData = {
-      ...req.body,
-      userId: req.user?.id
+      items: validatedItems,
+      userId: req.user.id,
+      subtotal,
+      tax,
+      shipping,
+      total,
+      shippingAddress,
+      paymentStatus,
+      status: 'pending',
+      eventId: req.body.eventId || crypto.randomUUID(),
+      fbp: req.body.fbp || '',
+      fbc: req.body.fbc || '',
+      purchaseTracked: false
     };
 
     if (!orderData.orderNumber) {
@@ -130,8 +228,9 @@ export const createOrder = async (req, res) => {
     }
 
     const order = new Order(orderData);
-    
-    await order.save();
+    await order.save({ session });
+
+    await session.commitTransaction();
 
     const populatedOrder = await Order.findById(order._id)
       .populate('userId', 'email fullName phone')
@@ -142,12 +241,15 @@ export const createOrder = async (req, res) => {
       data: populatedOrder
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error('Create order error:', error);
     res.status(400).json({ 
       success: false,
       message: 'Invalid order data', 
       error: error.message 
     });
+  } finally {
+    session.endSession();
   }
 };
 
@@ -231,7 +333,16 @@ export const updateOrderStatus = async (req, res) => {
 export const updatePaymentStatus = async (req, res) => {
   try {
     const { paymentStatus, paymentId } = req.body;
-    
+
+    // Only admins can update payment status directly
+    const isAdmin = req.user && req.user.role === 'admin';
+    if (!isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to update payment status'
+      });
+    }
+
     const order = await Order.findByIdAndUpdate(
       req.params.id,
       { paymentStatus, paymentId, updatedAt: Date.now() },
@@ -254,45 +365,6 @@ export const updatePaymentStatus = async (req, res) => {
     res.status(400).json({ 
       success: false,
       message: 'Invalid payment data', 
-      error: error.message 
-    });
-  }
-};
-
-export const updateOrderPrices = async (req, res) => {
-  try {
-    const { subtotal, tax, shipping, total } = req.body;
-    
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      { 
-        subtotal: subtotal !== undefined ? subtotal : undefined,
-        tax: tax !== undefined ? tax : undefined,
-        shipping: shipping !== undefined ? shipping : undefined,
-        total: total !== undefined ? total : undefined,
-        updatedAt: Date.now() 
-      },
-      { new: true, runValidators: false }
-    )
-      .populate('userId', 'email fullName phone')
-      .populate('items.productId', 'name images');
-    
-    if (!order) {
-      return res.status(404).json({ 
-        success: false,
-        message: 'Order not found' 
-      });
-    }
-
-    res.json({
-      success: true,
-      data: order
-    });
-  } catch (error) {
-    console.error('Update order prices error:', error);
-    res.status(400).json({ 
-      success: false,
-      message: 'Invalid order data', 
       error: error.message 
     });
   }

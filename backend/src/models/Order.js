@@ -71,6 +71,13 @@ const orderSchema = new mongoose.Schema({
     phone: String
   },
   trackingNumber: String,
+  eventId: String,
+  fbp: String,
+  fbc: String,
+  purchaseTracked: {
+    type: Boolean,
+    default: false
+  },
   createdAt: {
     type: Date,
     default: Date.now

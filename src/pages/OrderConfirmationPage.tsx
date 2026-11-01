@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { trackEcommerce } from "../lib/analytics";
 
 interface OrderItem {
   productId: {
@@ -81,6 +82,27 @@ export function OrderConfirmationPage({
         
         if (result.data.paymentStatus === "paid") {
           setPollingActive(false);
+
+          // TRK-06: Fire Purchase event once per order using database verified values
+          const sessionKey = `purchase_sent_${orderId}`;
+          if (!sessionStorage.getItem(sessionKey)) {
+            sessionStorage.setItem(sessionKey, 'true');
+            const ord = result.data;
+            const items = (ord.items || []).map((i: any) => ({
+              id: `${i.productId?._id || i.productId}_${i.size || 'free'}`,
+              groupId: String(i.productId?._id || i.productId),
+              name: i.name,
+              price: i.price,
+              quantity: i.quantity || 1,
+              variant: i.size,
+            }));
+
+            trackEcommerce('purchase', items, {
+              value: ord.total,
+              transactionId: ord.orderNumber || ord._id,
+              eventId: ord.eventId || `ord_${ord._id}`,
+            });
+          }
         }
       } else if (response.status === 404) {
         setError("Order not found");

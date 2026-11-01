@@ -120,26 +120,33 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
     <div className="bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition-all duration-300 border border-gray-100">
       <div className="relative overflow-hidden">
         {/* Product Image */}
-        <div
-          className="w-full aspect-square bg-gray-100 cursor-pointer relative"
-          onClick={handleProductClick}
-        >
+        <div className="w-full aspect-square bg-gray-100 relative">
           {imageLoading && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-8 h-8 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
           )}
 
-          <img
-            src={imageError ? '/api/placeholder/300/300' : (product.images[0]?.url || '/api/placeholder/300/300')}
-            alt={product.name}
-            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${imageLoading ? 'opacity-0' : 'opacity-100'
-              }`}
-            loading="lazy"
-            decoding="async"
-            onLoad={handleImageLoad}
-            onError={handleImageError}
-          />
+          <a
+            href={`/product/${product.slug}`}
+            onClick={(e) => {
+              e.preventDefault();
+              handleProductClick();
+            }}
+            aria-label={product.name}
+            className="block w-full h-full"
+          >
+            <img
+              src={imageError ? '/api/placeholder/300/300' : (product.images[0]?.url || '/api/placeholder/300/300')}
+              alt={product.name}
+              className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${imageLoading ? 'opacity-0' : 'opacity-100'
+                }`}
+              loading="lazy"
+              decoding="async"
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+            />
+          </a>
 
           {/* Overlay with quick actions - only on hover */}
           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300">
@@ -241,16 +248,21 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
       <div className="p-3">
         {/* Brand Name */}
         <div className="text-xs text-gray-600 uppercase tracking-wide mb-1 font-semibold">
-          {product.brand || 'RARE RABBIT'}
+          {product.brand || 'ASTROS KULTURE'}
         </div>
 
         {/* Product Name */}
-        <h3
-          className="font-semibold text-sm text-gray-900 mb-2 cursor-pointer hover:text-red-600 transition-colors line-clamp-2 leading-tight"
-          onClick={handleProductClick}
-          title={product.name}
-        >
-          {product.name}
+        <h3 className="font-semibold text-sm text-gray-900 mb-2 hover:text-red-600 transition-colors line-clamp-2 leading-tight">
+          <a
+            href={`/product/${product.slug}`}
+            onClick={(e) => {
+              e.preventDefault();
+              handleProductClick();
+            }}
+            title={product.name}
+          >
+            {product.name}
+          </a>
         </h3>
 
         {/* Rating in Green Badge */}

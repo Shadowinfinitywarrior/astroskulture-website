@@ -9,11 +9,12 @@ export const getAllProducts = async (req, res) => {
     let limitNumber = 12;
 
     if (limit !== undefined) {
-      if (limit === 'all' || limit === '0') {
-        limitNumber = 0;
+      const parsedLimit = parseInt(limit, 10);
+      if (Number.isNaN(parsedLimit) || parsedLimit < 1) {
+        limitNumber = 12;
       } else {
-        const parsedLimit = parseInt(limit, 10);
-        limitNumber = Number.isNaN(parsedLimit) ? 12 : parsedLimit;
+        // Enforce maximum page size to prevent unbounded queries
+        limitNumber = Math.min(parsedLimit, 100);
       }
     }
 
@@ -282,25 +283,39 @@ export const updateProduct = async (req, res) => {
 
 export const deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
-    
+    const product = await Product.findById(req.params.id);
+
     if (!product) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         success: false,
-        message: 'Product not found' 
+        message: 'Product not found'
       });
     }
 
+    // Prevent deletion if orders reference this product (preserve order history)
+    const Order = (await import('../models/Order.js')).default;
+    const orderCount = await Order.countDocuments({ 'items.productId': product._id });
+    if (orderCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot delete product with existing orders. Deactivate it instead.'
+      });
+    }
+
+    // Soft-delete: deactivate instead of hard delete to preserve order history
+    product.isActive = false;
+    await product.save();
+
     res.json({
       success: true,
-      message: 'Product deleted successfully'
+      message: 'Product deactivated successfully'
     });
   } catch (error) {
     console.error('Delete product error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: 'Failed to delete product', 
-      error: error.message 
+      message: 'Failed to delete product',
+      error: error.message
     });
   }
 };
@@ -407,23 +422,35 @@ export const getProductsByCategory = async (req, res) => {
 // Get all categories with product counts
 export const getCategoriesWithCounts = async (req, res) => {
   try {
-    const categories = await Category.find({ isActive: true })
-      .sort({ displayOrder: 1, name: 1 })
-      .lean();
-
-    // Get product counts for each category
-    const categoriesWithCounts = await Promise.all(
-      categories.map(async (category) => {
-        const productCount = await Product.countDocuments({
-          category: category._id,
-          isActive: true
-        });
-        return {
-          ...category,
-          productCount
-        };
-      })
-    );
+    // Single aggregation pipeline avoids N+1 queries
+    const categoriesWithCounts = await Category.aggregate([
+      { $match: { isActive: true } },
+      { $sort: { displayOrder: 1, name: 1 } },
+      {
+        $lookup: {
+          from: 'products',
+          let: { catId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$category', '$$catId'] },
+                isActive: true
+              }
+            },
+            { $count: 'count' }
+          ],
+          as: 'productCountResult'
+        }
+      },
+      {
+        $addFields: {
+          productCount: {
+            $ifNull: [{ $arrayElemAt: ['$productCountResult.count', 0] }, 0]
+          }
+        }
+      },
+      { $project: { productCountResult: 0 } }
+    ]);
 
     res.json({
       success: true,
@@ -434,32 +461,6 @@ export const getCategoriesWithCounts = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch categories with counts',
-      error: error.message
-    });
-  }
-};
-
-// Debug endpoint to see all products and slugs
-export const getAllProductsDebug = async (req, res) => {
-  try {
-    const products = await Product.find({ isActive: true })
-      .select('name slug _id category totalStock isActive')
-      .populate('category', 'name slug')
-      .sort({ name: 1 })
-      .lean();
-    
-    console.log('🔍 [DEBUG] All active products:', products.length);
-    
-    res.json({
-      success: true,
-      data: products,
-      count: products.length,
-      message: `Found ${products.length} active products in database`
-    });
-  } catch (error) {
-    console.error('Get products debug error:', error);
-    res.status(500).json({
-      success: false,
       error: error.message
     });
   }

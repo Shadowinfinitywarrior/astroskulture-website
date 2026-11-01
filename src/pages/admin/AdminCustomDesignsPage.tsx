@@ -5,6 +5,8 @@ import { CheckCircle2, XCircle, Clock, Search, Filter, MessageSquare, AlertCircl
 
 interface CustomDesignRequest {
   _id: string;
+  frontImageUrl?: string;
+  backImageUrl?: string;
   imageUrl: string;
   color: string;
   size: string;
@@ -12,6 +14,8 @@ interface CustomDesignRequest {
   sleeveStyle: string;
   otherDetails: string;
   whatsappNumber: string;
+  completedFrontDesignUrl?: string;
+  completedBackDesignUrl?: string;
   completedDesignUrl?: string;
   status: 'pending' | 'accepted' | 'rejected';
   adminNotes?: string;
@@ -39,9 +43,9 @@ export default function AdminCustomDesignsPage({ onNavigate }: { onNavigate: (pa
   const [modalAction, setModalAction] = useState<'accept' | 'reject' | null>(null);
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [uploadingDesignId, setUploadingDesignId] = useState<string | null>(null);
+  const [uploadingSlot, setUploadingSlot] = useState<{ id: string; slot: 'front' | 'back' } | null>(null);
 
-  const handleCompletedDesignUpload = async (id: string, file: File) => {
+  const handleCompletedDesignUpload = async (id: string, file: File, slot: 'front' | 'back') => {
     if (!file) return;
     
     // Check file type
@@ -56,12 +60,16 @@ export default function AdminCustomDesignsPage({ onNavigate }: { onNavigate: (pa
       return;
     }
 
-    setUploadingDesignId(id);
+    setUploadingSlot({ id, slot });
     setError('');
 
     try {
       const formData = new FormData();
-      formData.append('completedImage', file);
+      if (slot === 'front') {
+        formData.append('completedFrontImage', file);
+      } else {
+        formData.append('completedBackImage', file);
+      }
 
       const response = await apiService.adminUploadCompletedDesign(id, formData);
       if (response.success) {
@@ -71,7 +79,9 @@ export default function AdminCustomDesignsPage({ onNavigate }: { onNavigate: (pa
             d._id === id
               ? {
                   ...d,
-                  completedDesignUrl: response.data.completedDesignUrl,
+                  completedFrontDesignUrl: response.data.completedFrontDesignUrl || d.completedFrontDesignUrl,
+                  completedBackDesignUrl: response.data.completedBackDesignUrl || d.completedBackDesignUrl,
+                  completedDesignUrl: response.data.completedDesignUrl || d.completedDesignUrl,
                   status: response.data.status,
                   adminNotes: response.data.adminNotes || d.adminNotes
                 }
@@ -85,7 +95,7 @@ export default function AdminCustomDesignsPage({ onNavigate }: { onNavigate: (pa
       console.error('Error uploading completed design:', err);
       setError(err.message || 'Error occurred while uploading completed design');
     } finally {
-      setUploadingDesignId(null);
+      setUploadingSlot(null);
     }
   };
 
@@ -123,17 +133,17 @@ export default function AdminCustomDesignsPage({ onNavigate }: { onNavigate: (pa
       result = result.filter((d) => d.status === statusFilter);
     }
 
-    // Search filter (User name, email, color, size)
+    // Search filter (User name, email, color, size, neck, sleeve)
     if (searchTerm.trim() !== '') {
       const term = searchTerm.toLowerCase();
       result = result.filter(
         (d) =>
-          d.userId?.fullName.toLowerCase().includes(term) ||
-          d.userId?.email.toLowerCase().includes(term) ||
-          d.color.toLowerCase().includes(term) ||
-          d.size.toLowerCase().includes(term) ||
-          d.neckStyle.toLowerCase().includes(term) ||
-          d.sleeveStyle.toLowerCase().includes(term)
+          d.userId?.fullName?.toLowerCase().includes(term) ||
+          d.userId?.email?.toLowerCase().includes(term) ||
+          d.color?.toLowerCase().includes(term) ||
+          d.size?.toLowerCase().includes(term) ||
+          d.neckStyle?.toLowerCase().includes(term) ||
+          d.sleeveStyle?.toLowerCase().includes(term)
       );
     }
 
@@ -148,7 +158,6 @@ export default function AdminCustomDesignsPage({ onNavigate }: { onNavigate: (pa
     try {
       const response = await apiService.adminDeleteCustomDesign(id);
       if (response.success) {
-        // Remove from local state
         setDesigns(prev => prev.filter(design => design._id !== id));
       } else {
         setError(response.message || 'Failed to delete request');
@@ -171,62 +180,64 @@ export default function AdminCustomDesignsPage({ onNavigate }: { onNavigate: (pa
     setNotes('');
   };
 
-  const handleSubmitStatus = async () => {
+  const handleStatusSubmit = async () => {
     if (!selectedDesign || !modalAction) return;
 
     setSubmitting(true);
     setError('');
 
-    const newStatus = modalAction === 'accept' ? 'accepted' : 'rejected';
-
     try {
       const response = await apiService.adminUpdateCustomDesignStatus(
         selectedDesign._id,
-        newStatus,
+        modalAction === 'accept' ? 'accepted' : 'rejected',
         notes
       );
 
       if (response.success) {
-        // Update local state
         setDesigns((prev) =>
           prev.map((d) =>
             d._id === selectedDesign._id
-              ? { ...d, status: newStatus, adminNotes: notes }
+              ? {
+                  ...d,
+                  status: modalAction === 'accept' ? 'accepted' : 'rejected',
+                  adminNotes: notes
+                }
               : d
           )
         );
         handleCloseModal();
       } else {
-        setError(response.message || 'Failed to update custom design status');
+        setError(response.message || 'Failed to update request status');
       }
     } catch (err: any) {
       console.error('Error updating status:', err);
-      setError(err.message || 'An error occurred while updating status');
+      setError(err.message || 'Error occurred while updating request status');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const getStatusBadge = (status: 'pending' | 'accepted' | 'rejected') => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'accepted':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <CheckCircle2 className="w-3.5 h-3.5" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
             Accepted
           </span>
         );
       case 'rejected':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-            <XCircle className="w-3.5 h-3.5" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">
+            <XCircle className="w-3.5 h-3.5 text-rose-600" />
             Rejected
           </span>
         );
+      case 'pending':
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-            <Clock className="w-3.5 h-3.5 animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
+            <Clock className="w-3.5 h-3.5 text-amber-600" />
             Pending
           </span>
         );
@@ -241,7 +252,7 @@ export default function AdminCustomDesignsPage({ onNavigate }: { onNavigate: (pa
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Custom T-Shirt Designs</h1>
             <p className="text-sm text-slate-500 mt-1">
-              Manage and review custom design requests uploaded by customers.
+              Manage and review custom design requests uploaded by customers (Front and Back views).
             </p>
           </div>
         </div>
@@ -252,7 +263,7 @@ export default function AdminCustomDesignsPage({ onNavigate }: { onNavigate: (pa
             <Search className="absolute left-3 top-2.5 h-4.5 w-4.5 text-slate-400" />
             <input
               type="text"
-              placeholder="Search user, color, style..."
+              placeholder="Search user, color, fit, sleeve..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm bg-white text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
@@ -304,7 +315,7 @@ export default function AdminCustomDesignsPage({ onNavigate }: { onNavigate: (pa
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {filteredDesigns.map((design) => (
               <div
                 key={design._id}
@@ -320,7 +331,7 @@ export default function AdminCustomDesignsPage({ onNavigate }: { onNavigate: (pa
                       </div>
                       <div>
                         <h2 className="text-sm font-bold text-slate-900 leading-tight">
-                          {design.userId?.fullName || 'Deleted User'}
+                          {design.userId?.fullName || 'Customer'}
                         </h2>
                         <span className="text-xs text-slate-500">{design.userId?.email}</span>
                       </div>
@@ -337,56 +348,105 @@ export default function AdminCustomDesignsPage({ onNavigate }: { onNavigate: (pa
                     </div>
                   </div>
 
-                  {/* Body Grid: Image + Specifications */}
-                  <div className="flex gap-4">
-                    {/* Design Image Thumbnail */}
-                    <div className="w-32 h-32 rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center bg-slate-50 flex-shrink-0 relative group">
-                      <img
-                        src={design.imageUrl}
-                        alt="Design Thumbnail"
-                        className="w-full h-full object-contain p-1"
-                      />
-                      <a
-                        href={design.imageUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-semibold"
-                      >
-                        <Eye className="w-3.5 h-3.5 mr-1" />
-                        View Image
-                      </a>
-                    </div>
+                  {/* Customer Uploads (Front View & Back View) */}
+                  <div>
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">
+                      Customer Artwork Uploads:
+                    </span>
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Front View */}
+                      <div className="border border-slate-200 rounded-lg p-2 bg-slate-50/60 flex flex-col items-center">
+                        <span className="text-[10px] font-bold text-slate-600 mb-1">Front View</span>
+                        {(design.frontImageUrl || design.imageUrl) ? (
+                          <div className="w-full h-28 rounded border border-slate-200 overflow-hidden bg-white flex items-center justify-center relative group">
+                            <img
+                              src={design.frontImageUrl || design.imageUrl}
+                              alt="Customer Front Design"
+                              className="w-full h-full object-contain p-1"
+                            />
+                            <a
+                              href={design.frontImageUrl || design.imageUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-semibold"
+                            >
+                              <Eye className="w-3.5 h-3.5 mr-1" />
+                              View
+                            </a>
+                          </div>
+                        ) : (
+                          <div className="w-full h-28 rounded border border-dashed border-slate-300 bg-white flex items-center justify-center text-slate-400 text-xs">
+                            Not Uploaded
+                          </div>
+                        )}
+                      </div>
 
-                    {/* Specifications List */}
-                    <div className="flex-1 space-y-1.5 text-xs text-slate-600">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full border border-slate-300" style={{ backgroundColor: design.color }} />
-                        <span className="font-bold text-slate-800">Color:</span> {design.color}
-                      </div>
-                      <div>
-                        <span className="font-bold text-slate-800">Size:</span> {design.size}
-                      </div>
-                      <div>
-                        <span className="font-bold text-slate-800">Neck:</span> {design.neckStyle}
-                      </div>
-                      <div>
-                        <span className="font-bold text-slate-800">Sleeve:</span> {design.sleeveStyle}
-                      </div>
-                      <div>
-                        <span className="font-bold text-slate-800">WhatsApp:</span> {design.whatsappNumber}
-                      </div>
-                      <div>
-                        <span className="font-bold text-slate-800">Date:</span> {new Date(design.createdAt).toLocaleDateString()}
+                      {/* Back View */}
+                      <div className="border border-slate-200 rounded-lg p-2 bg-slate-50/60 flex flex-col items-center">
+                        <span className="text-[10px] font-bold text-slate-600 mb-1">Back View</span>
+                        {design.backImageUrl ? (
+                          <div className="w-full h-28 rounded border border-slate-200 overflow-hidden bg-white flex items-center justify-center relative group">
+                            <img
+                              src={design.backImageUrl}
+                              alt="Customer Back Design"
+                              className="w-full h-full object-contain p-1"
+                            />
+                            <a
+                              href={design.backImageUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-semibold"
+                            >
+                              <Eye className="w-3.5 h-3.5 mr-1" />
+                              View
+                            </a>
+                          </div>
+                        ) : (
+                          <div className="w-full h-28 rounded border border-dashed border-slate-300 bg-white flex items-center justify-center text-slate-400 text-xs">
+                            Not Uploaded
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Other Specifications Details */}
+                  {/* Specifications Details Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 p-3 bg-slate-50 rounded-lg text-xs">
+                    <div>
+                      <span className="text-slate-400 block font-semibold text-[10px] uppercase">Base Color</span>
+                      <span className="font-bold text-slate-800 flex items-center gap-1.5 mt-0.5">
+                        <span className="w-2.5 h-2.5 rounded-full border border-slate-300" style={{ backgroundColor: design.color }} />
+                        {design.color}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block font-semibold text-[10px] uppercase">Size</span>
+                      <span className="font-bold text-slate-800 mt-0.5 block">{design.size}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block font-semibold text-[10px] uppercase">Fit / Neck</span>
+                      <span className="font-bold text-slate-800 mt-0.5 block">{design.neckStyle}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block font-semibold text-[10px] uppercase">Sleeve</span>
+                      <span className="font-bold text-slate-800 mt-0.5 block">{design.sleeveStyle}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block font-semibold text-[10px] uppercase">WhatsApp</span>
+                      <span className="font-bold text-slate-800 mt-0.5 block">{design.whatsappNumber}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block font-semibold text-[10px] uppercase">Date</span>
+                      <span className="font-bold text-slate-800 mt-0.5 block">{new Date(design.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+
+                  {/* Customer Additional Details */}
                   {design.otherDetails && (
                     <div className="p-3 bg-slate-50 rounded-lg text-xs leading-relaxed text-slate-700 flex gap-2">
                       <FileText className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="font-bold text-slate-800 mb-0.5">Instructions:</p>
+                        <p className="font-bold text-slate-800 mb-0.5">Customer Instructions:</p>
                         {design.otherDetails}
                       </div>
                     </div>
@@ -407,78 +467,136 @@ export default function AdminCustomDesignsPage({ onNavigate }: { onNavigate: (pa
                     </div>
                   )}
 
-                  {/* Completed Design Delivery Section */}
-                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 mt-2 space-y-3">
-                    <p className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-indigo-650" />
-                      Completed Design Delivery (Cloudinary CDN)
+                  {/* Completed Design Proofs Section (Admin Front & Back Deliveries) */}
+                  <div className="p-4 bg-indigo-50/40 rounded-xl border border-indigo-100 mt-2 space-y-3">
+                    <p className="text-xs font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                      Admin Delivery Proofs (Front & Back)
                     </p>
 
-                    {design.completedDesignUrl ? (
-                      <div className="flex gap-4 items-center">
-                        <div className="w-16 h-16 rounded-lg overflow-hidden border border-slate-300 bg-white flex items-center justify-center flex-shrink-0 relative group">
-                          <img
-                            src={design.completedDesignUrl}
-                            alt="Completed Design"
-                            className="w-full h-full object-contain p-1"
-                          />
-                          <a
-                            href={design.completedDesignUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-semibold"
-                          >
-                            View
-                          </a>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-emerald-700 font-bold flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                            Design Uploaded
-                          </p>
-                          <p className="text-[10px] text-slate-500 truncate" title={design.completedDesignUrl}>
-                            {design.completedDesignUrl}
-                          </p>
-                          <label className="inline-block mt-1 cursor-pointer text-[10px] font-bold text-indigo-600 hover:text-indigo-800">
-                            Upload Replace Image
-                            <input
-                              type="file"
-                              accept="image/png, image/jpeg, image/jpg"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) handleCompletedDesignUpload(design._id, file);
-                              }}
-                              className="hidden"
-                            />
-                          </label>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        {uploadingDesignId === design._id ? (
-                          <div className="py-3 flex items-center justify-center gap-2">
-                            <div className="w-4 h-4 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin"></div>
-                            <span className="text-xs font-semibold text-slate-500">Uploading to Cloudinary...</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Admin Front Delivery */}
+                      <div className="bg-white p-3 rounded-lg border border-indigo-100">
+                        <span className="text-[10px] font-bold text-slate-600 uppercase block mb-1.5">
+                          Front View Completed Proof
+                        </span>
+                        {(design.completedFrontDesignUrl || design.completedDesignUrl) ? (
+                          <div className="space-y-2">
+                            <div className="w-full h-24 rounded border border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center relative group">
+                              <img
+                                src={design.completedFrontDesignUrl || design.completedDesignUrl}
+                                alt="Completed Front"
+                                className="w-full h-full object-contain p-1"
+                              />
+                              <a
+                                href={design.completedFrontDesignUrl || design.completedDesignUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-semibold"
+                              >
+                                View Proof
+                              </a>
+                            </div>
+                            <label className="block text-center cursor-pointer text-[10px] font-bold text-indigo-600 hover:text-indigo-800">
+                              Replace Front Proof
+                              <input
+                                type="file"
+                                accept="image/png, image/jpeg, image/jpg"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleCompletedDesignUpload(design._id, file, 'front');
+                                }}
+                                className="hidden"
+                              />
+                            </label>
                           </div>
                         ) : (
-                          <label className="flex items-center justify-center gap-2 border-2 border-dashed border-slate-350 hover:border-indigo-500 hover:bg-slate-100/50 rounded-lg p-4 cursor-pointer transition-all">
-                            <Upload className="w-4 h-4 text-slate-400" />
-                            <span className="text-xs font-semibold text-slate-600">
-                              Upload Final Completed Design
-                            </span>
-                            <input
-                              type="file"
-                              accept="image/png, image/jpeg, image/jpg"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) handleCompletedDesignUpload(design._id, file);
-                              }}
-                              className="hidden"
-                            />
-                          </label>
+                          <div>
+                            {uploadingSlot?.id === design._id && uploadingSlot?.slot === 'front' ? (
+                              <div className="h-24 flex items-center justify-center gap-2">
+                                <div className="w-4 h-4 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin"></div>
+                                <span className="text-[10px] text-slate-500 font-semibold">Uploading...</span>
+                              </div>
+                            ) : (
+                              <label className="h-24 flex flex-col items-center justify-center gap-1 border border-dashed border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50/20 rounded cursor-pointer transition-all">
+                                <Upload className="w-4 h-4 text-indigo-500" />
+                                <span className="text-[11px] font-semibold text-indigo-600">Upload Front Proof</span>
+                                <input
+                                  type="file"
+                                  accept="image/png, image/jpeg, image/jpg"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handleCompletedDesignUpload(design._id, file, 'front');
+                                  }}
+                                  className="hidden"
+                                />
+                              </label>
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
+
+                      {/* Admin Back Delivery */}
+                      <div className="bg-white p-3 rounded-lg border border-indigo-100">
+                        <span className="text-[10px] font-bold text-slate-600 uppercase block mb-1.5">
+                          Back View Completed Proof
+                        </span>
+                        {design.completedBackDesignUrl ? (
+                          <div className="space-y-2">
+                            <div className="w-full h-24 rounded border border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center relative group">
+                              <img
+                                src={design.completedBackDesignUrl}
+                                alt="Completed Back"
+                                className="w-full h-full object-contain p-1"
+                              />
+                              <a
+                                href={design.completedBackDesignUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-semibold"
+                              >
+                                View Proof
+                              </a>
+                            </div>
+                            <label className="block text-center cursor-pointer text-[10px] font-bold text-indigo-600 hover:text-indigo-800">
+                              Replace Back Proof
+                              <input
+                                type="file"
+                                accept="image/png, image/jpeg, image/jpg"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleCompletedDesignUpload(design._id, file, 'back');
+                                }}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                        ) : (
+                          <div>
+                            {uploadingSlot?.id === design._id && uploadingSlot?.slot === 'back' ? (
+                              <div className="h-24 flex items-center justify-center gap-2">
+                                <div className="w-4 h-4 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin"></div>
+                                <span className="text-[10px] text-slate-500 font-semibold">Uploading...</span>
+                              </div>
+                            ) : (
+                              <label className="h-24 flex flex-col items-center justify-center gap-1 border border-dashed border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50/20 rounded cursor-pointer transition-all">
+                                <Upload className="w-4 h-4 text-indigo-500" />
+                                <span className="text-[11px] font-semibold text-indigo-600">Upload Back Proof</span>
+                                <input
+                                  type="file"
+                                  accept="image/png, image/jpeg, image/jpg"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handleCompletedDesignUpload(design._id, file, 'back');
+                                  }}
+                                  className="hidden"
+                                />
+                              </label>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -531,29 +649,28 @@ export default function AdminCustomDesignsPage({ onNavigate }: { onNavigate: (pa
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Type notes for the user here... (e.g. 'Order confirmed. Delivery within 7 business days.' or 'The upload resolution is too low. Please upload a clear image.')"
+                  placeholder="Enter response notes for the customer..."
                   rows={4}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all text-sm leading-relaxed mb-4"
+                  className="w-full p-3 border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all mb-6"
                 />
 
-                <div className="flex gap-3 justify-end">
+                <div className="flex justify-end gap-3">
                   <button
                     onClick={handleCloseModal}
-                    disabled={submitting}
-                    className="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                    className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
                   >
                     Cancel
                   </button>
                   <button
-                    onClick={handleSubmitStatus}
+                    onClick={handleStatusSubmit}
                     disabled={submitting}
-                    className={`px-4 py-2 text-xs font-bold text-white rounded-lg transition-all shadow-sm flex items-center gap-1.5 ${
+                    className={`px-4 py-2 text-xs font-bold text-white rounded-lg transition-colors flex items-center gap-1.5 shadow-sm ${
                       modalAction === 'accept'
                         ? 'bg-emerald-600 hover:bg-emerald-700'
                         : 'bg-rose-600 hover:bg-rose-700'
                     }`}
                   >
-                    {submitting ? 'Submitting...' : 'Confirm Response'}
+                    {submitting ? 'Updating...' : modalAction === 'accept' ? 'Confirm Acceptance' : 'Confirm Rejection'}
                   </button>
                 </div>
               </div>

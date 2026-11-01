@@ -33,8 +33,8 @@ module.exports = {
             restart_delay: 4000,
 
             // Advanced options
-            kill_timeout: 5000,
-            listen_timeout: 3000,
+            kill_timeout: 8000,
+            listen_timeout: 10000,
             shutdown_with_message: true,
 
             // Merge logs from all instances

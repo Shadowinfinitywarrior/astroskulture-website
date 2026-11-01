@@ -8,6 +8,7 @@ import type { Product } from '../lib/types';
 import ProductImageGallery from '../components/ProductImageGallery';
 import ProductReviews from '../components/ProductReviews';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { trackEcommerce } from '../lib/analytics';
 
 interface AppSettings {
   gstPercentage: number;
@@ -67,6 +68,23 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
 
       if (data.success && data.data) {
         setProduct(data.data);
+        
+        // TRK-05: Track ViewContent / view_item
+        const prod = data.data;
+        const effectivePrice = prod.discountPrice && prod.discountPrice > 0 && prod.discountPrice < prod.price
+          ? prod.discountPrice
+          : prod.price;
+
+        trackEcommerce('view_item', [
+          {
+            id: prod._id,
+            groupId: prod._id,
+            name: prod.name,
+            price: effectivePrice,
+            category: prod.category || 'Oversized T-Shirts',
+          }
+        ], { contentType: 'product_group' });
+
         // Set default size to first available size
         const availableSizes = data.data.sizes
           .filter((size: any) => size.stock > 0)
@@ -116,6 +134,23 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
 
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 2000);
+
+    // TRK-05: Track AddToCart / add_to_cart
+    const effectivePrice = product.discountPrice && product.discountPrice > 0 && product.discountPrice < product.price
+      ? product.discountPrice
+      : product.price;
+
+    trackEcommerce('add_to_cart', [
+      {
+        id: `${product._id}_${selectedSize}`,
+        groupId: product._id,
+        name: product.name,
+        price: effectivePrice,
+        quantity: 1,
+        variant: selectedSize,
+        category: product.category,
+      }
+    ]);
   };
 
   const handleBuyNow = () => {
@@ -137,6 +172,18 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
         await removeFromWishlist(product._id);
       } else {
         await addToWishlist(product);
+        const effectivePrice = product.discountPrice && product.discountPrice > 0 && product.discountPrice < product.price
+          ? product.discountPrice
+          : product.price;
+        trackEcommerce('add_to_wishlist', [
+          {
+            id: String(product._id),
+            groupId: String(product._id),
+            name: product.name,
+            price: effectivePrice,
+            category: product.category,
+          }
+        ]);
       }
     } catch (error) {
       console.error('Error toggling wishlist:', error);

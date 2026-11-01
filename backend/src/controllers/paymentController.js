@@ -2,6 +2,7 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import { sendCapi } from '../services/metaCapi.js';
 
 const validateRazorpayConfig = () => {
   if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_SECRET_KEY) {
@@ -120,7 +121,10 @@ export const verifyPayment = async (req, res) => {
       .update(body)
       .digest('hex');
 
-    if (expectedSignature !== razorpaySignature) {
+    const expectedBuf = Buffer.from(expectedSignature, 'utf8');
+    const signatureBuf = Buffer.from(razorpaySignature, 'utf8');
+
+    if (expectedBuf.length !== signatureBuf.length || !crypto.timingSafeEqual(expectedBuf, signatureBuf)) {
       console.warn('❌ Invalid signature for order:', orderId);
       console.warn('Expected:', expectedSignature);
       console.warn('Received:', razorpaySignature);
@@ -165,6 +169,42 @@ export const verifyPayment = async (req, res) => {
     }
 
     console.log('✅ Payment verified successfully for order:', orderId);
+
+    // TRK-06 & TRK-07: Fire CAPI Purchase if not already tracked
+    if (!updatedOrder.purchaseTracked) {
+      sendCapi({
+        eventName: 'Purchase',
+        eventId: updatedOrder.eventId || `ord_${updatedOrder._id}`,
+        sourceUrl: `https://astroskulture.in/order-confirmation/${updatedOrder._id}`,
+        user: {
+          email: updatedOrder.userId?.email || updatedOrder.shippingAddress?.email,
+          phone: updatedOrder.userId?.phone || updatedOrder.shippingAddress?.phone,
+          firstName: updatedOrder.shippingAddress?.fullName?.split(' ')[0],
+          lastName: updatedOrder.shippingAddress?.fullName?.split(' ').slice(1).join(' '),
+          city: updatedOrder.shippingAddress?.city,
+          state: updatedOrder.shippingAddress?.state,
+          pincode: updatedOrder.shippingAddress?.postalCode,
+          id: updatedOrder.userId?._id?.toString(),
+          fbp: updatedOrder.fbp,
+          fbc: updatedOrder.fbc
+        },
+        custom: {
+          value: updatedOrder.total,
+          order_id: updatedOrder._id.toString(),
+          num_items: updatedOrder.items.reduce((s, i) => s + (i.quantity || 1), 0),
+          content_type: 'product',
+          contents: updatedOrder.items.map(i => ({
+            id: `${i.productId?._id || i.productId}_${i.size}`,
+            quantity: i.quantity || 1,
+            item_price: i.price
+          }))
+        },
+        ip: req.ip || req.headers['x-forwarded-for'],
+        userAgent: req.headers['user-agent']
+      }).catch(err => console.error('[CAPI verify error]', err.message));
+
+      await Order.findByIdAndUpdate(updatedOrder._id, { purchaseTracked: true });
+    }
 
     res.json({
       success: true,
@@ -269,7 +309,10 @@ export const handlePaymentWebhook = async (req, res) => {
       .update(body)
       .digest('hex');
 
-    if (expectedSignature !== signature) {
+    const expectedBuf = Buffer.from(expectedSignature, 'utf8');
+    const signatureBuf = Buffer.from(signature, 'utf8');
+
+    if (expectedBuf.length !== signatureBuf.length || !crypto.timingSafeEqual(expectedBuf, signatureBuf)) {
       console.warn('❌ Invalid webhook signature - mismatch');
       console.warn('Expected:', expectedSignature);
       console.warn('Received:', signature);
@@ -356,6 +399,42 @@ export const handlePaymentWebhook = async (req, res) => {
       paymentStatus,
       orderStatus: updatedOrder.status
     });
+
+    // TRK-07: Backup CAPI Purchase trigger from webhook
+    if (paymentStatus === 'paid' && !updatedOrder.purchaseTracked) {
+      sendCapi({
+        eventName: 'Purchase',
+        eventId: updatedOrder.eventId || `ord_${updatedOrder._id}`,
+        sourceUrl: `https://astroskulture.in/order-confirmation/${updatedOrder._id}`,
+        user: {
+          email: updatedOrder.userId?.email || updatedOrder.shippingAddress?.email,
+          phone: updatedOrder.userId?.phone || updatedOrder.shippingAddress?.phone,
+          firstName: updatedOrder.shippingAddress?.fullName?.split(' ')[0],
+          lastName: updatedOrder.shippingAddress?.fullName?.split(' ').slice(1).join(' '),
+          city: updatedOrder.shippingAddress?.city,
+          state: updatedOrder.shippingAddress?.state,
+          pincode: updatedOrder.shippingAddress?.postalCode,
+          id: updatedOrder.userId?._id?.toString(),
+          fbp: updatedOrder.fbp,
+          fbc: updatedOrder.fbc
+        },
+        custom: {
+          value: updatedOrder.total,
+          order_id: updatedOrder._id.toString(),
+          num_items: updatedOrder.items.reduce((s, i) => s + (i.quantity || 1), 0),
+          content_type: 'product',
+          contents: updatedOrder.items.map(i => ({
+            id: `${i.productId?._id || i.productId}_${i.size}`,
+            quantity: i.quantity || 1,
+            item_price: i.price
+          }))
+        },
+        ip: req.ip || req.headers['x-forwarded-for'],
+        userAgent: req.headers['user-agent']
+      }).catch(err => console.error('[CAPI webhook error]', err.message));
+
+      await Order.findByIdAndUpdate(updatedOrder._id, { purchaseTracked: true });
+    }
 
     res.status(200).json({
       success: true,

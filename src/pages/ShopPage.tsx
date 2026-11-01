@@ -6,6 +6,7 @@ import { useWishlist } from '../contexts/WishlistContext';
 import { useAuth } from '../contexts/AuthContext';
 import type { Product, Category, ProductSize } from '../lib/types';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { trackEcommerce } from '../lib/analytics';
 
 interface ShopPageProps {
   onNavigate: (page: string, params?: any) => void;
@@ -61,6 +62,9 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
 
   useEffect(() => {
     loadProducts();
+    if (searchQuery && searchQuery.trim().length > 1) {
+      trackEcommerce('search', [], { searchTerm: searchQuery.trim() });
+    }
   }, [selectedCategory, sortBy, searchQuery, priceRange, selectedSizes, minRating]);
 
   // Update URL when filters change

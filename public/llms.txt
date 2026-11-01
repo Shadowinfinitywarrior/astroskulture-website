@@ -1,0 +1,22 @@
+# Astros Kulture — Streetwear Brand
+> Premium Heavyweight 240 GSM Cotton Streetwear, Oversized Drop-Shoulder Tees & Custom Apparel Pan-India.
+
+## Brand & Entity Information
+- Brand Name: ASTROS KULTURE
+- Domain: https://astroskulture.in
+- Tagline: Wear the Universe
+- Target Market: Pan-India (Affordable Premium Streetwear)
+- Specialization: 240 GSM Combed Cotton, Drop Shoulder Fits, Graphic Tees, Custom Design Prints
+
+## Key Links
+- Home: https://astroskulture.in/
+- Shop: https://astroskulture.in/shop
+- Categories: https://astroskulture.in/categories
+- Custom T-Shirt Design Studio: https://astroskulture.in/custom-design
+- Official Blog: https://astroskulture.in/blog
+- Support Email: help.astroskulture@gmail.com
+- WhatsApp Support: +91 78716 58830
+- Instagram: https://www.instagram.com/astroskulture.in
+
+## Product Catalog Feed
+- Meta / Google Product Catalog: https://astroskulture.in/feeds/meta-catalog.csv

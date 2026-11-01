@@ -96,7 +96,12 @@ router.post('/admin/login', async (req, res) => {
       });
     }
 
-    const admin = await Admin.findOne({ username });
+    const admin = await Admin.findOne({
+      $or: [
+        { username: { $regex: new RegExp(`^${username}$`, 'i') } },
+        { email: username.toLowerCase() }
+      ]
+    });
     if (!admin) {
       console.log(`❌ Admin login failed: Username '${username}' not found in database`);
       return res.status(401).json({

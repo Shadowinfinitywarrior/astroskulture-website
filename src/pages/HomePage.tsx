@@ -193,61 +193,51 @@ export function HomePage({ onNavigate }: HomePageProps) {
 
   useEffect(() => {
     loadData();
-    
-    // Set up interval to refresh data every 30 seconds to catch admin updates
-    const refreshInterval = setInterval(() => {
-      loadData();
-    }, 30000);
-    
-    return () => clearInterval(refreshInterval);
   }, []);
 
   const loadData = async () => {
     try {
       setError('');
       
-      // Load featured products
-      const productsResponse = await apiService.getProducts({ featured: true });
+      // Parallelize top-level requests for instant paint
+      const [productsResponse, categoriesResponse, bannersResponse] = await Promise.all([
+        apiService.getProducts({ featured: true }).catch(() => ({ success: false, data: [] })),
+        apiService.getCategories().catch(() => ({ success: false, data: [] })),
+        apiService.getBanners().catch(() => ({ success: false, data: [] }))
+      ]);
       
       if (productsResponse.success) {
         setFeaturedProducts(productsResponse.data || []);
-      } else {
-        throw new Error(productsResponse.message || 'Failed to load products');
       }
 
-      // Load categories
-      const categoriesResponse = await apiService.getCategories();
-      
+      if (bannersResponse.success) {
+        const activeBanners = (bannersResponse.data || []).filter((b: Banner) => b.isActive);
+        setBanners(activeBanners.sort((a: Banner, b: Banner) => a.displayOrder - b.displayOrder));
+      }
+
       if (categoriesResponse.success) {
         const loadedCategories = categoriesResponse.data || [];
         setCategories(loadedCategories);
         
-        // Load products for each category
+        // Parallel fetch products for first 4 categories
         const categoryProductsMap: Record<string, Product[]> = {};
-        for (const category of loadedCategories.slice(0, 4)) { // Load first 4 categories
-          try {
-            const catProductsResponse = await apiService.getProducts({ category: category.slug });
-            if (catProductsResponse.success) {
-              categoryProductsMap[category.slug] = (catProductsResponse.data || []).slice(0, 10); // Get up to 10 products per category for horizontal scroll (showing 5 latest)
+        const categorySlice = loadedCategories.slice(0, 4);
+        
+        const catResults = await Promise.all(
+          categorySlice.map(async (category: Category) => {
+            try {
+              const res = await apiService.getProducts({ category: category.slug });
+              return { slug: category.slug, products: res.success ? (res.data || []).slice(0, 10) : [] };
+            } catch {
+              return { slug: category.slug, products: [] };
             }
-          } catch (err) {
-            console.warn(`Failed to load products for category ${category.name}:`, err);
-          }
+          })
+        );
+
+        for (const item of catResults) {
+          categoryProductsMap[item.slug] = item.products;
         }
         setCategoryProducts(categoryProductsMap);
-      } else {
-        throw new Error(categoriesResponse.message || 'Failed to load categories');
-      }
-
-      // Load banners
-      try {
-        const bannersResponse = await apiService.getBanners();
-        if (bannersResponse.success) {
-          const activeBanners = (bannersResponse.data || []).filter((b: Banner) => b.isActive);
-          setBanners(activeBanners.sort((a: Banner, b: Banner) => a.displayOrder - b.displayOrder));
-        }
-      } catch (bannerError) {
-        console.warn('Failed to load banners:', bannerError);
       }
     } catch (error) {
       console.error('Error loading data:', error);

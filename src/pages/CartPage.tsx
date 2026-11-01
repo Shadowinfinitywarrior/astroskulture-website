@@ -2,6 +2,7 @@ import { Trash2, Plus, Minus } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useEffect, useState } from 'react';
 import { apiService } from '../lib/mongodb';
+import { trackEcommerce } from '../lib/analytics';
 
 interface AppSettings {
   gstPercentage: number;
@@ -27,6 +28,16 @@ export function CartPage({ onNavigate }: CartPageProps) {
 
   useEffect(() => {
     loadSettings();
+    if (items.length > 0) {
+      trackEcommerce('view_item', items.map(i => ({
+        id: `${i.productId}_${i.size}`,
+        groupId: i.productId,
+        name: i.name,
+        price: i.discountPrice || i.price,
+        quantity: i.quantity,
+        variant: i.size,
+      })), { value: total, contentType: 'product' });
+    }
   }, []);
 
   const loadSettings = async () => {

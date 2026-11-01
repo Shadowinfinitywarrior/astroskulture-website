@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /checkout
+Disallow: /order-confirmation/
+Disallow: /account
+Disallow: /orders
+
+Sitemap: https://astroskulture.in/sitemap.xml

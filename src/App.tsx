@@ -31,6 +31,9 @@ import UserAccountPage from './pages/UserAccountPage';
 import UserOrdersPage from './pages/UserOrdersPage';
 import { OrderConfirmationPage } from './pages/OrderConfirmationPage';
 import { CustomDesignsPage } from './pages/CustomDesignsPage';
+import { PolicyPage } from './pages/PolicyPage';
+import { ConsentBanner } from './components/ConsentBanner';
+import { pageView } from './lib/analytics';
 
 interface NavigationParams {
   slug?: string;
@@ -110,8 +113,21 @@ function AppContent() {
       const orderId = path.replace('/order-confirmation/', '');
       setCurrentPage('order-confirmation');
       setPageParams({ orderId });
+    } else if (path === '/privacy-policy') {
+      setCurrentPage('privacy-policy');
+    } else if (path === '/terms-of-service') {
+      setCurrentPage('terms-of-service');
+    } else if (path === '/shipping-policy') {
+      setCurrentPage('shipping-policy');
+    } else if (path === '/return-refund-policy') {
+      setCurrentPage('return-refund-policy');
     }
   }, []);
+
+  // TRK-04: Fire SPA PageView on every route change
+  useEffect(() => {
+    pageView(window.location.pathname + window.location.search);
+  }, [currentPage]);
 
   useEffect(() => {
     const handlePopstate = () => {
@@ -166,6 +182,10 @@ function AppContent() {
         'orders': '/orders',
         'custom-design': '/custom-design',
         'order-confirmation': `/order-confirmation/${params?.orderId}`,
+        'privacy-policy': '/privacy-policy',
+        'terms-of-service': '/terms-of-service',
+        'shipping-policy': '/shipping-policy',
+        'return-refund-policy': '/return-refund-policy',
       };
       
       let url = routes[page] || '/';
@@ -215,6 +235,14 @@ function AppContent() {
         return <CustomDesignsPage onNavigate={handleNavigate} />;
       case 'order-confirmation':
         return <OrderConfirmationPage orderId={pageParams.orderId || ''} onNavigate={handleNavigate} />;
+      case 'privacy-policy':
+        return <PolicyPage type="privacy" onNavigate={handleNavigate} />;
+      case 'terms-of-service':
+        return <PolicyPage type="terms" onNavigate={handleNavigate} />;
+      case 'shipping-policy':
+        return <PolicyPage type="shipping" onNavigate={handleNavigate} />;
+      case 'return-refund-policy':
+        return <PolicyPage type="returns" onNavigate={handleNavigate} />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }
@@ -227,6 +255,7 @@ function AppContent() {
       {!isAdminPage && <Navbar onNavigate={handleNavigate} currentPage={currentPage} />}
       <main className={isAdminPage ? '' : 'flex-1'}>{renderPage()}</main>
       {!isAdminPage && <Footer />}
+      <ConsentBanner />
     </div>
   );
 }
