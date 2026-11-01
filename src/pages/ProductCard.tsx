@@ -160,12 +160,12 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
             className="block w-full h-full"
           >
             <img
-              src={imageError ? '/api/placeholder/300/300' : (product.images[0]?.url ? optimizeImageUrl(product.images[0]?.url, { width: 350, quality: 'auto' }) : '/api/placeholder/300/300')}
-              srcSet={product.images[0]?.url ? `${optimizeImageUrl(product.images[0]?.url, { width: 300, quality: 'auto' })} 300w, ${optimizeImageUrl(product.images[0]?.url, { width: 500, quality: 'auto' })} 500w` : undefined}
-              sizes="(max-width: 640px) 180px, (max-width: 1024px) 292px, 350px"
+              src={imageError ? '/api/placeholder/400/400' : (product.images[0]?.url ? optimizeImageUrl(product.images[0]?.url, { width: 400, quality: 'auto:good' }) : '/api/placeholder/400/400')}
+              srcSet={product.images[0]?.url ? `${optimizeImageUrl(product.images[0]?.url, { width: 280, quality: 'auto:good' })} 280w, ${optimizeImageUrl(product.images[0]?.url, { width: 400, quality: 'auto:good' })} 400w, ${optimizeImageUrl(product.images[0]?.url, { width: 600, quality: 'auto:good' })} 600w` : undefined}
+              sizes="(max-width: 640px) 180px, (max-width: 1024px) 292px, 400px"
               alt={product.name}
-              width={350}
-              height={350}
+              width={400}
+              height={400}
               className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${imageLoading ? 'opacity-0' : 'opacity-100'
                 }`}
               loading="lazy"

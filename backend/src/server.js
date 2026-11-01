@@ -44,6 +44,7 @@ import settingsRoutes from './routes/settings.js'; // ADDED SETTINGS ROUTES
 import paymentVerificationRoutes from './routes/paymentVerification.js'; // ADDED PAYMENT VERIFICATION ROUTES
 import customDesignRoutes from './routes/customDesigns.js';
 import feedRoutes from './routes/feeds.js';
+import homepageRoutes from './routes/homepage.js';
 
 const app = express();
 app.set('trust proxy', 1); // Trust first proxy (Nginx)
@@ -322,6 +323,7 @@ app.use((req, res, next) => {
 });
 
 // Routes
+app.use('/api/homepage', homepageRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { WishlistProvider } from './contexts/WishlistContext';
@@ -6,34 +6,44 @@ import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
-import { ShopPage } from './pages/ShopPage';
-import { CategoriesPage } from './pages/CategoriesPage';
-import { ProductPage } from './pages/ProductPage';
-import { CartPage } from './pages/CartPage';
-import { CheckoutPage } from './pages/CheckoutPage';
-import { WishlistPage } from './pages/WishlistPage';
-import LoginPage from './pages/LoginPage';
-import { RegisterPage } from './pages/RegisterPage';
-import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
-import { BlogPage } from './pages/BlogPage';
-import { BlogDetailPage } from './pages/BlogDetailPage';
-import AdminDashboardPage from './pages/admin/AdminDashboardPage';
-import AdminProductsPage from './pages/admin/AdminProductsPage';
-import AdminOrdersPage from './pages/admin/AdminOrdersPage';
-import AdminUsersPage from './pages/admin/AdminUsersPage';
-import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
-import AdminBannersPage from './pages/admin/AdminBannersPage';
-import AdminBlogPage from './pages/admin/AdminBlogPage';
-import AdminAnalyticsPage from './pages/admin/AdminAnalyticsPage';
-import AdminSettingsPage from './pages/admin/AdminSettingsPage';
-import AdminCustomDesignsPage from './pages/admin/AdminCustomDesignsPage';
-import UserAccountPage from './pages/UserAccountPage';
-import UserOrdersPage from './pages/UserOrdersPage';
-import { OrderConfirmationPage } from './pages/OrderConfirmationPage';
-import { CustomDesignsPage } from './pages/CustomDesignsPage';
-import { PolicyPage } from './pages/PolicyPage';
 import { ConsentBanner } from './components/ConsentBanner';
 import { pageView, initWebVitalsMonitor } from './lib/analytics';
+
+// Lazy-load non-critical routes to drastically minimize initial JS payload and Long Tasks
+const ShopPage = lazy(() => import('./pages/ShopPage').then(m => ({ default: m.ShopPage })));
+const CategoriesPage = lazy(() => import('./pages/CategoriesPage').then(m => ({ default: m.CategoriesPage })));
+const ProductPage = lazy(() => import('./pages/ProductPage').then(m => ({ default: m.ProductPage })));
+const CartPage = lazy(() => import('./pages/CartPage').then(m => ({ default: m.CartPage })));
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(m => ({ default: m.CheckoutPage })));
+const WishlistPage = lazy(() => import('./pages/WishlistPage').then(m => ({ default: m.WishlistPage })));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
+const BlogPage = lazy(() => import('./pages/BlogPage').then(m => ({ default: m.BlogPage })));
+const BlogDetailPage = lazy(() => import('./pages/BlogDetailPage').then(m => ({ default: m.BlogDetailPage })));
+const UserAccountPage = lazy(() => import('./pages/UserAccountPage'));
+const UserOrdersPage = lazy(() => import('./pages/UserOrdersPage'));
+const OrderConfirmationPage = lazy(() => import('./pages/OrderConfirmationPage').then(m => ({ default: m.OrderConfirmationPage })));
+const CustomDesignsPage = lazy(() => import('./pages/CustomDesignsPage').then(m => ({ default: m.CustomDesignsPage })));
+const PolicyPage = lazy(() => import('./pages/PolicyPage').then(m => ({ default: m.PolicyPage })));
+
+// Lazy-load Admin routes (never required for customer browsing)
+const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'));
+const AdminProductsPage = lazy(() => import('./pages/admin/AdminProductsPage'));
+const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'));
+const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'));
+const AdminCategoriesPage = lazy(() => import('./pages/admin/AdminCategoriesPage'));
+const AdminBannersPage = lazy(() => import('./pages/admin/AdminBannersPage'));
+const AdminBlogPage = lazy(() => import('./pages/admin/AdminBlogPage'));
+const AdminAnalyticsPage = lazy(() => import('./pages/admin/AdminAnalyticsPage'));
+const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'));
+const AdminCustomDesignsPage = lazy(() => import('./pages/admin/AdminCustomDesignsPage'));
+
+const PageFallback = () => (
+  <div className="min-h-[60vh] flex items-center justify-center">
+    <div className="w-8 h-8 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 interface NavigationParams {
   slug?: string;
@@ -256,7 +266,11 @@ function AppContent() {
   return (
     <div className="min-h-screen flex flex-col">
       {!isAdminPage && <Navbar onNavigate={handleNavigate} currentPage={currentPage} />}
-      <main className={isAdminPage ? '' : 'flex-1'}>{renderPage()}</main>
+      <main className={isAdminPage ? '' : 'flex-1'}>
+        <Suspense fallback={<PageFallback />}>
+          {renderPage()}
+        </Suspense>
+      </main>
       {!isAdminPage && <Footer />}
       <ConsentBanner />
     </div>
@@ -292,29 +306,35 @@ function AdminRoutes({ currentPage, onNavigate }: { currentPage: string; onNavig
 
   console.log('🏗️ Rendering admin page:', currentPage);
 
-  switch (currentPage) {
-    case 'admin-products':
-      return <AdminProductsPage onNavigate={onNavigate} />;
-    case 'admin-orders':
-      return <AdminOrdersPage onNavigate={onNavigate} />;
-    case 'admin-users':
-      return <AdminUsersPage onNavigate={onNavigate} />;
-    case 'admin-categories':
-      return <AdminCategoriesPage onNavigate={onNavigate} />;
-    case 'admin-banners':
-      return <AdminBannersPage onNavigate={onNavigate} />;
-    case 'admin-blogs':
-      return <AdminBlogPage onNavigate={onNavigate} />;
-    case 'admin-analytics':
-      return <AdminAnalyticsPage onNavigate={onNavigate} />;
-    case 'admin-custom-designs':
-      return <AdminCustomDesignsPage onNavigate={onNavigate} />;
-    case 'admin-settings':
-      return <AdminSettingsPage onNavigate={onNavigate} />;
-    case 'admin-dashboard':
-    default:
-      return <AdminDashboardPage onNavigate={onNavigate} />;
-  }
+  return (
+    <Suspense fallback={<PageFallback />}>
+      {(() => {
+        switch (currentPage) {
+          case 'admin-products':
+            return <AdminProductsPage onNavigate={onNavigate} />;
+          case 'admin-orders':
+            return <AdminOrdersPage onNavigate={onNavigate} />;
+          case 'admin-users':
+            return <AdminUsersPage onNavigate={onNavigate} />;
+          case 'admin-categories':
+            return <AdminCategoriesPage onNavigate={onNavigate} />;
+          case 'admin-banners':
+            return <AdminBannersPage onNavigate={onNavigate} />;
+          case 'admin-blogs':
+            return <AdminBlogPage onNavigate={onNavigate} />;
+          case 'admin-analytics':
+            return <AdminAnalyticsPage onNavigate={onNavigate} />;
+          case 'admin-custom-designs':
+            return <AdminCustomDesignsPage onNavigate={onNavigate} />;
+          case 'admin-settings':
+            return <AdminSettingsPage onNavigate={onNavigate} />;
+          case 'admin-dashboard':
+          default:
+            return <AdminDashboardPage onNavigate={onNavigate} />;
+        }
+      })()}
+    </Suspense>
+  );
 }
 
 function App() {

@@ -16,13 +16,12 @@
 
     <!-- Resource Preconnects -->
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
-    <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <!-- LCP Critical Resource Preload -->
-    <link rel="preload" as="image" media="(max-width: 640px)" href="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=640&auto=format&fit=crop&q=70" fetchpriority="high" />
-    <link rel="preload" as="image" media="(min-width: 641px)" href="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&auto=format&fit=crop&q=75" fetchpriority="high" />
+    <!-- LCP Critical Resource Preload (Same-Origin WebP) -->
+    <link rel="preload" as="image" type="image/webp" media="(max-width: 640px)" href="/hero-banner-mobile.webp" fetchpriority="high" />
+    <link rel="preload" as="image" type="image/webp" media="(min-width: 641px)" href="/hero-banner.webp" fetchpriority="high" />
 
     <!-- Non-Render-Blocking Web Fonts -->
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" />

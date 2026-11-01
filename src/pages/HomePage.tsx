@@ -136,15 +136,15 @@ function ProductCard({
           aria-label={product.name}
         >
           <img
-            src={product.images[0]?.url ? optimizeImageUrl(product.images[0]?.url, { width: 350, quality: 'auto' }) : 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=350&auto=format'}
-            srcSet={product.images[0]?.url ? `${optimizeImageUrl(product.images[0]?.url, { width: 300, quality: 'auto' })} 300w, ${optimizeImageUrl(product.images[0]?.url, { width: 500, quality: 'auto' })} 500w` : undefined}
-            sizes="(max-width: 640px) 180px, (max-width: 1024px) 292px, 350px"
+            src={product.images[0]?.url ? optimizeImageUrl(product.images[0]?.url, { width: 400, quality: 'auto:good' }) : '/hero-banner-mobile.webp'}
+            srcSet={product.images[0]?.url ? `${optimizeImageUrl(product.images[0]?.url, { width: 280, quality: 'auto:good' })} 280w, ${optimizeImageUrl(product.images[0]?.url, { width: 400, quality: 'auto:good' })} 400w, ${optimizeImageUrl(product.images[0]?.url, { width: 600, quality: 'auto:good' })} 600w` : undefined}
+            sizes="(max-width: 640px) 180px, (max-width: 1024px) 292px, 400px"
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
             loading="lazy"
             decoding="async"
-            width={350}
-            height={350}
+            width={400}
+            height={400}
           />
         </a>
         
@@ -342,7 +342,31 @@ export function HomePage({ onNavigate }: HomePageProps) {
     try {
       setError('');
       
-      // Parallelize top-level requests for instant paint
+      // Fast path: Unified high-performance homepage endpoint (single roundtrip, lean MongoDB projection)
+      try {
+        const homeRes: any = await apiService.getHomepageData();
+        if (homeRes && homeRes.success) {
+          if (homeRes.banners) {
+            const activeBanners = (homeRes.banners || []).filter((b: Banner) => b.isActive);
+            setBanners(activeBanners.sort((a: Banner, b: Banner) => a.displayOrder - b.displayOrder));
+          }
+          if (homeRes.categories) {
+            setCategories(homeRes.categories);
+          }
+          if (homeRes.featuredProducts) {
+            setFeaturedProducts(homeRes.featuredProducts);
+          }
+          if (homeRes.categoryProducts) {
+            setCategoryProducts(homeRes.categoryProducts);
+          }
+          setLoading(false);
+          return;
+        }
+      } catch (homeErr) {
+        console.warn('Unified homepage endpoint failed, falling back to parallel fetch:', homeErr);
+      }
+
+      // Fallback: Parallel requests if unified route is unavailable
       const [productsResponse, categoriesResponse, bannersResponse] = await Promise.all([
         apiService.getProducts({ featured: true }).catch(() => ({ success: false, data: [] })),
         apiService.getCategories().catch(() => ({ success: false, data: [] })),
@@ -436,10 +460,10 @@ export function HomePage({ onNavigate }: HomePageProps) {
       <section className="relative min-h-[480px] md:h-[500px] bg-gradient-to-r from-red-600 to-red-800 text-white overflow-hidden">
         <div className="absolute inset-0 opacity-20 pointer-events-none">
           <picture>
-            <source media="(max-width: 640px)" srcSet="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=640&auto=format&fit=crop&q=70" />
+            <source media="(max-width: 640px)" srcSet="/hero-banner-mobile.webp" type="image/webp" />
             <img
-              src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&auto=format&fit=crop&q=75"
-              alt="Hero background"
+              src="/hero-banner.webp"
+              alt="Astros Kulture fashion collection"
               className="w-full h-full object-cover"
               width={1200}
               height={500}

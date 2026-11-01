@@ -310,8 +310,8 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
   };
 
   const getProductImage = (product: Product) => {
-    const raw = product.images[0]?.url || 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500';
-    return optimizeImageUrl(raw, { width: 500, quality: 'auto' });
+    const raw = product.images[0]?.url || '/hero-banner-mobile.webp';
+    return optimizeImageUrl(raw, { width: 400, quality: 'auto:good' });
   };
 
   const getDisplayPrice = (product: Product) => {
@@ -546,8 +546,8 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
                               loading="lazy"
                               decoding="async"
-                              width={500}
-                              height={500}
+                              width={400}
+                              height={400}
                             />
                           </a>
 

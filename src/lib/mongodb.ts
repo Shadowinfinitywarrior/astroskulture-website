@@ -25,8 +25,8 @@ class ApiService {
 
     const isFormData = options.body instanceof FormData;
     const config: RequestInit = {
-      // Prevent browser caching of API responses
-      cache: 'no-store',
+      // Use standard caching for GET requests to leverage HTTP cache-control, or caller's preference
+      cache: options.cache || (options.method && options.method !== 'GET' ? 'no-store' : 'default'),
       headers: {
         ...(!isFormData && { 'Content-Type': 'application/json' }),
         ...(token && { 'Authorization': `Bearer ${token}` }),
@@ -584,6 +584,14 @@ class ApiService {
     return this.request(`/custom-designs/admin/${id}`, {
       method: 'DELETE',
     }, true);
+  }
+
+  /**
+   * High-performance unified homepage payload:
+   * Returns banners, categories, featured products, and the 4 category preview shelves in one request.
+   */
+  async getHomepageData() {
+    return this.request('/homepage', { cache: 'default' });
   }
 }
 
