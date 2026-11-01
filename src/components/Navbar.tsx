@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShoppingCart, User, Menu, X, Search, Heart } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Search, Heart, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -284,20 +284,23 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
             <div className="relative">
               <button 
                 onClick={handleUserMenuClick}
-                className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors flex items-center space-x-1"
+                className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors flex items-center relative"
                 title="User Menu"
                 aria-label="User Account Menu"
               >
                 <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
+                {user && (
+                  <span className="absolute bottom-1 right-1 w-2 h-2 bg-emerald-500 rounded-full ring-2 ring-white"></span>
+                )}
               </button>
               
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg py-2 z-50 border border-gray-200">
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl py-2 z-50 border border-gray-200">
                   {user ? (
                     <>
                       {/* User Info */}
-                      <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                      <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50 rounded-t-xl">
+                        <p className="text-sm font-bold text-gray-900 truncate">
                           {user.fullName || user.email}
                         </p>
                         <p className="text-xs text-gray-500 truncate">{user.email}</p>
@@ -306,29 +309,29 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
                       {/* Menu Items */}
                       <button
                         onClick={() => handleNavigation('account')}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors font-medium"
                       >
                         My Account
                       </button>
                       <button
                         onClick={() => handleNavigation('orders')}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors font-medium"
                       >
                         My Orders
                       </button>
                       <button
                         onClick={() => handleNavigation('custom-design')}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors font-medium"
                       >
                         My Custom Designs
                       </button>
                       <button
                         onClick={() => handleNavigation('wishlist')}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-between"
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors font-medium flex items-center justify-between"
                       >
                         <span>My Wishlist</span>
                         {wishlistCount > 0 && (
-                          <span className="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full min-w-6 text-center">
+                          <span className="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full min-w-6 text-center font-bold">
                             {wishlistCount}
                           </span>
                         )}
@@ -340,7 +343,7 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
                           <div className="border-t border-gray-100 my-1"></div>
                           <button
                             onClick={() => handleNavigation('admin-dashboard')}
-                            className="block w-full text-left px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 transition-colors"
+                            className="block w-full text-left px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 transition-colors font-semibold"
                           >
                             Admin Dashboard
                           </button>
@@ -351,9 +354,10 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
                       <div className="border-t border-gray-100 my-1"></div>
                       <button
                         onClick={handleSignOut}
-                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center font-bold"
                       >
-                        Sign Out
+                        <LogOut className="w-4 h-4 mr-2" />
+                        <span>Sign Out</span>
                       </button>
                     </>
                   ) : (
@@ -413,6 +417,46 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
               <X className="w-5 h-5" />
             </button>
           </div>
+
+          {/* User Status Banner at Top of Mobile Drawer */}
+          {user ? (
+            <div className="p-3.5 bg-red-50/70 border-b border-red-100 flex items-center justify-between">
+              <div className="flex items-center space-x-2.5 min-w-0 pr-2">
+                <div className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs">
+                  {(user.fullName || user.email || 'U')[0].toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-gray-900 truncate">{user.fullName || user.email}</p>
+                  <p className="text-[10px] text-gray-500 truncate">{user.email}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  handleSignOut();
+                }}
+                className="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-xs flex-shrink-0 active:scale-95"
+                title="Sign Out"
+                aria-label="Sign Out"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out</span>
+              </button>
+            </div>
+          ) : (
+            <div className="p-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+              <span className="text-xs font-medium text-gray-600">Welcome to Astros</span>
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  handleNavigation('login');
+                }}
+                className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold shadow-xs active:scale-95"
+              >
+                Sign In
+              </button>
+            </div>
+          )}
 
           {/* Drawer Navigation Links */}
           <div className="flex-1 overflow-y-auto py-3 px-3 space-y-1">
@@ -527,9 +571,10 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
                     setIsMenuOpen(false);
                     handleSignOut();
                   }}
-                  className="block w-full text-left px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
+                  className="w-full text-left px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors font-bold flex items-center gap-2"
                 >
-                  Sign Out
+                  <LogOut className="w-4 h-4 text-red-600" />
+                  <span>Sign Out</span>
                 </button>
               </>
             ) : (

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { LogOut } from 'lucide-react';
 
 interface UserData {
   _id: string;
@@ -19,7 +20,7 @@ interface UserData {
 }
 
 const UserAccountPage = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
-  const { user: authUser, updateProfile } = useAuth();
+  const { user: authUser, updateProfile, signOut } = useAuth();
   const [user, setUser] = useState<UserData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -28,6 +29,15 @@ const UserAccountPage = ({ onNavigate }: { onNavigate: (page: string) => void })
     email: '',
     phone: ''
   });
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      onNavigate('home');
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
 
   useEffect(() => {
     fetchUserProfile();
@@ -110,7 +120,17 @@ const UserAccountPage = ({ onNavigate }: { onNavigate: (page: string) => void })
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">My Account</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">My Account</h1>
+        <button
+          onClick={handleSignOut}
+          className="flex items-center gap-1.5 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-sm font-bold transition-all shadow-xs active:scale-95"
+          title="Sign out of your account"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>Sign Out</span>
+        </button>
+      </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Profile Information */}
@@ -224,8 +244,11 @@ const UserAccountPage = ({ onNavigate }: { onNavigate: (page: string) => void })
               >
                 ❤️ My Wishlist
               </button>
-              <button className="block w-full text-left bg-purple-50 text-purple-700 px-4 py-3 rounded hover:bg-purple-100 transition-colors">
-                ⭐ My Reviews
+              <button 
+                onClick={handleSignOut}
+                className="block w-full text-left bg-red-50 text-red-600 font-bold px-4 py-3 rounded hover:bg-red-100 transition-colors flex items-center justify-between"
+              >
+                <span>🚪 Sign Out</span>
               </button>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../lib/mongodb';
+import { LogOut } from 'lucide-react';
 
 interface OrderItem {
   productId: {
@@ -37,10 +38,19 @@ interface Order {
 }
 
 const UserOrdersPage = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      onNavigate('home');
+    } catch (err) {
+      console.error('Sign out error:', err);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -114,7 +124,19 @@ const UserOrdersPage = ({ onNavigate }: { onNavigate: (page: string) => void }) 
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">My Orders</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
+        {user && (
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-1.5 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-sm font-bold transition-all shadow-xs active:scale-95"
+            title="Sign out of your account"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Sign Out</span>
+          </button>
+        )}
+      </div>
       
       {orders.length === 0 ? (
         <div className="bg-white rounded-lg shadow-md p-8 text-center">
