@@ -366,13 +366,14 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 py-8 pb-32 md:pb-8">
-        {/* Navigation */}
+        {/* Navigation - Arrow icon only */}
         <button
           onClick={() => onNavigate('shop')}
-          className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors group"
+          className="p-2 -ml-1 text-gray-700 hover:text-gray-950 hover:bg-gray-100 rounded-full transition-all group mb-4 inline-flex items-center justify-center w-10 h-10 border border-gray-200/80 shadow-sm"
+          title="Back to Shop"
+          aria-label="Back to Shop"
         >
-          <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-          Back to Shop
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 lg:gap-12">

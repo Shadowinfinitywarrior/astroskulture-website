@@ -53,6 +53,10 @@ router.put('/', authenticateAdmin, async (req, res) => {
       freeShippingAbove,
       heroBannerDesktop,
       heroBannerMobile,
+      heroBanner2Desktop,
+      heroBanner2Mobile,
+      heroBanner3Desktop,
+      heroBanner3Mobile,
       announcementText
     } = req.body;
 
@@ -78,6 +82,10 @@ router.put('/', authenticateAdmin, async (req, res) => {
     if (freeShippingAbove !== undefined) settings.freeShippingAbove = freeShippingAbove;
     if (heroBannerDesktop !== undefined) settings.heroBannerDesktop = heroBannerDesktop;
     if (heroBannerMobile !== undefined) settings.heroBannerMobile = heroBannerMobile;
+    if (heroBanner2Desktop !== undefined) settings.heroBanner2Desktop = heroBanner2Desktop;
+    if (heroBanner2Mobile !== undefined) settings.heroBanner2Mobile = heroBanner2Mobile;
+    if (heroBanner3Desktop !== undefined) settings.heroBanner3Desktop = heroBanner3Desktop;
+    if (heroBanner3Mobile !== undefined) settings.heroBanner3Mobile = heroBanner3Mobile;
     if (announcementText !== undefined) settings.announcementText = announcementText;
 
     settings.updatedAt = new Date();

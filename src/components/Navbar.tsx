@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ShoppingCart, User, Menu, X, Search, Heart } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
@@ -12,9 +12,21 @@ interface NavbarProps {
 export function Navbar({ onNavigate, currentPage }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [announcementText, setAnnouncementText] = useState('');
   const { user, isAdmin, signOut } = useAuth();
   const { cartCount } = useCart();
-  const { wishlistCount } = useWishlist(); // Use wishlistCount instead of wishlist.length
+  const { wishlistCount } = useWishlist();
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data?.data?.announcementText) {
+          setAnnouncementText(data.data.announcementText);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -37,7 +49,51 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
   };
 
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50">
+    <header className="sticky top-0 z-50">
+      {/* Top Banner Above Header with Professional Movement Animation */}
+      <div className="bg-gradient-to-r from-red-700 via-red-600 to-red-800 text-white text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 overflow-hidden border-b border-red-800/40 select-none shadow-sm">
+        <div className="flex w-fit whitespace-nowrap animate-marquee hover:[animation-play-state:paused]">
+          <div className="flex items-center gap-6 sm:gap-8 px-4 tracking-wider">
+            <span>{announcementText || '✨ FREE SHIPPING ON ORDERS ABOVE ₹999 PAN-INDIA'}</span>
+            <span className="opacity-60">•</span>
+            <span>👕 100% PREMIUM 240 GSM COMBED COTTON</span>
+            <span className="opacity-60">•</span>
+            <span>🎁 GIFT PACKING & CUSTOM CARDS (+₹49)</span>
+            <span className="opacity-60">•</span>
+            <span>⚡ DISPATCH WITHIN 24-48 HOURS</span>
+            <span className="opacity-60">•</span>
+            <span>🔄 7-DAY EASY SIZE EXCHANGES</span>
+            <span className="opacity-60">•</span>
+            <span>📦 CASH ON DELIVERY AVAILABLE</span>
+            <span className="opacity-60">•</span>
+          </div>
+          <div className="flex items-center gap-6 sm:gap-8 px-4 tracking-wider" aria-hidden="true">
+            <span>{announcementText || '✨ FREE SHIPPING ON ORDERS ABOVE ₹999 PAN-INDIA'}</span>
+            <span className="opacity-60">•</span>
+            <span>👕 100% PREMIUM 240 GSM COMBED COTTON</span>
+            <span className="opacity-60">•</span>
+            <span>🎁 GIFT PACKING & CUSTOM CARDS (+₹49)</span>
+            <span className="opacity-60">•</span>
+            <span>⚡ DISPATCH WITHIN 24-48 HOURS</span>
+            <span className="opacity-60">•</span>
+            <span>🔄 7-DAY EASY SIZE EXCHANGES</span>
+            <span className="opacity-60">•</span>
+            <span>📦 CASH ON DELIVERY AVAILABLE</span>
+            <span className="opacity-60">•</span>
+          </div>
+        </div>
+        <style>{`
+          @keyframes marquee-scroll {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+          }
+          .animate-marquee {
+            animation: marquee-scroll 24s linear infinite;
+          }
+        `}</style>
+      </div>
+
+      <nav className="bg-white shadow-md">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-16 md:h-18">
           {/* Left section: Mobile Menu Hamburger & Brand Logo */}
@@ -503,5 +559,6 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
         />
       )}
     </nav>
+  </header>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Heart, Star, ArrowRight, ChevronLeft, ChevronRight, ShoppingCart, Check } from 'lucide-react';
+import { Heart, Star, ArrowRight, ChevronLeft, ChevronRight, ShoppingCart, Check, Plus } from 'lucide-react';
 import { apiService } from '../lib/mongodb';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -246,46 +246,37 @@ function ProductCard({
           <p className="text-red-600 text-xs mb-2 font-semibold">Out of Stock</p>
         )}
 
-        {/* Action Buttons: Add to Cart & Buy Now */}
-        <div className="mt-auto pt-2.5 border-t border-gray-100 flex flex-col sm:flex-row gap-2">
+        {/* Action Button: Single "Add +" button */}
+        <div className="mt-auto pt-2.5 border-t border-gray-100">
           {product.totalStock === 0 ? (
             <button
               disabled
-              className="w-full py-1.5 px-3 rounded-lg text-xs font-semibold bg-gray-100 text-gray-400 cursor-not-allowed"
+              className="w-full py-2 px-3 rounded-lg text-xs font-semibold bg-gray-100 text-gray-400 cursor-not-allowed text-center"
             >
               Out of Stock
             </button>
           ) : (
-            <>
-              <button
-                onClick={handleAddToCart}
-                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center transition-all border ${
-                  isAdded
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
-                    : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50 active:scale-95'
-                }`}
-                aria-label={`Add ${product.name} to cart`}
-              >
-                {isAdded ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 mr-1 text-emerald-600" />
-                    Added
-                  </>
-                ) : (
-                  <>
-                    <ShoppingCart className="w-3.5 h-3.5 mr-1" />
-                    Add to Cart
-                  </>
-                )}
-              </button>
-              <button
-                onClick={handleBuyNow}
-                className="flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold bg-red-600 text-white hover:bg-red-700 active:scale-95 flex items-center justify-center transition-all shadow-sm"
-                aria-label={`Buy ${product.name} now`}
-              >
-                Buy Now
-              </button>
-            </>
+            <button
+              onClick={handleAddToCart}
+              className={`w-full py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center transition-all ${
+                isAdded
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'bg-gray-900 text-white hover:bg-red-600 active:scale-95 shadow-sm'
+              }`}
+              aria-label={`Add ${product.name} to cart`}
+            >
+              {isAdded ? (
+                <>
+                  <Check className="w-3.5 h-3.5 mr-1.5" />
+                  Added
+                </>
+              ) : (
+                <>
+                  <Plus className="w-3.5 h-3.5 mr-1" />
+                  Add
+                </>
+              )}
+            </button>
           )}
         </div>
       </div>
@@ -298,7 +289,16 @@ export function HomePage({ onNavigate }: HomePageProps) {
   const [categoryProducts, setCategoryProducts] = useState<Record<string, Product[]>>({});
   const [categories, setCategories] = useState<Category[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
-  const [settings, setSettings] = useState<{ heroBannerDesktop?: string; heroBannerMobile?: string; announcementText?: string }>({});
+  const [settings, setSettings] = useState<{
+    heroBannerDesktop?: string;
+    heroBannerMobile?: string;
+    heroBanner2Desktop?: string;
+    heroBanner2Mobile?: string;
+    heroBanner3Desktop?: string;
+    heroBanner3Mobile?: string;
+    announcementText?: string;
+  }>({});
+  const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [wishlistLoading, setWishlistLoading] = useState<string | null>(null);
@@ -443,6 +443,46 @@ export function HomePage({ onNavigate }: HomePageProps) {
   };
 
 
+  // Construct dynamic multi-slides for the hero section
+  const heroSlides = [
+    {
+      desktop: settings.heroBannerDesktop || '/hero-banner.webp',
+      mobile: settings.heroBannerMobile || settings.heroBannerDesktop || '/hero-banner-mobile.webp',
+      badge: 'ASTROS KULTURE',
+      title: 'Streetwear From Another Universe',
+      subtitle: "Step into Astros - where oversized meets attitude. A signature drop of oversized tees, customized tees, and premium cotton t-shirts built for all-day comfort and bold self-expression. Clean fits, premium fabric, and quality that speaks loud - Astros is more than style, it's a statement.",
+      primaryBtn: 'Shop Now',
+      secondaryBtn: 'View Astros Drop'
+    },
+    {
+      desktop: settings.heroBanner2Desktop || settings.heroBannerDesktop || '/hero-banner.webp',
+      mobile: settings.heroBanner2Mobile || settings.heroBanner2Desktop || settings.heroBannerMobile || '/hero-banner-mobile.webp',
+      badge: 'EXCLUSIVE DROP',
+      title: 'Heavyweight Cotton Oversized Fits',
+      subtitle: 'Engineered for the ultimate streetwear silhouette. Crafted from 240 GSM breathable combed cotton with high-definition DTF print durability. Stand out from the crowd.',
+      primaryBtn: 'Explore Drop',
+      secondaryBtn: 'View All Tees'
+    },
+    {
+      desktop: settings.heroBanner3Desktop || settings.heroBannerDesktop || '/hero-banner.webp',
+      mobile: settings.heroBanner3Mobile || settings.heroBanner3Desktop || settings.heroBannerMobile || '/hero-banner-mobile.webp',
+      badge: 'TRENDING NOW',
+      title: 'Bold Graphics. Unmatched Attitude.',
+      subtitle: 'From iconic anime artwork to cosmic aesthetic graphics, discover the pieces redefining everyday casual luxury with free pan-India shipping on prepaid orders.',
+      primaryBtn: 'Shop Trending',
+      secondaryBtn: 'Best Sellers'
+    }
+  ];
+
+  // Auto-slide every 3 seconds
+  useEffect(() => {
+    if (heroSlides.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [heroSlides.length]);
+
   if (error && !loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -464,107 +504,106 @@ export function HomePage({ onNavigate }: HomePageProps) {
 
   return (
     <div className="min-h-screen">
-      {/* Top Announcement / Dynamic Banners Section (Above Hero) */}
-      {loading ? (
-        <section className="py-2 md:py-2.5 overflow-hidden bg-red-700 min-h-[38px] flex items-center justify-center">
-          <p className="font-bold text-xs md:text-sm text-white tracking-wide">
-            {settings.announcementText || '✨ Free Shipping on orders above ₹999 Pan-India | 100% Premium Cotton'}
-          </p>
-        </section>
-      ) : banners.length > 0 ? (
-        <section className="py-2 md:py-2.5 overflow-hidden min-h-[38px]">
-          {banners.map((banner) => (
+      {/* Multi-Slide Hero Carousel with 3s Auto-Slide & Touch Navigation */}
+      <section className="relative min-h-[480px] md:h-[520px] bg-gradient-to-r from-red-600 to-red-800 text-white overflow-hidden group">
+        {heroSlides.map((slide, idx) => {
+          const isActive = idx === currentHeroSlide;
+          return (
             <div
-              key={banner._id}
-              className="relative py-2 md:py-2 text-white overflow-hidden shadow-inner"
-              style={{
-                backgroundColor: banner.backgroundColor || '#dc2626',
-                color: banner.textColor || '#ffffff',
-              }}
+              key={idx}
+              className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+                isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+              }`}
             >
-              <div className="relative whitespace-nowrap animate-scroll-text">
-                <p className="font-bold text-xs md:text-sm inline-block pr-8 tracking-wide">
-                  ✨ {banner.displayText || `Special Offer: Get ${banner.discountPercentage}% OFF on your order today!`}
-                </p>
-                <p className="font-bold text-xs md:text-sm inline-block pr-8 tracking-wide">
-                  ✨ {banner.displayText || `Special Offer: Get ${banner.discountPercentage}% OFF on your order today!`}
-                </p>
+              {/* Background Image with Overlay */}
+              <div className="absolute inset-0 opacity-25">
+                <picture>
+                  <source 
+                    media="(max-width: 640px)" 
+                    srcSet={slide.mobile} 
+                    type="image/webp" 
+                  />
+                  <img
+                    src={slide.desktop}
+                    alt={slide.title}
+                    className="w-full h-full object-cover"
+                    width={1200}
+                    height={520}
+                    loading={idx === 0 ? 'eager' : 'lazy'}
+                    onError={(e) => {
+                      const img = e.target as HTMLImageElement;
+                      if (!img.src.endsWith('/hero-banner.webp')) {
+                        img.src = '/hero-banner.webp';
+                      }
+                    }}
+                  />
+                </picture>
               </div>
-              <style>{`
-                @keyframes scroll-text {
-                  0% { transform: translateX(0); }
-                  100% { transform: translateX(-50%); }
-                }
-                .animate-scroll-text {
-                  animation: scroll-text 15s linear infinite;
-                }
-              `}</style>
-            </div>
-          ))}
-        </section>
-      ) : (
-        <section className="py-2 md:py-2.5 overflow-hidden bg-red-700 min-h-[38px] flex items-center justify-center">
-          <p className="font-bold text-xs md:text-sm text-white tracking-wide">
-            {settings.announcementText || '✨ Free Shipping on orders above ₹999 Pan-India | 100% Premium Cotton'}
-          </p>
-        </section>
-      )}
 
-      {/* Hero Section */}
-      <section className="relative min-h-[480px] md:h-[500px] bg-gradient-to-r from-red-600 to-red-800 text-white overflow-hidden">
-        <div className="absolute inset-0 opacity-25 pointer-events-none">
-          <picture>
-            <source 
-              media="(max-width: 640px)" 
-              srcSet={settings.heroBannerMobile || '/hero-banner-mobile.webp'} 
-              type="image/webp" 
-            />
-            <img
-              src={settings.heroBannerDesktop || '/hero-banner.webp'}
-              alt="Astros Kulture streetwear collection"
-              className="w-full h-full object-cover"
-              width={1200}
-              height={500}
-              loading="eager"
-              fetchPriority="high"
-              decoding="async"
-              onError={(e) => {
-                const img = e.target as HTMLImageElement;
-                if (!img.src.endsWith('/hero-banner.webp')) {
-                  img.src = '/hero-banner.webp';
-                }
-              }}
-            />
-          </picture>
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 min-h-[500px] md:h-full flex flex-col justify-center py-8 md:py-0">
-          <div className="max-w-2xl">
-            <div className="flex items-center space-x-2 mb-3 md:mb-4">
-              <Star className="w-6 md:w-8 h-6 md:h-8 fill-white" />
-              <span className="text-lg md:text-2xl font-bold">ASTROS KULTURE</span>
+              {/* Slide Content */}
+              <div className="relative max-w-7xl mx-auto px-4 min-h-[480px] md:h-full flex flex-col justify-center py-10 md:py-0">
+                <div className="max-w-2xl">
+                  <div className="flex items-center space-x-2 mb-3 md:mb-4">
+                    <Star className="w-5 md:w-7 h-5 md:h-7 fill-white text-yellow-300" />
+                    <span className="text-xs md:text-sm font-bold tracking-wider uppercase bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full border border-white/20">
+                      {slide.badge}
+                    </span>
+                  </div>
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-3 md:mb-5 leading-tight tracking-tight drop-shadow-sm">
+                    {slide.title}
+                  </h1>
+                  <p className="text-sm md:text-base lg:text-lg mb-6 md:mb-8 text-gray-100 leading-relaxed font-normal line-clamp-3 md:line-clamp-none max-w-xl">
+                    {slide.subtitle}
+                  </p>
+                  <div className="flex flex-col sm:flex-row space-y-2.5 sm:space-y-0 sm:space-x-4">
+                    <button
+                      onClick={() => onNavigate('shop')}
+                      className="bg-white text-red-600 px-6 md:px-8 py-3 md:py-3.5 rounded-xl font-bold hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center space-x-2 text-sm md:text-base shadow-lg"
+                    >
+                      <span>{slide.primaryBtn}</span>
+                      <ArrowRight className="w-4 md:w-5 h-4 md:h-5" />
+                    </button>
+                    <button
+                      onClick={() => onNavigate('shop')}
+                      className="border-2 border-white/90 text-white px-6 md:px-8 py-3 md:py-3.5 rounded-xl font-bold hover:bg-white hover:text-red-600 transition-all duration-300 text-sm md:text-base backdrop-blur-sm"
+                    >
+                      {slide.secondaryBtn}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 leading-tight">
-              Streetwear From Another Universe
-            </h1>
-            <p className="text-sm md:text-lg mb-6 md:mb-8 text-gray-100 leading-relaxed">
-              Step into Astros - where oversized meets attitude. A signature drop of oversized tees, customized tees, and premium cotton t-shirts built for all-day comfort and bold self-expression. Clean fits, premium fabric, and quality that speaks loud - Astros is more than style, it's a statement.
-            </p>
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-              <button
-                onClick={() => onNavigate('shop')}
-                className="bg-white text-red-600 px-6 md:px-8 py-2 md:py-4 rounded-lg font-semibold hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 flex items-center justify-center sm:justify-start space-x-2 text-sm md:text-base"
-              >
-                <span>Shop Now</span>
-                <ArrowRight className="w-4 md:w-5 h-4 md:h-5" />
-              </button>
-              <button
-                onClick={() => onNavigate('shop')}
-                className="border-2 border-white text-white px-6 md:px-8 py-2 md:py-4 rounded-lg font-semibold hover:bg-white hover:text-red-600 transition-all duration-300 text-sm md:text-base"
-              >
-                View Astros Drop
-              </button>
-            </div>
-          </div>
+          );
+        })}
+
+        {/* Carousel Arrow Controls */}
+        <button
+          onClick={() => setCurrentHeroSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length)}
+          className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-11 md:h-11 rounded-full bg-black/30 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transition-all opacity-80 md:opacity-0 md:group-hover:opacity-100"
+          aria-label="Previous slide"
+        >
+          <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+        </button>
+        <button
+          onClick={() => setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length)}
+          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-11 md:h-11 rounded-full bg-black/30 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transition-all opacity-80 md:opacity-0 md:group-hover:opacity-100"
+          aria-label="Next slide"
+        >
+          <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+        </button>
+
+        {/* Dot Indicators */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center space-x-2">
+          {heroSlides.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentHeroSlide(idx)}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                idx === currentHeroSlide ? 'w-8 bg-white' : 'w-2 bg-white/50 hover:bg-white/80'
+              }`}
+              aria-label={`Go to slide ${idx + 1}`}
+            />
+          ))}
         </div>
       </section>
 

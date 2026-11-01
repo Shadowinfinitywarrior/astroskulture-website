@@ -11,6 +11,10 @@ interface Settings {
   freeShippingAbove: number;
   heroBannerDesktop?: string;
   heroBannerMobile?: string;
+  heroBanner2Desktop?: string;
+  heroBanner2Mobile?: string;
+  heroBanner3Desktop?: string;
+  heroBanner3Mobile?: string;
   announcementText?: string;
 }
 
@@ -31,6 +35,10 @@ export default function AdminSettingsPage({ onNavigate }: { onNavigate: (page: s
     freeShippingAbove: 999,
     heroBannerDesktop: '/hero-banner.webp',
     heroBannerMobile: '/hero-banner-mobile.webp',
+    heroBanner2Desktop: '',
+    heroBanner2Mobile: '',
+    heroBanner3Desktop: '',
+    heroBanner3Mobile: '',
     announcementText: '✨ FREE SHIPPING ON ORDERS ABOVE ₹999 | 100% PREMIUM COTTON'
   });
   const [loading, setLoading] = useState(true);
@@ -284,64 +292,118 @@ export default function AdminSettingsPage({ onNavigate }: { onNavigate: (page: s
 
           {/* Homepage Hero & Announcement Settings */}
           <div className="mb-8 border-t border-gray-200 pt-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Homepage Banners</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Homepage Hero Carousel (Multi-Slide 3s Auto-Slide)</h2>
+            <p className="text-xs text-gray-500 mb-6">Configure multiple hero slides. Slides automatically rotate every 3 seconds with smooth navigation arrows and indicators.</p>
 
             <div className="space-y-6">
-              <div>
-                <label htmlFor="heroBannerDesktop" className="block text-sm font-medium text-gray-700 mb-2">
-                  Desktop Hero Banner Image URL
-                </label>
-                <input
-                  type="text"
-                  id="heroBannerDesktop"
-                  name="heroBannerDesktop"
-                  value={settings.heroBannerDesktop || ''}
-                  onChange={handleInputChange}
-                  placeholder="/hero-banner.webp or https://..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                />
-                <p className="text-xs text-gray-500 mt-1">Recommended dimensions: 1920×800 or 1200×500 (WebP/PNG/JPG)</p>
-                {settings.heroBannerDesktop && (
-                  <div className="mt-3 relative w-full max-w-md h-32 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
-                    <img 
-                      src={settings.heroBannerDesktop} 
-                      alt="Hero Desktop Preview" 
-                      className="w-full h-full object-cover" 
-                      onError={(e) => { (e.target as HTMLImageElement).src = '/hero-banner.webp'; }}
+              {/* Slide 1 */}
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <h3 className="text-sm font-bold text-gray-900 mb-3">Slide 1 (Default Hero)</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="heroBannerDesktop" className="block text-xs font-semibold text-gray-700 mb-1">
+                      Desktop Image URL
+                    </label>
+                    <input
+                      type="text"
+                      id="heroBannerDesktop"
+                      name="heroBannerDesktop"
+                      value={settings.heroBannerDesktop || ''}
+                      onChange={handleInputChange}
+                      placeholder="/hero-banner.webp"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
                     />
                   </div>
-                )}
+                  <div>
+                    <label htmlFor="heroBannerMobile" className="block text-xs font-semibold text-gray-700 mb-1">
+                      Mobile Image URL
+                    </label>
+                    <input
+                      type="text"
+                      id="heroBannerMobile"
+                      name="heroBannerMobile"
+                      value={settings.heroBannerMobile || ''}
+                      onChange={handleInputChange}
+                      placeholder="/hero-banner-mobile.webp"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label htmlFor="heroBannerMobile" className="block text-sm font-medium text-gray-700 mb-2">
-                  Mobile Hero Banner Image URL
-                </label>
-                <input
-                  type="text"
-                  id="heroBannerMobile"
-                  name="heroBannerMobile"
-                  value={settings.heroBannerMobile || ''}
-                  onChange={handleInputChange}
-                  placeholder="/hero-banner-mobile.webp or https://..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                />
-                <p className="text-xs text-gray-500 mt-1">Recommended dimensions: 750×1000 or 600×800 for optimal mobile loading</p>
-                {settings.heroBannerMobile && (
-                  <div className="mt-3 relative w-36 h-48 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
-                    <img 
-                      src={settings.heroBannerMobile} 
-                      alt="Hero Mobile Preview" 
-                      className="w-full h-full object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).src = '/hero-banner-mobile.webp'; }}
+              {/* Slide 2 */}
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <h3 className="text-sm font-bold text-gray-900 mb-3">Slide 2 (Optional)</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="heroBanner2Desktop" className="block text-xs font-semibold text-gray-700 mb-1">
+                      Desktop Image URL
+                    </label>
+                    <input
+                      type="text"
+                      id="heroBanner2Desktop"
+                      name="heroBanner2Desktop"
+                      value={settings.heroBanner2Desktop || ''}
+                      onChange={handleInputChange}
+                      placeholder="Leave empty or enter image URL"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
                     />
                   </div>
-                )}
+                  <div>
+                    <label htmlFor="heroBanner2Mobile" className="block text-xs font-semibold text-gray-700 mb-1">
+                      Mobile Image URL
+                    </label>
+                    <input
+                      type="text"
+                      id="heroBanner2Mobile"
+                      name="heroBanner2Mobile"
+                      value={settings.heroBanner2Mobile || ''}
+                      onChange={handleInputChange}
+                      placeholder="Leave empty or enter mobile image URL"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Slide 3 */}
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <h3 className="text-sm font-bold text-gray-900 mb-3">Slide 3 (Optional)</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="heroBanner3Desktop" className="block text-xs font-semibold text-gray-700 mb-1">
+                      Desktop Image URL
+                    </label>
+                    <input
+                      type="text"
+                      id="heroBanner3Desktop"
+                      name="heroBanner3Desktop"
+                      value={settings.heroBanner3Desktop || ''}
+                      onChange={handleInputChange}
+                      placeholder="Leave empty or enter image URL"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="heroBanner3Mobile" className="block text-xs font-semibold text-gray-700 mb-1">
+                      Mobile Image URL
+                    </label>
+                    <input
+                      type="text"
+                      id="heroBanner3Mobile"
+                      name="heroBanner3Mobile"
+                      value={settings.heroBanner3Mobile || ''}
+                      onChange={handleInputChange}
+                      placeholder="Leave empty or enter mobile image URL"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div>
                 <label htmlFor="announcementText" className="block text-sm font-medium text-gray-700 mb-2">
-                  Top Announcement Banner Text
+                  Top Announcement Ticker Text (Above Header)
                 </label>
                 <input
                   type="text"
