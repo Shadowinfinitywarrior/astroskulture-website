@@ -25,8 +25,8 @@ router.get('/details/:paymentId', auth, getPaymentDetails);
 
 // Razorpay 1-Click Magic Checkout headless endpoints
 router.post('/magic/create-order', createMagicOrder);
-router.get('/magic/promotions', getPromotions);
-router.post('/magic/apply-promotion', applyPromotion);
-router.post('/magic/shipping-info', getShippingInfo);
+router.all('/magic/promotions', getPromotions);
+router.all('/magic/apply-promotion', applyPromotion);
+router.all('/magic/shipping-info', getShippingInfo);
 
 export default router;

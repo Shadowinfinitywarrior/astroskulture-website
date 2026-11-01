@@ -87,34 +87,59 @@ export const createMagicOrder = async (req, res) => {
  * 2. Public Promotions Endpoint: GET /api/payments/magic/promotions
  */
 export const getPromotions = async (req, res) => {
-  res.json({
-    promotions: [
-      {
-        code: 'ASTROS10',
-        title: '10% OFF Welcome Offer',
-        description: 'Valid Pan-India on orders above ₹999',
-        type: 'percent',
-        value: 10,
-      },
-    ],
+  const promotionsList = [
+    {
+      code: 'ASTROS10',
+      title: '10% OFF Welcome Offer',
+      description: 'Valid on orders above ₹999 across India',
+      type: 'percent',
+      value: 10,
+    },
+  ];
+
+  return res.json({
+    status: 'success',
+    data: {
+      promotions: promotionsList,
+    },
+    promotions: promotionsList,
   });
 };
 
-/**
- * 3. Apply Promotion Endpoint: POST /api/payments/magic/apply-promotion
- */
 export const applyPromotion = async (req, res) => {
   try {
-    const { code, line_items_total } = req.body;
+    const code = (req.body?.code || req.query?.code || '').toString().trim().toUpperCase();
+    const line_items_total = Number(req.body?.line_items_total || req.body?.order_amount || req.query?.order_amount || 0);
 
-    if (code && code.toUpperCase() === 'ASTROS10' && line_items_total >= 99900) {
-      const discountPaise = Math.round(line_items_total * 0.10);
-      return res.json({ valid: true, code: 'ASTROS10', discount: discountPaise });
+    if (code === 'ASTROS10') {
+      if (line_items_total > 0 && line_items_total < 99900) {
+        return res.json({
+          status: 'error',
+          valid: false,
+          message: 'Minimum order amount of ₹999 required for coupon ASTROS10',
+        });
+      }
+
+      const discountPaise = line_items_total >= 99900 ? Math.round(line_items_total * 0.10) : 10000;
+      return res.json({
+        status: 'success',
+        valid: true,
+        code: 'ASTROS10',
+        discount: discountPaise,
+        discount_amount: discountPaise,
+        data: {
+          valid: true,
+          code: 'ASTROS10',
+          discount: discountPaise,
+          discount_amount: discountPaise,
+        },
+      });
     }
 
     return res.json({
+      status: 'error',
       valid: false,
-      message: 'Invalid coupon code or minimum order amount of ₹999 not met.',
+      message: 'Invalid coupon code',
     });
   } catch (error) {
     res.status(500).json({ valid: false, message: error.message });
