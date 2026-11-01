@@ -290,12 +290,26 @@ export function HomePage({ onNavigate }: HomePageProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [settings, setSettings] = useState<{
+    heroSlides?: Array<{
+      _id?: string;
+      desktopImage?: string;
+      mobileImage?: string;
+      badge?: string;
+      title?: string;
+      subtitle?: string;
+      buttonText?: string;
+      buttonLink?: string;
+    }>;
     heroBannerDesktop?: string;
     heroBannerMobile?: string;
     heroBanner2Desktop?: string;
     heroBanner2Mobile?: string;
     heroBanner3Desktop?: string;
     heroBanner3Mobile?: string;
+    heroBanner4Desktop?: string;
+    heroBanner4Mobile?: string;
+    heroBanner5Desktop?: string;
+    heroBanner5Mobile?: string;
     announcementText?: string;
   }>({});
   const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
@@ -443,38 +457,81 @@ export function HomePage({ onNavigate }: HomePageProps) {
   };
 
 
-  // Construct dynamic multi-slides for the hero section
-  const heroSlides = [
-    {
-      desktop: settings.heroBannerDesktop || '/hero-banner.webp',
-      mobile: settings.heroBannerMobile || settings.heroBannerDesktop || '/hero-banner-mobile.webp',
-      badge: 'ASTROS KULTURE',
-      title: 'Streetwear From Another Universe',
-      subtitle: "Step into Astros - where oversized meets attitude. A signature drop of oversized tees, customized tees, and premium cotton t-shirts built for all-day comfort and bold self-expression. Clean fits, premium fabric, and quality that speaks loud - Astros is more than style, it's a statement.",
-      primaryBtn: 'Shop Now',
-      secondaryBtn: 'View Astros Drop'
-    },
-    {
-      desktop: settings.heroBanner2Desktop || settings.heroBannerDesktop || '/hero-banner.webp',
-      mobile: settings.heroBanner2Mobile || settings.heroBanner2Desktop || settings.heroBannerMobile || '/hero-banner-mobile.webp',
-      badge: 'EXCLUSIVE DROP',
-      title: 'Heavyweight Cotton Oversized Fits',
-      subtitle: 'Engineered for the ultimate streetwear silhouette. Crafted from 240 GSM breathable combed cotton with high-definition DTF print durability. Stand out from the crowd.',
-      primaryBtn: 'Explore Drop',
-      secondaryBtn: 'View All Tees'
-    },
-    {
-      desktop: settings.heroBanner3Desktop || settings.heroBannerDesktop || '/hero-banner.webp',
-      mobile: settings.heroBanner3Mobile || settings.heroBanner3Desktop || settings.heroBannerMobile || '/hero-banner-mobile.webp',
-      badge: 'TRENDING NOW',
-      title: 'Bold Graphics. Unmatched Attitude.',
-      subtitle: 'From iconic anime artwork to cosmic aesthetic graphics, discover the pieces redefining everyday casual luxury with free pan-India shipping on prepaid orders.',
-      primaryBtn: 'Shop Trending',
-      secondaryBtn: 'Best Sellers'
-    }
+  // Gather any admin uploaded/configured hero slides (Max 5)
+  const uploadedHeroSlides: Array<{
+    desktop: string;
+    mobile: string;
+    badge: string;
+    title: string;
+    subtitle: string;
+    buttonText: string;
+    buttonLink: string;
+  }> = [];
+
+  // Check structured heroSlides array from settings
+  if (Array.isArray(settings.heroSlides) && settings.heroSlides.length > 0) {
+    settings.heroSlides.forEach((s, idx) => {
+      const desktop = s.desktopImage?.trim();
+      if (desktop && !desktop.includes('/hero-banner.webp')) {
+        uploadedHeroSlides.push({
+          desktop,
+          mobile: s.mobileImage?.trim() || desktop,
+          badge: s.badge?.trim() || (idx === 0 ? 'ASTROS KULTURE' : `DROP #${idx + 1}`),
+          title: s.title?.trim() || 'Streetwear From Another Universe',
+          subtitle: s.subtitle?.trim() || "Step into Astros - where oversized meets attitude. High quality cotton, bold graphics, and clean fits built for all-day comfort.",
+          buttonText: s.buttonText?.trim() || 'Shop Now',
+          buttonLink: s.buttonLink?.trim() || 'shop'
+        });
+      }
+    });
+  }
+
+  // Also check individual heroBanner fields up to 5
+  const legacyHeroFields = [
+    { desktop: settings.heroBannerDesktop, mobile: settings.heroBannerMobile },
+    { desktop: settings.heroBanner2Desktop, mobile: settings.heroBanner2Mobile },
+    { desktop: settings.heroBanner3Desktop, mobile: settings.heroBanner3Mobile },
+    { desktop: settings.heroBanner4Desktop, mobile: settings.heroBanner4Mobile },
+    { desktop: settings.heroBanner5Desktop, mobile: settings.heroBanner5Mobile },
   ];
 
-  // Auto-slide every 3 seconds
+  legacyHeroFields.forEach((b, idx) => {
+    const desktop = b.desktop?.trim();
+    if (desktop && !desktop.includes('/hero-banner.webp')) {
+      const exists = uploadedHeroSlides.some(s => s.desktop === desktop);
+      if (!exists && uploadedHeroSlides.length < 5) {
+        uploadedHeroSlides.push({
+          desktop,
+          mobile: b.mobile?.trim() || desktop,
+          badge: idx === 0 ? 'ASTROS KULTURE' : `DROP #${idx + 1}`,
+          title: idx === 0 ? 'Streetwear From Another Universe' : `Signature Drop Collection`,
+          subtitle: "Step into Astros - where oversized meets attitude. High quality cotton, bold graphics, and clean fits built for all-day comfort.",
+          buttonText: 'Shop Now',
+          buttonLink: 'shop'
+        });
+      }
+    }
+  });
+
+  // Limit to maximum 5
+  const activeAdminSlides = uploadedHeroSlides.slice(0, 5);
+
+  // If no hero images added, show hardcoded default; otherwise use ONLY uploaded hero images (maximum 5)
+  const heroSlides = activeAdminSlides.length > 0
+    ? activeAdminSlides
+    : [
+        {
+          desktop: '/hero-banner.webp',
+          mobile: '/hero-banner-mobile.webp',
+          badge: 'ASTROS KULTURE',
+          title: 'Streetwear From Another Universe',
+          subtitle: "Step into Astros - where oversized meets attitude. A signature drop of oversized tees, customized tees, and premium cotton t-shirts built for all-day comfort and bold self-expression. Clean fits, premium fabric, and quality that speaks loud - Astros is more than style, it's a statement.",
+          buttonText: 'Shop Now',
+          buttonLink: 'shop'
+        }
+      ];
+
+  // Auto-slide every 3 seconds if multiple slides exist
   useEffect(() => {
     if (heroSlides.length <= 1) return;
     const interval = setInterval(() => {
@@ -557,17 +614,17 @@ export function HomePage({ onNavigate }: HomePageProps) {
                   </p>
                   <div className="flex flex-col sm:flex-row space-y-2.5 sm:space-y-0 sm:space-x-4">
                     <button
-                      onClick={() => onNavigate('shop')}
+                      onClick={() => onNavigate(slide.buttonLink || 'shop')}
                       className="bg-white text-red-600 px-6 md:px-8 py-3 md:py-3.5 rounded-xl font-bold hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center space-x-2 text-sm md:text-base shadow-lg"
                     >
-                      <span>{slide.primaryBtn}</span>
+                      <span>{slide.buttonText || 'Shop Now'}</span>
                       <ArrowRight className="w-4 md:w-5 h-4 md:h-5" />
                     </button>
                     <button
                       onClick={() => onNavigate('shop')}
                       className="border-2 border-white/90 text-white px-6 md:px-8 py-3 md:py-3.5 rounded-xl font-bold hover:bg-white hover:text-red-600 transition-all duration-300 text-sm md:text-base backdrop-blur-sm"
                     >
-                      {slide.secondaryBtn}
+                      View Astros Drop
                     </button>
                   </div>
                 </div>
@@ -576,35 +633,39 @@ export function HomePage({ onNavigate }: HomePageProps) {
           );
         })}
 
-        {/* Carousel Arrow Controls */}
-        <button
-          onClick={() => setCurrentHeroSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length)}
-          className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-11 md:h-11 rounded-full bg-black/30 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transition-all opacity-80 md:opacity-0 md:group-hover:opacity-100"
-          aria-label="Previous slide"
-        >
-          <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
-        </button>
-        <button
-          onClick={() => setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length)}
-          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-11 md:h-11 rounded-full bg-black/30 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transition-all opacity-80 md:opacity-0 md:group-hover:opacity-100"
-          aria-label="Next slide"
-        >
-          <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
-        </button>
-
-        {/* Dot Indicators */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center space-x-2">
-          {heroSlides.map((_, idx) => (
+        {/* Carousel Arrow Controls (Only shown if multiple slides exist) */}
+        {heroSlides.length > 1 && (
+          <>
             <button
-              key={idx}
-              onClick={() => setCurrentHeroSlide(idx)}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                idx === currentHeroSlide ? 'w-8 bg-white' : 'w-2 bg-white/50 hover:bg-white/80'
-              }`}
-              aria-label={`Go to slide ${idx + 1}`}
-            />
-          ))}
-        </div>
+              onClick={() => setCurrentHeroSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length)}
+              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-11 md:h-11 rounded-full bg-black/30 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transition-all opacity-80 md:opacity-0 md:group-hover:opacity-100"
+              aria-label="Previous slide"
+            >
+              <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+            </button>
+            <button
+              onClick={() => setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length)}
+              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-11 md:h-11 rounded-full bg-black/30 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transition-all opacity-80 md:opacity-0 md:group-hover:opacity-100"
+              aria-label="Next slide"
+            >
+              <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+            </button>
+
+            {/* Dot Indicators */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center space-x-2">
+              {heroSlides.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentHeroSlide(idx)}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    idx === currentHeroSlide ? 'w-8 bg-white' : 'w-2 bg-white/50 hover:bg-white/80'
+                  }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </section>
 
       {/* Categories Section - Horizontal Carousel */}

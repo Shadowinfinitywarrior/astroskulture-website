@@ -1,6 +1,7 @@
 import express from 'express';
 import { authenticateAdmin } from '../middleware/auth.js';
 import Banner from '../models/Banner.js';
+import { invalidateHomepageCache } from './homepage.js';
 
 const router = express.Router();
 
@@ -71,6 +72,7 @@ router.post('/', authenticateAdmin, async (req, res) => {
     });
 
     await banner.save();
+    invalidateHomepageCache();
 
     res.status(201).json({
       success: true,
@@ -102,6 +104,8 @@ router.put('/:id', authenticateAdmin, async (req, res) => {
       });
     }
 
+    invalidateHomepageCache();
+
     res.json({
       success: true,
       data: banner
@@ -127,6 +131,8 @@ router.delete('/:id', authenticateAdmin, async (req, res) => {
         message: 'Banner not found'
       });
     }
+
+    invalidateHomepageCache();
 
     res.json({
       success: true,

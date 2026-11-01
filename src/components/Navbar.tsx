@@ -13,20 +13,48 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [announcementText, setAnnouncementText] = useState('');
+  const [activeBanners, setActiveBanners] = useState<string[]>([]);
   const { user, isAdmin, signOut } = useAuth();
   const { cartCount } = useCart();
   const { wishlistCount } = useWishlist();
 
   useEffect(() => {
+    // 1. Fetch settings announcement text
     fetch('/api/settings')
       .then(res => res.json())
       .then(data => {
-        if (data?.data?.announcementText) {
-          setAnnouncementText(data.data.announcementText);
+        if (data?.data?.announcementText && data.data.announcementText.trim()) {
+          setAnnouncementText(data.data.announcementText.trim());
+        } else {
+          setAnnouncementText('');
+        }
+      })
+      .catch(() => {});
+
+    // 2. Fetch active dynamic banners created in Admin > Banners
+    fetch('/api/banners')
+      .then(res => res.json())
+      .then(data => {
+        if (data?.data && Array.isArray(data.data)) {
+          const texts = data.data
+            .filter((b: any) => b.isActive && b.displayText && b.displayText.trim())
+            .map((b: any) => b.displayText.trim());
+          setActiveBanners(texts);
         }
       })
       .catch(() => {});
   }, []);
+
+  // Collect ONLY admin-controlled banner items (strictly no hardcoded banners)
+  const bannerList: string[] = [];
+  if (activeBanners.length > 0) {
+    activeBanners.forEach(b => {
+      if (!bannerList.includes(b)) bannerList.push(b);
+    });
+  }
+  if (announcementText && !bannerList.includes(announcementText)) {
+    bannerList.push(announcementText);
+  }
 
   const handleSignOut = async () => {
     try {
@@ -50,48 +78,38 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
 
   return (
     <header className="sticky top-0 z-50">
-      {/* Top Banner Above Header with Professional Movement Animation */}
-      <div className="bg-gradient-to-r from-red-700 via-red-600 to-red-800 text-white text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 overflow-hidden border-b border-red-800/40 select-none shadow-sm">
-        <div className="flex w-fit whitespace-nowrap animate-marquee hover:[animation-play-state:paused]">
-          <div className="flex items-center gap-6 sm:gap-8 px-4 tracking-wider">
-            <span>{announcementText || '✨ FREE SHIPPING ON ORDERS ABOVE ₹999 PAN-INDIA'}</span>
-            <span className="opacity-60">•</span>
-            <span>👕 100% PREMIUM 240 GSM COMBED COTTON</span>
-            <span className="opacity-60">•</span>
-            <span>🎁 GIFT PACKING & CUSTOM CARDS (+₹49)</span>
-            <span className="opacity-60">•</span>
-            <span>⚡ DISPATCH WITHIN 24-48 HOURS</span>
-            <span className="opacity-60">•</span>
-            <span>🔄 7-DAY EASY SIZE EXCHANGES</span>
-            <span className="opacity-60">•</span>
-            <span>📦 CASH ON DELIVERY AVAILABLE</span>
-            <span className="opacity-60">•</span>
+      {/* Top Banner Above Header (Strictly Admin-Controlled, No Hardcoded Banners) */}
+      {bannerList.length > 0 && (
+        <div className="bg-gradient-to-r from-red-700 via-red-600 to-red-800 text-white text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 overflow-hidden border-b border-red-800/40 select-none shadow-sm">
+          <div className="flex w-fit whitespace-nowrap animate-marquee hover:[animation-play-state:paused]">
+            <div className="flex items-center gap-6 sm:gap-8 px-4 tracking-wider">
+              {(bannerList.length < 3 ? [...bannerList, ...bannerList, ...bannerList] : bannerList).map((text, idx) => (
+                <span key={idx} className="flex items-center gap-6 sm:gap-8">
+                  <span>{text}</span>
+                  <span className="opacity-60">•</span>
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center gap-6 sm:gap-8 px-4 tracking-wider" aria-hidden="true">
+              {(bannerList.length < 3 ? [...bannerList, ...bannerList, ...bannerList] : bannerList).map((text, idx) => (
+                <span key={`dup-${idx}`} className="flex items-center gap-6 sm:gap-8">
+                  <span>{text}</span>
+                  <span className="opacity-60">•</span>
+                </span>
+              ))}
+            </div>
           </div>
-          <div className="flex items-center gap-6 sm:gap-8 px-4 tracking-wider" aria-hidden="true">
-            <span>{announcementText || '✨ FREE SHIPPING ON ORDERS ABOVE ₹999 PAN-INDIA'}</span>
-            <span className="opacity-60">•</span>
-            <span>👕 100% PREMIUM 240 GSM COMBED COTTON</span>
-            <span className="opacity-60">•</span>
-            <span>🎁 GIFT PACKING & CUSTOM CARDS (+₹49)</span>
-            <span className="opacity-60">•</span>
-            <span>⚡ DISPATCH WITHIN 24-48 HOURS</span>
-            <span className="opacity-60">•</span>
-            <span>🔄 7-DAY EASY SIZE EXCHANGES</span>
-            <span className="opacity-60">•</span>
-            <span>📦 CASH ON DELIVERY AVAILABLE</span>
-            <span className="opacity-60">•</span>
-          </div>
+          <style>{`
+            @keyframes marquee-scroll {
+              0% { transform: translateX(0%); }
+              100% { transform: translateX(-50%); }
+            }
+            .animate-marquee {
+              animation: marquee-scroll 22s linear infinite;
+            }
+          `}</style>
         </div>
-        <style>{`
-          @keyframes marquee-scroll {
-            0% { transform: translateX(0%); }
-            100% { transform: translateX(-50%); }
-          }
-          .animate-marquee {
-            animation: marquee-scroll 24s linear infinite;
-          }
-        `}</style>
-      </div>
+      )}
 
       <nav className="bg-white shadow-md">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
