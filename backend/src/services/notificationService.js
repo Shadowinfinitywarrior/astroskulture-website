@@ -1,8 +1,6 @@
-import nodemailer from 'nodemailer';
-
 let transporter = null;
 
-const getTransporter = () => {
+const getTransporter = async () => {
   if (transporter) return transporter;
 
   const host = process.env.SMTP_HOST;
@@ -11,12 +9,22 @@ const getTransporter = () => {
   const port = Number(process.env.SMTP_PORT) || 587;
 
   if (host && user && pass) {
-    transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: { user, pass },
-    });
+    try {
+      const nodemailer = await import('nodemailer');
+      transporter = nodemailer.default ? nodemailer.default.createTransport({
+        host,
+        port,
+        secure: port === 465,
+        auth: { user, pass },
+      }) : nodemailer.createTransport({
+        host,
+        port,
+        secure: port === 465,
+        auth: { user, pass },
+      });
+    } catch {
+      transporter = null;
+    }
   }
 
   return transporter;
@@ -49,7 +57,7 @@ export const sendAbandonedCartNotification = async ({
   // Send Email if email is available and SMTP is configured
   if (customerEmail) {
     try {
-      const mailer = getTransporter();
+      const mailer = await getTransporter();
       if (mailer) {
         await mailer.sendMail({
           from: `"Astros Kulture" <${process.env.SMTP_FROM || 'support@astroskulture.in'}>`,
