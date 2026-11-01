@@ -33,7 +33,7 @@ import { OrderConfirmationPage } from './pages/OrderConfirmationPage';
 import { CustomDesignsPage } from './pages/CustomDesignsPage';
 import { PolicyPage } from './pages/PolicyPage';
 import { ConsentBanner } from './components/ConsentBanner';
-import { pageView } from './lib/analytics';
+import { pageView, initWebVitalsMonitor } from './lib/analytics';
 
 interface NavigationParams {
   slug?: string;
@@ -122,6 +122,9 @@ function AppContent() {
     } else if (path === '/return-refund-policy') {
       setCurrentPage('return-refund-policy');
     }
+
+    // Initialize Web Vitals observer (CLS, LCP)
+    initWebVitalsMonitor();
   }, []);
 
   // TRK-04: Fire SPA PageView on every route change

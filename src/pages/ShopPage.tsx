@@ -9,6 +9,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { trackEcommerce } from '../lib/analytics';
 import { optimizeImageUrl } from '../utils/imageUtils';
 import { updatePageSeo } from '../utils/seoUtils';
+import { ProductCardSkeleton } from './ProductCard';
 
 interface ShopPageProps {
   onNavigate: (page: string, params?: any) => void;
@@ -464,8 +465,13 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
           {/* Products Grid */}
           <main className="flex-1">
 
-            {loading && <LoadingSpinner fullScreen size="lg" />}
-            {!loading && (
+            {loading ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <ProductCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : (
               <>
                 {/* Mobile & Desktop Grid - 2 columns mobile, 3 columns desktop */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
@@ -476,22 +482,24 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
 
                     return (
                       <div key={product._id} className="bg-white rounded-lg overflow-hidden group hover:shadow-lg transition-all duration-300 h-full flex flex-col border border-gray-200">
-                        <div className="relative overflow-hidden flex-shrink-0">
+                        <div className="relative overflow-hidden flex-shrink-0 w-full aspect-square bg-gray-100">
                           <a
                             href={`/product/${product.slug}`}
                             onClick={(e) => {
                               e.preventDefault();
                               handleProductClick(product);
                             }}
-                            className="block w-full"
+                            className="block w-full h-full"
                             aria-label={product.name}
                           >
                             <img
                               src={getProductImage(product)}
                               alt={product.images[0]?.alt || product.name}
-                              className="w-full h-48 md:h-72 object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
                               loading="lazy"
                               decoding="async"
+                              width={500}
+                              height={500}
                             />
                           </a>
 

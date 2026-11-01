@@ -77,22 +77,24 @@ function ProductCard({
 
   return (
     <div className="bg-white rounded-lg overflow-hidden group hover:shadow-lg transition-all duration-300 h-full flex flex-col border border-gray-200">
-      <div className="relative overflow-hidden flex-shrink-0">
+      <div className="relative overflow-hidden flex-shrink-0 w-full aspect-square bg-gray-100">
         <a
           href={`/product/${product.slug || product._id}`}
           onClick={(e) => {
             e.preventDefault();
             onNavigate('product', { slug: product.slug || product._id });
           }}
-          className="block w-full"
+          className="block w-full h-full"
           aria-label={product.name}
         >
           <img
             src={product.images[0]?.url ? optimizeImageUrl(product.images[0]?.url, { width: 500, quality: 'auto' }) : 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}
             alt={product.name}
-            className="w-full h-48 md:h-64 object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
             loading="lazy"
             decoding="async"
+            width={500}
+            height={500}
           />
         </a>
         
@@ -341,12 +343,15 @@ export function HomePage({ onNavigate }: HomePageProps) {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative h-auto md:h-[500px] bg-gradient-to-r from-red-600 to-red-800 text-white overflow-hidden">
-        <div className="absolute inset-0 opacity-20">
+      <section className="relative min-h-[480px] md:h-[500px] bg-gradient-to-r from-red-600 to-red-800 text-white overflow-hidden">
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
           <img
             src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200"
-            alt="Hero"
+            alt="Hero background"
             className="w-full h-full object-cover"
+            width={1200}
+            height={500}
+            loading="eager"
           />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 min-h-[500px] md:h-full flex flex-col justify-center py-8 md:py-0">

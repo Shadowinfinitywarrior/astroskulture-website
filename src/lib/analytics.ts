@@ -146,3 +146,67 @@ export function getCookie(name: string): string {
   const match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
   return match ? decodeURIComponent(match[3]) : '';
 }
+
+/**
+ * Monitor Cumulative Layout Shift (CLS) in real-time per Google Web Vitals spec
+ * Implements session windowing (max 5s, 1s gap) and filters out user interactions (hadRecentInput)
+ */
+export function initWebVitalsMonitor() {
+  if (typeof window === 'undefined' || !('PerformanceObserver' in window)) return;
+
+  try {
+    let clsValue = 0;
+    let sessionValue = 0;
+    let sessionEntries: PerformanceEntry[] = [];
+
+    const observer = new PerformanceObserver((entryList) => {
+      for (const entry of entryList.getEntries()) {
+        // Only count layout shifts without recent user input (within 500ms)
+        if (!(entry as any).hadRecentInput) {
+          const firstSessionEntry = sessionEntries[0];
+          const lastSessionEntry = sessionEntries[sessionEntries.length - 1];
+
+          // Session windowing: 1 second gap threshold or 5 second maximum duration
+          if (
+            sessionValue &&
+            entry.startTime - lastSessionEntry.startTime < 1000 &&
+            entry.startTime - firstSessionEntry.startTime < 5000
+          ) {
+            sessionValue += (entry as any).value;
+            sessionEntries.push(entry);
+          } else {
+            sessionValue = (entry as any).value;
+            sessionEntries = [entry];
+          }
+
+          if (sessionValue > clsValue) {
+            clsValue = sessionValue;
+          }
+        }
+      }
+    });
+
+    observer.observe({ type: 'layout-shift', buffered: true });
+
+    // Send CLS to GA4 upon page backgrounding/visibility change
+    const reportCls = () => {
+      if (clsValue > 0) {
+        window.gtag?.('event', 'web_vitals', {
+          event_category: 'Web Vitals',
+          metric_name: 'CLS',
+          value: Math.round(clsValue * 1000) / 1000,
+          event_label: window.location.pathname,
+          non_interaction: true,
+        });
+      }
+    };
+
+    window.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        reportCls();
+      }
+    });
+  } catch (err) {
+    // Graceful fallback if PerformanceObserver is not supported
+  }
+}
