@@ -89,13 +89,15 @@ function ProductCard({
           aria-label={product.name}
         >
           <img
-            src={product.images[0]?.url ? optimizeImageUrl(product.images[0]?.url, { width: 500, quality: 'auto' }) : 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}
+            src={product.images[0]?.url ? optimizeImageUrl(product.images[0]?.url, { width: 350, quality: 'auto' }) : 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=350&auto=format'}
+            srcSet={product.images[0]?.url ? `${optimizeImageUrl(product.images[0]?.url, { width: 300, quality: 'auto' })} 300w, ${optimizeImageUrl(product.images[0]?.url, { width: 500, quality: 'auto' })} 500w` : undefined}
+            sizes="(max-width: 640px) 180px, (max-width: 1024px) 292px, 350px"
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
             loading="lazy"
             decoding="async"
-            width={500}
-            height={500}
+            width={350}
+            height={350}
           />
         </a>
         

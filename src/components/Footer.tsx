@@ -8,18 +8,21 @@ export function Footer() {
           {/* Brand Section */}
           <div className="md:col-span-2">
             <div className="flex items-center space-x-3 mb-4">
-              <img 
-                src="/logo.png" 
-                alt="AstroSkulture" 
-                className="w-10 h-10 object-contain"
-                width={40}
-                height={40}
-                loading="lazy"
-                decoding="async"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
+              <picture>
+                <source srcSet="/logo.webp" type="image/webp" />
+                <img 
+                  src="/logo.png" 
+                  alt="AstroSkulture" 
+                  className="w-10 h-10 object-contain"
+                  width={40}
+                  height={40}
+                  loading="lazy"
+                  decoding="async"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </picture>
               <span className="text-xl font-bold">ASTROS KULTURE</span>
             </div>
             <p className="text-gray-400 text-sm mb-4 max-w-xl">
