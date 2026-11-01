@@ -123,20 +123,50 @@ export const applyPromotion = async (req, res) => {
 
 /**
  * 4. Shipping Info & COD Serviceability: POST /api/payments/magic/shipping-info
+ * Fully compatible with Razorpay Magic Checkout Custom Platform specification
  */
 export const getShippingInfo = async (req, res) => {
   try {
-    const { order_amount } = req.body;
-    const isFree = order_amount >= 99900; // Free shipping above ₹999 (99900 paise)
+    const { order_amount, addresses = [], line_items = [] } = req.body;
 
-    res.json({
+    // Calculate total order amount in paise
+    let totalPaise = Number(order_amount) || 0;
+    if (!totalPaise && Array.isArray(line_items) && line_items.length > 0) {
+      totalPaise = line_items.reduce((acc, item) => acc + (Number(item.price || item.offer_price || 0) * (item.quantity || 1)), 0);
+    }
+
+    // Free shipping Pan-India above ₹999 (99900 paise)
+    const isFreeShipping = totalPaise >= 99900;
+    const shippingFeeRupees = isFreeShipping ? 0 : 69;
+    const isCodAvailable = totalPaise > 0 ? totalPaise <= 300000 : true; // Under ₹3,000
+
+    const addressList = Array.isArray(addresses) && addresses.length > 0
+      ? addresses
+      : [{ id: 'default', pincode: req.body.pincode }];
+
+    const formattedAddresses = addressList.map((addr) => ({
+      id: addr.id || 'default',
       serviceable: true,
-      shipping_fee: isFree ? 0 : 9900, // ₹99 shipping below ₹999
-      cod_available: order_amount <= 300000, // COD allowed under ₹3,000
-      cod_fee: 5000, // ₹50 COD handling fee
-      estimated_delivery_days: 4,
+      cod: isCodAvailable,
+      shipping_fee: shippingFeeRupees,
+      cod_fee: 0,
+      estimated_delivery_days: 4
+    }));
+
+    // Return unified payload satisfying all Razorpay Magic schema variants
+    return res.json({
+      status: 'success',
+      data: {
+        addresses: formattedAddresses
+      },
+      serviceable: true,
+      shipping_fee: shippingFeeRupees,
+      cod_available: isCodAvailable,
+      cod_fee: 0,
+      estimated_delivery_days: 4
     });
   } catch (error) {
-    res.status(500).json({ serviceable: false, message: error.message });
+    console.error('[Magic getShippingInfo Error]', error);
+    return res.status(500).json({ status: 'error', serviceable: false, message: error.message });
   }
 };

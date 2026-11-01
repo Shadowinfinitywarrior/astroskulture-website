@@ -53,17 +53,49 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
   };
 
   return (
-    <div className="space-y-3 sm:space-y-4">
+    <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
+      {/* Thumbnail Navigation: Left side on Desktop, Underneath on Mobile */}
+      {images.length > 1 && (
+        <div className="order-2 md:order-1 w-full md:w-20 lg:w-24 flex-shrink-0 overflow-x-auto md:overflow-y-auto md:overflow-x-hidden md:max-h-[550px] scrollbar-thin">
+          <div className="flex md:flex-col gap-2 sm:gap-3 px-1 md:px-0">
+            {images.map((image, index) => (
+              <button
+                key={index}
+                onClick={() => goToImage(index)}
+                className={`flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 md:w-full md:h-auto md:aspect-square rounded-lg overflow-hidden border-2 transition-all hover:border-red-600 ${
+                  currentIndex === index 
+                    ? 'border-red-600 ring-2 ring-red-300' 
+                    : 'border-gray-300'
+                }`}
+                title={`View image ${index + 1}`}
+              >
+                <img
+                  src={optimizeImageUrl(image.url, { width: 160, quality: 'auto:good', crop: 'thumb' })}
+                  alt={image.alt || `${productName} thumbnail ${index + 1}`}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder-image.jpg';
+                  }}
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Main Image Container */}
-      <div className="w-full bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+      <div className="order-1 md:order-2 flex-1 min-w-0 bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
         <div 
-          className="relative w-full aspect-square sm:aspect-video md:aspect-square lg:aspect-square max-h-[500px] cursor-zoom-in bg-white flex items-center justify-center"
+          className="relative w-full aspect-square max-h-[550px] cursor-zoom-in bg-white flex items-center justify-center"
           onClick={() => setIsZoomed(!isZoomed)}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
           <img
-            src={optimizeImageUrl(images[currentIndex].url, { width: 900, quality: 'auto' })}
+            src={optimizeImageUrl(images[currentIndex].url, { width: 900, quality: 'auto:good' })}
             alt={images[currentIndex].alt || `${productName} - Image ${currentIndex + 1}`}
             className={`w-full h-full object-contain transition-transform duration-300 ${
               isZoomed ? 'scale-150 cursor-zoom-out' : 'scale-100'
@@ -120,38 +152,6 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Thumbnail Navigation */}
-      {images.length > 1 && (
-        <div className="w-full overflow-x-auto pb-2">
-          <div className="flex gap-2 sm:gap-3 px-1">
-            {images.map((image, index) => (
-              <button
-                key={index}
-                onClick={() => goToImage(index)}
-                className={`flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all hover:border-red-600 ${
-                  currentIndex === index 
-                    ? 'border-red-600 ring-2 ring-red-300' 
-                    : 'border-gray-300'
-                }`}
-                title={`View image ${index + 1}`}
-              >
-                <img
-                  src={optimizeImageUrl(image.url, { width: 160, quality: 'auto', crop: 'thumb' })}
-                  alt={image.alt || `${productName} thumbnail ${index + 1}`}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                  decoding="async"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = '/placeholder-image.jpg';
-                  }}
-                />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
