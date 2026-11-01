@@ -106,14 +106,28 @@ export const getUserOrders = async (req, res) => {
 };
 
 export const createOrder = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const isReplicaSet = Boolean(
+    mongoose.connection?.client?.topology?.description?.setName ||
+    mongoose.connection?.client?.topology?.s?.replicaSet
+  );
+
+  let session = null;
+  if (isReplicaSet) {
+    try {
+      session = await mongoose.startSession();
+      session.startTransaction();
+    } catch {
+      session = null;
+    }
+  }
+
+  const sessionOption = session ? { session } : {};
 
   try {
     const { items, shippingAddress, paymentStatus = 'pending' } = req.body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
-      await session.abortTransaction();
+      if (session) await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: 'Order must contain at least one item'
@@ -136,16 +150,19 @@ export const createOrder = async (req, res) => {
 
     for (const item of items) {
       if (!item.productId || !item.quantity || !item.size) {
-        await session.abortTransaction();
+        if (session) await session.abortTransaction();
         return res.status(400).json({
           success: false,
           message: 'Each item must have productId, quantity, and size'
         });
       }
 
-      const product = await Product.findById(item.productId).session(session);
+      let productQuery = Product.findById(item.productId);
+      if (session) productQuery = productQuery.session(session);
+      const product = await productQuery;
+
       if (!product || !product.isActive) {
-        await session.abortTransaction();
+        if (session) await session.abortTransaction();
         return res.status(400).json({
           success: false,
           message: `Product not found or inactive: ${item.productId}`
@@ -154,7 +171,7 @@ export const createOrder = async (req, res) => {
 
       const sizeIndex = product.sizes.findIndex(s => s.size === item.size);
       if (sizeIndex === -1) {
-        await session.abortTransaction();
+        if (session) await session.abortTransaction();
         return res.status(400).json({
           success: false,
           message: `Size ${item.size} not available for ${product.name}`
@@ -162,19 +179,18 @@ export const createOrder = async (req, res) => {
       }
 
       if (product.sizes[sizeIndex].stock < item.quantity) {
-        await session.abortTransaction();
+        if (session) await session.abortTransaction();
         return res.status(400).json({
           success: false,
           message: `Insufficient stock for ${product.name} (size: ${item.size})`
         });
       }
 
-      // Atomic stock decrement
+      // Decrement stock
       product.sizes[sizeIndex].stock -= item.quantity;
       product.totalStock -= item.quantity;
-      await product.save({ session });
+      await product.save(sessionOption);
 
-      // SEC-02: Authoritative price extracted solely from verified database record
       const verifiedUnitPrice = (product.discountPrice && product.discountPrice > 0 && product.discountPrice < product.price)
         ? product.discountPrice
         : product.price;
@@ -228,9 +244,11 @@ export const createOrder = async (req, res) => {
     }
 
     const order = new Order(orderData);
-    await order.save({ session });
+    await order.save(sessionOption);
 
-    await session.commitTransaction();
+    if (session) {
+      await session.commitTransaction();
+    }
 
     const populatedOrder = await Order.findById(order._id)
       .populate('userId', 'email fullName phone')
@@ -241,7 +259,13 @@ export const createOrder = async (req, res) => {
       data: populatedOrder
     });
   } catch (error) {
-    await session.abortTransaction();
+    if (session) {
+      try {
+        await session.abortTransaction();
+      } catch {
+        // Ignore abort errors
+      }
+    }
     console.error('Create order error:', error);
     res.status(400).json({ 
       success: false,
@@ -249,7 +273,13 @@ export const createOrder = async (req, res) => {
       error: error.message 
     });
   } finally {
-    session.endSession();
+    if (session) {
+      try {
+        session.endSession();
+      } catch {
+        // Ignore session cleanup errors
+      }
+    }
   }
 };
 
