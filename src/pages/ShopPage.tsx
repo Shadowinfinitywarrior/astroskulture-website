@@ -7,6 +7,8 @@ import { useAuth } from '../contexts/AuthContext';
 import type { Product, Category, ProductSize } from '../lib/types';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { trackEcommerce } from '../lib/analytics';
+import { optimizeImageUrl } from '../utils/imageUtils';
+import { updatePageSeo } from '../utils/seoUtils';
 
 interface ShopPageProps {
   onNavigate: (page: string, params?: any) => void;
@@ -59,6 +61,30 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
   useEffect(() => {
     loadCategories();
   }, []);
+
+  useEffect(() => {
+    const catName = selectedCategory && selectedCategory !== 'all' ? selectedCategory : 'All Streetwear & Oversized T-Shirts';
+    updatePageSeo({
+      title: `${catName} | ASTROS KULTURE Shop`,
+      description: `Explore ${catName} at ASTROS KULTURE. Heavyweight graphic tees, anime oversized streetwear, and limited drops. Free shipping across India.`,
+      canonicalUrl: selectedCategory && selectedCategory !== 'all' 
+        ? `https://astroskulture.in/shop?category=${encodeURIComponent(selectedCategory)}` 
+        : 'https://astroskulture.in/shop',
+      ogType: 'website',
+      structuredData: {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": catName,
+        "description": `Shop ${catName} at ASTROS KULTURE`,
+        "url": window.location.href,
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "ASTROS KULTURE",
+          "url": "https://astroskulture.in"
+        }
+      }
+    });
+  }, [selectedCategory]);
 
   useEffect(() => {
     loadProducts();
@@ -235,7 +261,8 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
   };
 
   const getProductImage = (product: Product) => {
-    return product.images[0]?.url || 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500';
+    const raw = product.images[0]?.url || 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500';
+    return optimizeImageUrl(raw, { width: 500, quality: 'auto' });
   };
 
   const getDisplayPrice = (product: Product) => {
@@ -450,16 +477,27 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
                     return (
                       <div key={product._id} className="bg-white rounded-lg overflow-hidden group hover:shadow-lg transition-all duration-300 h-full flex flex-col border border-gray-200">
                         <div className="relative overflow-hidden flex-shrink-0">
-                          <img
-                            src={getProductImage(product)}
-                            alt={product.images[0]?.alt || product.name}
-                            className="w-full h-48 md:h-72 object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
-                            onClick={() => handleProductClick(product)}
-                          />
+                          <a
+                            href={`/product/${product.slug}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleProductClick(product);
+                            }}
+                            className="block w-full"
+                            aria-label={product.name}
+                          >
+                            <img
+                              src={getProductImage(product)}
+                              alt={product.images[0]?.alt || product.name}
+                              className="w-full h-48 md:h-72 object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
+                              loading="lazy"
+                              decoding="async"
+                            />
+                          </a>
 
                           {/* Top Left - Bestseller Badge */}
                           {product.isBestseller && (
-                            <div className="absolute top-2 left-2">
+                            <div className="absolute top-2 left-2 pointer-events-none">
                               <div className="bg-gray-800 text-white px-3 py-1 text-xs font-bold uppercase tracking-wide">
                                 BESTSELLER
                               </div>
@@ -476,7 +514,7 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
                             className={`absolute top-2 right-2 p-2 rounded-full shadow-lg transition-all ${isInWishlistState
                               ? 'bg-white text-red-600'
                               : 'bg-white text-gray-400 hover:text-red-600'
-                              } disabled:opacity-50 disabled:cursor-not-allowed`}
+                              } disabled:opacity-50 disabled:cursor-not-allowed z-10`}
                             title={isInWishlistState ? 'Remove from Wishlist' : 'Add to Wishlist'}
                           >
                             {isWishlistLoading ? (
@@ -495,11 +533,17 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
                           )}
 
                           {/* Product Name */}
-                          <h3
-                            onClick={() => handleProductClick(product)}
-                            className="font-medium text-sm md:text-base text-gray-900 mb-2 cursor-pointer hover:text-red-600 transition-colors line-clamp-2 leading-snug"
-                          >
-                            {product.name}
+                          <h3 className="font-medium text-sm md:text-base text-gray-900 mb-2 hover:text-red-600 transition-colors line-clamp-2 leading-snug">
+                            <a
+                              href={`/product/${product.slug}`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleProductClick(product);
+                              }}
+                              className="hover:text-red-600"
+                            >
+                              {product.name}
+                            </a>
                           </h3>
 
                           {/* Rating */}

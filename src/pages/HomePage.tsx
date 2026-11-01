@@ -4,6 +4,8 @@ import { apiService } from '../lib/mongodb';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useAuth } from '../contexts/AuthContext';
+import { optimizeImageUrl } from '../utils/imageUtils';
+import { updatePageSeo } from '../utils/seoUtils';
 
 interface Product {
   _id: string;
@@ -76,14 +78,23 @@ function ProductCard({
   return (
     <div className="bg-white rounded-lg overflow-hidden group hover:shadow-lg transition-all duration-300 h-full flex flex-col border border-gray-200">
       <div className="relative overflow-hidden flex-shrink-0">
-        <img
-          src={product.images[0]?.url || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}
-          alt={product.name}
-          className="w-full h-48 md:h-64 object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
-          onClick={() => onNavigate('product', { slug: product.slug || product._id })}
-          loading="lazy"
-          decoding="async"
-        />
+        <a
+          href={`/product/${product.slug || product._id}`}
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigate('product', { slug: product.slug || product._id });
+          }}
+          className="block w-full"
+          aria-label={product.name}
+        >
+          <img
+            src={product.images[0]?.url ? optimizeImageUrl(product.images[0]?.url, { width: 500, quality: 'auto' }) : 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}
+            alt={product.name}
+            className="w-full h-48 md:h-64 object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
+            loading="lazy"
+            decoding="async"
+          />
+        </a>
         
         {/* Bestseller Badge */}
         {product.isBestseller && (
@@ -122,11 +133,17 @@ function ProductCard({
         )}
         
         {/* Product Name */}
-        <h3 
-          onClick={() => onNavigate('product', { slug: product.slug || product._id })}
-          className="font-medium text-sm md:text-base text-gray-900 mb-2 cursor-pointer hover:text-red-600 transition-colors line-clamp-2 leading-snug"
-        >
-          {product.name}
+        <h3 className="font-medium text-sm md:text-base text-gray-900 mb-2 hover:text-red-600 transition-colors line-clamp-2 leading-snug">
+          <a
+            href={`/product/${product.slug || product._id}`}
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate('product', { slug: product.slug || product._id });
+            }}
+            className="hover:text-red-600"
+          >
+            {product.name}
+          </a>
         </h3>
         
         {/* Rating */}
@@ -192,6 +209,36 @@ export function HomePage({ onNavigate }: HomePageProps) {
   const { user } = useAuth();
 
   useEffect(() => {
+    updatePageSeo({
+      title: 'ASTROS KULTURE | Premium Oversized Streetwear & Anime Fashion',
+      description: 'Discover premium oversized t-shirts, anime streetwear, and cosmic custom designs at Astros Kulture. High quality cotton, bold graphics, free shipping.',
+      canonicalUrl: 'https://astroskulture.in/',
+      ogType: 'website',
+      structuredData: [
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "ASTROS KULTURE",
+          "url": "https://astroskulture.in",
+          "logo": "https://astroskulture.in/logo.png",
+          "sameAs": [
+            "https://www.instagram.com/astroskulture",
+            "https://www.facebook.com/astroskulture"
+          ]
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "ASTROS KULTURE",
+          "url": "https://astroskulture.in",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://astroskulture.in/shop?search={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    });
     loadData();
   }, []);
 

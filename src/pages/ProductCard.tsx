@@ -4,6 +4,7 @@ import { useWishlist } from '../contexts/WishlistContext';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import type { Product, NavigationParams } from '../lib/types';
+import { optimizeImageUrl } from '../utils/imageUtils';
 
 interface ProductCardProps {
   product: Product;
@@ -137,7 +138,7 @@ export function ProductCard({ product, onNavigate, showWishlist = true }: Produc
             className="block w-full h-full"
           >
             <img
-              src={imageError ? '/api/placeholder/300/300' : (product.images[0]?.url || '/api/placeholder/300/300')}
+              src={imageError ? '/api/placeholder/300/300' : (product.images[0]?.url ? optimizeImageUrl(product.images[0]?.url, { width: 500, quality: 'auto' }) : '/api/placeholder/300/300')}
               alt={product.name}
               className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${imageLoading ? 'opacity-0' : 'opacity-100'
                 }`}

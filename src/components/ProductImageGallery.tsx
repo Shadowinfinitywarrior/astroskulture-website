@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
+import { optimizeImageUrl } from '../utils/imageUtils';
 
 interface ProductImageGalleryProps {
   images: Array<{ url: string; alt?: string }>;
@@ -62,7 +63,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
           onTouchEnd={handleTouchEnd}
         >
           <img
-            src={images[currentIndex].url}
+            src={optimizeImageUrl(images[currentIndex].url, { width: 900, quality: 'auto' })}
             alt={images[currentIndex].alt || `${productName} - Image ${currentIndex + 1}`}
             className={`w-full h-full object-contain transition-transform duration-300 ${
               isZoomed ? 'scale-150 cursor-zoom-out' : 'scale-100'
@@ -136,7 +137,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
                 title={`View image ${index + 1}`}
               >
                 <img
-                  src={image.url}
+                  src={optimizeImageUrl(image.url, { width: 160, quality: 'auto', crop: 'thumb' })}
                   alt={image.alt || `${productName} thumbnail ${index + 1}`}
                   className="w-full h-full object-cover"
                   loading="lazy"

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Calendar, ArrowLeft, Share2 } from 'lucide-react';
 import { apiService } from '../lib/mongodb';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { updatePageSeo } from '../utils/seoUtils';
+import { optimizeImageUrl } from '../utils/imageUtils';
 
 interface Blog {
   _id: string;
@@ -36,6 +38,63 @@ export function BlogDetailPage({ slug, onNavigate }: BlogDetailPageProps) {
       
       if (response.success) {
         setBlog(response.data);
+        const b = response.data;
+        const cleanExcerpt = b.content ? b.content.replace(/<[^>]*>/g, '').slice(0, 160).trim() : b.title;
+        const blogImg = b.imageUrl || 'https://astroskulture.in/logo.png';
+
+        updatePageSeo({
+          title: `${b.title} | ASTROS KULTURE Blog`,
+          description: cleanExcerpt,
+          canonicalUrl: `https://astroskulture.in/blog/${b.slug}`,
+          ogType: 'article',
+          ogImage: blogImg,
+          structuredData: [
+            {
+              "@context": "https://schema.org",
+              "@type": "BlogPosting",
+              "headline": b.title,
+              "image": [blogImg],
+              "datePublished": b.publishedAt || new Date().toISOString(),
+              "author": {
+                "@type": "Organization",
+                "name": "ASTROS KULTURE"
+              },
+              "publisher": {
+                "@type": "Organization",
+                "name": "ASTROS KULTURE",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": "https://astroskulture.in/logo.png"
+                }
+              },
+              "description": cleanExcerpt
+            },
+            {
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://astroskulture.in"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Blog",
+                  "item": "https://astroskulture.in/blog"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": b.title,
+                  "item": `https://astroskulture.in/blog/${b.slug}`
+                }
+              ]
+            }
+          ]
+        });
       } else {
         throw new Error(response.message || 'Blog not found');
       }

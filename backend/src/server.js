@@ -339,6 +339,10 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/custom-designs', customDesignRoutes); // ADDED SETTINGS ROUTES
 app.use('/feeds', feedRoutes); // Public Meta / Google Product Catalog CSV feed
 app.use('/api/feeds', feedRoutes);
+app.get('/sitemap.xml', (req, res, next) => {
+  req.url = '/sitemap.xml';
+  feedRoutes(req, res, next);
+});
 
 // Serve static files from React build in production
 if (process.env.NODE_ENV === 'production') {

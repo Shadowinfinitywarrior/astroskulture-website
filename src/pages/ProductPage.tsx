@@ -9,6 +9,7 @@ import ProductImageGallery from '../components/ProductImageGallery';
 import ProductReviews from '../components/ProductReviews';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { trackEcommerce } from '../lib/analytics';
+import { updatePageSeo } from '../utils/seoUtils';
 
 interface AppSettings {
   gstPercentage: number;
@@ -84,6 +85,112 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
             category: prod.category || 'Oversized T-Shirts',
           }
         ], { contentType: 'product_group' });
+
+        // Dynamic SEO & Structured Data (Product + BreadcrumbList Schema)
+        const primaryImg = prod.images?.[0]?.url || 'https://astroskulture.in/logo.png';
+        const inStock = (prod.totalStock !== undefined ? prod.totalStock > 0 : true) || 
+          (Array.isArray(prod.sizes) && prod.sizes.some((s: any) => s.stock > 0));
+
+        const structuredData = [
+          {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": prod.name,
+            "image": prod.images?.map((img: any) => img.url) || [primaryImg],
+            "description": prod.description || `Buy ${prod.name} at Astros Kulture. Premium streetwear and high quality oversized t-shirt.`,
+            "sku": String(prod._id),
+            "mpn": String(prod._id),
+            "brand": {
+              "@type": "Brand",
+              "name": "ASTROS KULTURE"
+            },
+            "offers": {
+              "@type": "Offer",
+              "url": `https://astroskulture.in/product/${prod.slug}`,
+              "priceCurrency": "INR",
+              "price": effectivePrice.toFixed(2),
+              "priceValidUntil": "2027-12-31",
+              "itemCondition": "https://schema.org/NewCondition",
+              "availability": inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+              "seller": {
+                "@type": "Organization",
+                "name": "ASTROS KULTURE"
+              },
+              "hasMerchantReturnPolicy": {
+                "@type": "MerchantReturnPolicy",
+                "applicableCountry": "IN",
+                "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+                "merchantReturnDays": 7,
+                "returnMethod": "https://schema.org/ReturnByMail",
+                "returnFees": "https://schema.org/FreeReturn"
+              },
+              "shippingDetails": {
+                "@type": "OfferShippingDetails",
+                "shippingRate": {
+                  "@type": "MonetaryAmount",
+                  "value": "0.00",
+                  "currency": "INR"
+                },
+                "shippingDestination": {
+                  "@type": "DefinedRegion",
+                  "addressCountry": "IN"
+                },
+                "deliveryTime": {
+                  "@type": "ShippingDeliveryTime",
+                  "handlingTime": {
+                    "@type": "QuantitativeValue",
+                    "minValue": 1,
+                    "maxValue": 2,
+                    "unitCode": "d"
+                  },
+                  "transitTime": {
+                    "@type": "QuantitativeValue",
+                    "minValue": 3,
+                    "maxValue": 5,
+                    "unitCode": "d"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://astroskulture.in"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": prod.category || "Shop",
+                "item": "https://astroskulture.in/shop"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": prod.name,
+                "item": `https://astroskulture.in/product/${prod.slug}`
+              }
+            ]
+          }
+        ];
+
+        updatePageSeo({
+          title: `${prod.name} | ASTROS KULTURE`,
+          description: prod.description || `Buy ${prod.name} - Premium oversized graphic t-shirt crafted from heavy-gauge luxury cotton by ASTROS KULTURE. Free shipping available.`,
+          canonicalUrl: `https://astroskulture.in/product/${prod.slug}`,
+          ogImage: primaryImg,
+          ogType: 'product',
+          ogPrice: {
+            amount: effectivePrice,
+            currency: 'INR'
+          },
+          structuredData
+        });
 
         // Set default size to first available size
         const availableSizes = data.data.sizes
