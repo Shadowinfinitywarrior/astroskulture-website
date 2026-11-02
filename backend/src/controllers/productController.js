@@ -1,5 +1,6 @@
 import Product from '../models/Product.js';
 import Category from '../models/Category.js';
+import { invalidateHomepageCache } from '../routes/homepage.js';
 
 export const getAllProducts = async (req, res) => {
   try {
@@ -230,6 +231,8 @@ export const createProduct = async (req, res) => {
       })
       .lean();
 
+    invalidateHomepageCache();
+
     res.status(201).json({
       success: true,
       data: populatedProduct
@@ -266,6 +269,8 @@ export const updateProduct = async (req, res) => {
         message: 'Product not found' 
       });
     }
+
+    invalidateHomepageCache();
 
     res.json({
       success: true,
@@ -305,6 +310,8 @@ export const deleteProduct = async (req, res) => {
     // Soft-delete: deactivate instead of hard delete to preserve order history
     product.isActive = false;
     await product.save();
+
+    invalidateHomepageCache();
 
     res.json({
       success: true,

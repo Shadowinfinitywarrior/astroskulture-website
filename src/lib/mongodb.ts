@@ -25,8 +25,8 @@ class ApiService {
 
     const isFormData = options.body instanceof FormData;
     const config: RequestInit = {
-      // Use standard caching for GET requests to leverage HTTP cache-control, or caller's preference
-      cache: options.cache || (options.method && options.method !== 'GET' ? 'no-store' : 'default'),
+      // Default to 'no-cache' for GET requests so browser revalidates with server, preventing phantom deleted products
+      cache: options.cache || (options.method && options.method !== 'GET' ? 'no-store' : 'no-cache'),
       headers: {
         ...(!isFormData && { 'Content-Type': 'application/json' }),
         ...(token && { 'Authorization': `Bearer ${token}` }),
@@ -591,7 +591,7 @@ class ApiService {
    * Returns banners, categories, featured products, and the 4 category preview shelves in one request.
    */
   async getHomepageData() {
-    return this.request('/homepage', { cache: 'default' });
+    return this.request('/homepage', { cache: 'no-cache' });
   }
 }
 

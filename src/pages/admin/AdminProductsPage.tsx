@@ -114,9 +114,12 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
       console.log('📦 Fetching products from:', `${API_BASE_URL}/admin/products`);
       console.log('📦 Token present:', !!token);
 
-      const response = await fetch(`${API_BASE_URL}/admin/products`, {
+      const response = await fetch(`${API_BASE_URL}/admin/products?_t=${Date.now()}`, {
+        cache: 'no-store',
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache, no-store',
+          'Pragma': 'no-cache',
         },
       });
 
@@ -308,6 +311,10 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
     if (!confirm('Are you sure you want to delete this product?')) return;
 
     const token = localStorage.getItem('adminToken');
+    const previousProducts = products;
+
+    // Optimistically remove from state so the admin UI updates immediately
+    setProducts(prev => prev.filter(p => p._id !== id));
 
     try {
       console.log('🗑️ Deleting product:', id);
@@ -323,14 +330,18 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
 
       if (result.success) {
         console.log('✅ Product deleted successfully');
-        fetchProducts();
+        await fetchProducts();
         alert('Product deleted successfully!');
       } else {
         console.error('Error deleting product:', result.message);
+        // Rollback state if delete failed
+        setProducts(previousProducts);
         alert(result.message || 'Failed to delete product');
       }
     } catch (error) {
       console.error('Error deleting product:', error);
+      // Rollback state if delete failed
+      setProducts(previousProducts);
       alert('Failed to delete product');
     }
   };

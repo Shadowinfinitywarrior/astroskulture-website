@@ -7,8 +7,17 @@ import User from '../models/User.js';
 import Category from '../models/Category.js';
 import DeletedProduct from '../models/DeletedProduct.js';
 import CustomDesign from '../models/CustomDesign.js';
+import { invalidateHomepageCache } from './homepage.js';
 
 const router = express.Router();
+
+// Never cache admin API responses
+router.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
 
 // Protect all admin routes
 router.use(authenticateAdmin);
@@ -88,6 +97,8 @@ router.post('/products', async (req, res) => {
           })
           .lean();
 
+        invalidateHomepageCache();
+
         return res.status(201).json({
           success: true,
           data: populatedProduct
@@ -155,6 +166,8 @@ router.put('/products/:id', async (req, res) => {
       });
     }
 
+    invalidateHomepageCache();
+
     res.json({
       success: true,
       data: product
@@ -182,6 +195,7 @@ router.delete('/products/:id', async (req, res) => {
 
     try {
       await Product.findByIdAndDelete(req.params.id);
+      invalidateHomepageCache();
 
       res.json({
         success: true,
@@ -208,6 +222,7 @@ router.delete('/products/:id', async (req, res) => {
         });
 
         await deletedProduct.save();
+        invalidateHomepageCache();
 
         console.log('✅ Product moved to DeletedProduct collection');
 
@@ -723,6 +738,7 @@ router.post('/deleted-products/:id/restore', async (req, res) => {
 
     await restoredProduct.save();
     await DeletedProduct.findByIdAndDelete(req.params.id);
+    invalidateHomepageCache();
 
     res.json({
       success: true,

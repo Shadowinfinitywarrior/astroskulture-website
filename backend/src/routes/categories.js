@@ -1,5 +1,6 @@
 import express from 'express';
 import Category from '../models/Category.js';
+import { invalidateHomepageCache } from './homepage.js';
 
 const router = express.Router();
 
@@ -77,6 +78,7 @@ router.post('/', async (req, res) => {
   try {
     const category = new Category(req.body);
     await category.save();
+    invalidateHomepageCache();
     
     res.status(201).json({
       success: true,
@@ -107,6 +109,8 @@ router.put('/:id', async (req, res) => {
         message: 'Category not found'
       });
     }
+
+    invalidateHomepageCache();
     
     res.json({
       success: true,
@@ -137,6 +141,8 @@ router.delete('/:id', async (req, res) => {
         message: 'Category not found'
       });
     }
+
+    invalidateHomepageCache();
     
     res.json({
       success: true,

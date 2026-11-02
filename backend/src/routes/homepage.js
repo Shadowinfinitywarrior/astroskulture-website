@@ -8,7 +8,7 @@ const router = express.Router();
 // In-memory cache for homepage data
 let cachedData = null;
 let cacheExpiry = 0;
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes cache
+const CACHE_TTL_MS = 30 * 1000; // 30 seconds cache (short TTL so changes propagate rapidly)
 
 export const invalidateHomepageCache = () => {
   cachedData = null;
@@ -35,7 +35,7 @@ router.get('/', async (req, res) => {
   try {
     const now = Date.now();
     if (cachedData && now < cacheExpiry) {
-      res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
       return res.json({
         success: true,
         source: 'cache',
@@ -95,7 +95,7 @@ router.get('/', async (req, res) => {
     cachedData = payload;
     cacheExpiry = now + CACHE_TTL_MS;
 
-    res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
+    res.setHeader('Cache-Control', 'no-cache, must-revalidate');
     return res.json({
       success: true,
       source: 'database',
