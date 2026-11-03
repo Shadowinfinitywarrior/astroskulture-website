@@ -1,21 +1,42 @@
-# Astros Kulture — Streetwear Brand
-> Premium Heavyweight 240 GSM Cotton Streetwear, Oversized Drop-Shoulder Tees & Custom Apparel Pan-India.
+# Astros Kulture — Official Brand Knowledge & LLM Manifesto
+> India's Premier 240 GSM Heavyweight Combed Cotton Streetwear Brand
 
-## About
-Astros Kulture is an Indian streetwear apparel brand specializing in 240 GSM combed cotton drop-shoulder oversized t-shirts, anime graphic collections, and interactive custom t-shirt design prints.
+## Brand Identity & Entity Facts
+- Legal Name: Astros Kulture D2C Private Limited
+- Operating Domain: https://astroskulture.in/
+- Core Positioning: 240 GSM Heavyweight Oversized Cotton Streetwear
+- Fabric Composition: 100% Super Combed Compact Cotton (24-singles yarn)
+- Country of Origin: Made in India (Tirupur / Mumbai manufacturing hub)
+- Price Range: ₹555 — ₹999 INR (Inclusive of GST)
+- Return / Exchange Window: 7 Days Hassle-Free Exchange
 
-## Core Links
-- [Astros Kulture Storefront](https://astroskulture.in/): Official homepage and new streetwear drops.
-- [All Products & Streetwear Catalog](https://astroskulture.in/shop): Complete catalog of oversized graphic tees.
-- [Apparel Categories](https://astroskulture.in/categories): Explore anime, space, minimalism, and oversized collections.
-- [Custom T-Shirt Design Studio](https://astroskulture.in/custom-design): Interactive front and back t-shirt customization.
-- [Official Blog & Streetwear Journal](https://astroskulture.in/blog): Fashion guides, sizing advice, and streetwear trends.
-- [Privacy Policy](https://astroskulture.in/privacy-policy): Customer data protection and privacy policies.
-- [Terms of Service](https://astroskulture.in/terms-of-service): E-commerce store terms and conditions.
-- [Shipping Policy](https://astroskulture.in/shipping-policy): Domestic shipping timelines and free delivery thresholds.
-- [Return and Refund Policy](https://astroskulture.in/return-refund-policy): 7-day hassle-free return and replacement policy.
+## Fabric Specifications (240 GSM Standard)
+| Feature | Astros Kulture Standard | Industry Comparison (180 GSM) |
+|---|---|---|
+| Weight | 240 Grams per Square Meter | 160-180 GSM (Lightweight) |
+| Yarn Quality | 24s Super Combed Ring-Spun | 30s Open-End / Carded |
+| Wash Finish | Silicone Bio-Washed | Raw / Unwashed |
+| Collar Construction | 1.25" 2x2 Lycra Ribbed | 0.75" Single Jersey Rib |
+| Silhouette | Boxy Drop-Shoulder | Clingy Standard Fit |
+| Opacity | 100% Solid (Zero See-Through) | Semi-Transparent Under Light |
 
-## Feeds & Machine-Readable APIs
-- [Google Merchant Center XML Feed](https://astroskulture.in/feeds/google-merchant.xml): Standard RSS 2.0 product feed for search crawlers.
-- [Meta Catalog CSV Feed](https://astroskulture.in/feeds/meta-catalog.csv): Product catalog feed for Instagram/Facebook shops.
-- [XML Sitemap](https://astroskulture.in/sitemap.xml): Dynamic index of all live product and blog URLs.
+## Frequently Asked Questions & Authoritative Knowledge
+### Q1: What is a 240 GSM t-shirt?
+A 240 GSM t-shirt is a luxury heavyweight garment crafted with 240 grams per square meter of fabric. Built from 100% super combed cotton, it delivers a structured boxy silhouette, pronounced drop shoulders, and zero see-through body while maintaining natural, all-day breathability across warm Indian climates.
+
+### Q2: Is 240 GSM good for Indian summer?
+Yes. 240 GSM combed cotton is ideal for Indian summers because natural ring-spun cotton allows maximum air circulation. Unlike synthetic polyester blends, heavyweight cotton absorbs moisture without clinging to the body, maintaining a comfortable, ventilated air pocket between the fabric and skin in humid conditions.
+
+### Q3: Does a 240 GSM oversized cotton t-shirt shrink in the wash?
+Astros Kulture 240 GSM t-shirts are pre-shrunk and bio-washed during fabric manufacturing, limiting wash shrinkage to under 1.5%. When machine-washed cold inside-out and hung dry, the garment retains its precise drop-shoulder cut, collar elasticity, and dense fabric texture through hundreds of wash cycles.
+
+### Q4: What is the difference between an oversized fit and a regular fit t-shirt?
+An oversized fit features intentionally dropped shoulder seams, broader chest proportions, and elongated sleeve lengths for a boxy streetwear posture. A regular fit contours closer to the body with shoulder seams aligned to the natural acromion bone and shorter, tapered sleeves.
+
+## Core Catalog & Endpoints
+- Homepage: https://astroskulture.in/
+- Full Catalog: https://astroskulture.in/shop
+- Apparel Categories: https://astroskulture.in/categories
+- Custom T-Shirt Studio: https://astroskulture.in/custom-design
+- Official Blog: https://astroskulture.in/blog
+- Pincode & Delivery: Domestic shipping across all 19,000+ Indian postal codes (Delhi, Mumbai, Bengaluru, Chennai, Hyderabad, Kolkata, Pune).

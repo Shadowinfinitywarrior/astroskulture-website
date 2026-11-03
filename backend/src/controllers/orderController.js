@@ -46,9 +46,13 @@ export const getOrderById = async (req, res) => {
   try {
     const isAdmin = req.user && req.user.role === 'admin';
 
-    const order = await Order.findOne(
-      isAdmin ? { _id: req.params.id } : { _id: req.params.id, userId: req.user.id }
-    )
+    const orderQuery = isAdmin
+      ? { _id: req.params.id }
+      : req.user
+        ? { $or: [{ _id: req.params.id, userId: req.user.id }, { _id: req.params.id, userId: { $exists: false } }] }
+        : { _id: req.params.id };
+
+    const order = await Order.findOne(orderQuery)
       .populate('userId', 'email fullName phone addresses')
       .populate('items.productId', 'name images slug');
     
@@ -220,16 +224,18 @@ export const createOrder = async (req, res) => {
 
     const total = subtotal + tax + shipping;
 
+    const isCod = req.body.paymentMethod === 'cod';
     const orderData = {
       items: validatedItems,
-      userId: req.user.id,
+      userId: req.user ? req.user.id : undefined,
       subtotal,
       tax,
       shipping,
       total,
       shippingAddress,
-      paymentStatus,
-      status: 'pending',
+      paymentMethod: isCod ? 'cod' : 'razorpay',
+      paymentStatus: isCod ? 'pending' : paymentStatus,
+      status: isCod ? 'processing' : 'pending',
       eventId: req.body.eventId || crypto.randomUUID(),
       fbp: req.body.fbp || '',
       fbc: req.body.fbc || '',

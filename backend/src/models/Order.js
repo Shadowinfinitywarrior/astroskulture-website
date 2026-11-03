@@ -56,6 +56,11 @@ const orderSchema = new mongoose.Schema({
     enum: ['pending', 'paid', 'failed', 'refunded'],
     default: 'pending'
   },
+  paymentMethod: {
+    type: String,
+    enum: ['razorpay', 'cod'],
+    default: 'razorpay'
+  },
   paymentId: String,
   razorpayOrderId: String,
   shippingAddress: {

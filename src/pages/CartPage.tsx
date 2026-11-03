@@ -1,4 +1,4 @@
-import { Trash2, Plus, Minus } from 'lucide-react';
+import { Trash2, Plus, Minus, Tag, Truck, Check, X } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useEffect, useState } from 'react';
 import { apiService } from '../lib/mongodb';
@@ -25,6 +25,10 @@ export function CartPage({ onNavigate }: CartPageProps) {
     shippingEnabled: true,
     freeShippingAbove: 999,
   });
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null);
+  const [couponError, setCouponError] = useState('');
+  const [couponSuccess, setCouponSuccess] = useState('');
 
   useEffect(() => {
     loadSettings();
@@ -51,7 +55,48 @@ export function CartPage({ onNavigate }: CartPageProps) {
     }
   };
 
+  const handleApplyCoupon = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCouponError('');
+    setCouponSuccess('');
+    const code = couponInput.trim().toUpperCase();
+
+    if (!code) {
+      setCouponError('Please enter a coupon code');
+      return;
+    }
+
+    if (code === 'ASTROS240' || code === 'STREETWEAR10') {
+      const discount = Math.round(subtotal * 0.10);
+      setAppliedCoupon({ code, discount });
+      setCouponSuccess(`10% discount applied! You saved ₹${discount}`);
+      setCouponInput('');
+    } else if (code === 'WELCOME50') {
+      const discount = Math.min(50, subtotal);
+      setAppliedCoupon({ code, discount });
+      setCouponSuccess(`₹50 welcome discount applied!`);
+      setCouponInput('');
+    } else if (code === 'FLAT100') {
+      if (subtotal < 999) {
+        setCouponError('FLAT100 is valid only on orders above ₹999');
+        return;
+      }
+      setAppliedCoupon({ code, discount: 100 });
+      setCouponSuccess('₹100 flat discount applied!');
+      setCouponInput('');
+    } else {
+      setCouponError('Invalid promo code. Try ASTROS240 or WELCOME50');
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponSuccess('');
+    setCouponError('');
+  };
+
   const subtotal = cartTotal;
+  const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0;
   let gst = 0;
   if (settings.gstEnabled) {
     gst = items.reduce((sum, item) => {
@@ -67,7 +112,11 @@ export function CartPage({ onNavigate }: CartPageProps) {
   if (settings.shippingEnabled) {
     shipping = subtotal >= settings.freeShippingAbove ? 0 : settings.shippingFee;
   }
-  const total = subtotal + gst + shipping;
+  const total = Math.max(0, subtotal - couponDiscount + gst + shipping);
+
+  const freeShippingThreshold = settings.freeShippingAbove || 999;
+  const freeShippingDiff = Math.max(0, freeShippingThreshold - subtotal);
+  const freeShippingPercent = Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100));
 
   if (items.length === 0) {
     return (
@@ -140,14 +189,95 @@ export function CartPage({ onNavigate }: CartPageProps) {
             ))}
           </div>
 
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 lg:sticky lg:top-24">
+          <div className="lg:col-span-1 space-y-4">
+            {/* Free Shipping Progress Meter */}
+            <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+              <div className="flex items-center gap-2 mb-2">
+                <Truck className="w-4 h-4 text-red-600 flex-shrink-0" />
+                <span className="text-xs sm:text-sm font-semibold text-gray-800">
+                  {freeShippingDiff === 0 ? (
+                    <span className="text-emerald-700 font-bold">🎉 You've unlocked FREE Shipping!</span>
+                  ) : (
+                    <span>Add <strong className="text-red-600">₹{freeShippingDiff.toFixed(0)}</strong> more for <strong>FREE Shipping</strong></span>
+                  )}
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full transition-all duration-500 rounded-full ${
+                    freeShippingPercent >= 100 ? 'bg-emerald-600' : 'bg-red-600'
+                  }`}
+                  style={{ width: `${freeShippingPercent}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Coupon / Voucher Box */}
+            <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+              <div className="flex items-center gap-1.5 mb-2.5">
+                <Tag className="w-4 h-4 text-red-600" />
+                <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-gray-800">
+                  Have a Promo Code?
+                </h3>
+              </div>
+
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-emerald-600" />
+                    <div>
+                      <p className="text-xs font-bold text-emerald-800 tracking-wide uppercase">
+                        {appliedCoupon.code} Applied
+                      </p>
+                      <p className="text-[11px] text-emerald-700">Saved ₹{appliedCoupon.discount}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                    title="Remove coupon"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleApplyCoupon} className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="e.g. ASTROS240, WELCOME50"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value)}
+                      className="flex-1 px-3 py-2 text-xs uppercase bg-gray-50 focus:bg-white border border-gray-300 focus:border-red-500 rounded-lg outline-none font-semibold tracking-wider placeholder:normal-case placeholder:font-normal placeholder:tracking-normal"
+                    />
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-lg transition-all active:scale-95 shadow-xs cursor-pointer"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                  {couponError && <p className="text-xs text-red-600 font-medium">{couponError}</p>}
+                  {couponSuccess && <p className="text-xs text-emerald-600 font-medium">{couponSuccess}</p>}
+                </form>
+              )}
+            </div>
+
+            {/* Order Summary */}
+            <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 lg:sticky lg:top-24 border border-gray-100">
               <h2 className="font-heading font-semibold text-lg md:text-xl mb-4 md:mb-6">Order Summary</h2>
               <div className="space-y-2 md:space-y-3 mb-4 md:mb-6">
                 <div className="flex justify-between text-xs md:text-sm">
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-medium">₹{subtotal.toFixed(2)}</span>
                 </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between text-xs md:text-sm text-emerald-700 font-medium">
+                    <span>Coupon ({appliedCoupon.code})</span>
+                    <span>-₹{couponDiscount.toFixed(2)}</span>
+                  </div>
+                )}
                 {settings.gstEnabled && (
                   <div className="flex justify-between text-xs md:text-sm">
                     <span className="text-gray-600">GST ({settings.gstPercentage}%)</span>
@@ -158,14 +288,9 @@ export function CartPage({ onNavigate }: CartPageProps) {
                   <div className="flex justify-between text-xs md:text-sm">
                     <span className="text-gray-600">Shipping</span>
                     <span className="font-medium">
-                      {shipping === 0 ? 'FREE' : `₹${shipping}`}
+                      {shipping === 0 ? <span className="text-emerald-700 font-bold">FREE</span> : `₹${shipping}`}
                     </span>
                   </div>
-                )}
-                {subtotal < settings.freeShippingAbove && (
-                  <p className="text-xs text-red-600">
-                    Add ₹{(settings.freeShippingAbove - subtotal).toFixed(2)} more for free shipping
-                  </p>
                 )}
                 <div className="border-t border-gray-200 pt-2 md:pt-3 flex justify-between text-base md:text-lg font-bold">
                   <span>Total</span>
@@ -174,13 +299,13 @@ export function CartPage({ onNavigate }: CartPageProps) {
               </div>
               <button
                 onClick={() => onNavigate('checkout')}
-                className="w-full btn-primary text-sm md:text-base"
+                className="w-full btn-primary text-sm md:text-base cursor-pointer"
               >
                 Proceed to Checkout
               </button>
               <button
                 onClick={() => onNavigate('shop')}
-                className="w-full btn-secondary mt-2 md:mt-3 text-sm md:text-base"
+                className="w-full btn-secondary mt-2 md:mt-3 text-sm md:text-base cursor-pointer"
               >
                 Continue Shopping
               </button>

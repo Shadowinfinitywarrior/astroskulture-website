@@ -11,6 +11,7 @@ import { trackEcommerce } from '../lib/analytics';
 import { optimizeImageUrl } from '../utils/imageUtils';
 import { updatePageSeo } from '../utils/seoUtils';
 import { ProductCardSkeleton } from './ProductCard';
+import { QuickSizePicker } from '../components/QuickSizePicker';
 
 interface ShopPageProps {
   onNavigate: (page: string, params?: any) => void;
@@ -25,7 +26,7 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
   // Initialize state from URL params
   const getSearchParams = () => new URLSearchParams(window.location.search);
 
-  const [searchQuery, setSearchQuery] = useState(() => getSearchParams().get('search') || '');
+  const [searchQuery, setSearchQuery] = useState(() => getSearchParams().get('q') || getSearchParams().get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState < string | null > (() => {
     const params = getSearchParams();
     return initialCategory || params.get('category') || null;
@@ -54,12 +55,18 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
   const { addToCart } = useCart();
   const { user } = useAuth();
   const [addedProductId, setAddedProductId] = useState<string | null>(null);
+  const [sizePickerProductId, setSizePickerProductId] = useState<string | null>(null);
 
-  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
-    e.stopPropagation();
-    if (product.totalStock === 0) return;
+  // Sync search query when query parameter changes
+  useEffect(() => {
+    const params = getSearchParams();
+    const q = params.get('q') || params.get('search');
+    if (q !== null && q !== searchQuery) {
+      setSearchQuery(q);
+    }
+  }, [window.location.search]);
 
-    const defaultSize = product.sizes?.find((s: any) => s.stock > 0)?.size || 'M';
+  const handleSelectSizeShop = (product: Product, size: string) => {
     addToCart({
       productId: product._id,
       name: product.name,
@@ -69,14 +76,21 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
       gstApplicable: product.gstApplicable ?? false,
       shippingFee: product.shippingFee ?? 0,
       freeShippingAbove: product.freeShippingAbove ?? 0,
-      size: defaultSize,
+      size: size,
       image: product.images[0]?.url || '',
     });
 
     setAddedProductId(product._id);
+    setSizePickerProductId(null);
     setTimeout(() => {
       setAddedProductId((current) => (current === product._id ? null : current));
     }, 2000);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
+    e.stopPropagation();
+    if (product.totalStock === 0) return;
+    setSizePickerProductId(prev => prev === product._id ? null : product._id);
   };
 
   const handleBuyNow = (e: React.MouseEvent, product: Product) => {
@@ -114,26 +128,40 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
   useEffect(() => {
     const catName = selectedCategory && selectedCategory !== 'all' ? selectedCategory : 'All Streetwear & Oversized T-Shirts';
     updatePageSeo({
-      title: `${catName} | ASTROS KULTURE Shop`,
-      description: `Explore ${catName} at ASTROS KULTURE. Heavyweight graphic tees, anime oversized streetwear, and limited drops. Free shipping across India.`,
+      title: `${catName} – 240 GSM Heavyweight Oversized T-Shirts | ASTROS KULTURE`,
+      description: `Explore ${catName} at ASTROS KULTURE. Heavyweight 240 GSM combed cotton graphic tees, anime oversized streetwear, and limited drops. Free shipping across India.`,
       canonicalUrl: selectedCategory && selectedCategory !== 'all' 
         ? `https://astroskulture.in/shop?category=${encodeURIComponent(selectedCategory)}` 
         : 'https://astroskulture.in/shop',
       ogType: 'website',
-      structuredData: {
-        "@context": "https://schema.org",
-        "@type": "CollectionPage",
-        "name": catName,
-        "description": `Shop ${catName} at ASTROS KULTURE`,
-        "url": window.location.href,
-        "isPartOf": {
-          "@type": "WebSite",
-          "name": "ASTROS KULTURE",
-          "url": "https://astroskulture.in"
-        }
-      }
+      structuredData: [
+        {
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": catName,
+          "description": `Shop ${catName} at ASTROS KULTURE`,
+          "url": window.location.href,
+          "isPartOf": {
+            "@type": "WebSite",
+            "name": "ASTROS KULTURE",
+            "url": "https://astroskulture.in"
+          }
+        },
+        ...(products.length > 0 ? [{
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          "name": `${catName} 240 GSM Streetwear Collection`,
+          "numberOfItems": products.length,
+          "itemListElement": products.slice(0, 12).map((prod, idx) => ({
+            "@type": "ListItem",
+            "position": idx + 1,
+            "url": `https://astroskulture.in/product/${prod.slug}`,
+            "name": prod.name
+          }))
+        }] : [])
+      ]
     });
-  }, [selectedCategory]);
+  }, [selectedCategory, products.length]);
 
   useEffect(() => {
     loadProducts();
@@ -529,7 +557,7 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
                     const isWishlistLoading = wishlistLoading === product._id;
 
                     return (
-                      <div key={product._id} className="bg-white rounded-lg overflow-hidden group hover:shadow-lg transition-all duration-300 h-full flex flex-col border border-gray-200">
+                      <div key={product._id} className="bg-white rounded-lg overflow-hidden group hover:shadow-lg transition-all duration-300 h-full flex flex-col border border-gray-200 relative">
                         <div className="relative overflow-hidden flex-shrink-0 w-full aspect-square bg-gray-100">
                           <a
                             href={`/product/${product.slug}`}
@@ -542,7 +570,7 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
                           >
                             <img
                               src={getProductImage(product)}
-                              alt={product.images[0]?.alt || product.name}
+                              alt={product.images[0]?.alt || `${product.name} - 240 GSM Heavyweight Oversized Cotton T-Shirt`}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
                               loading="lazy"
                               decoding="async"
@@ -692,6 +720,15 @@ export function ShopPage({ onNavigate, initialCategory }: ShopPageProps) {
                             )}
                           </div>
                         </div>
+
+                        {/* Quick Size Selector Popover */}
+                        {sizePickerProductId === product._id && (
+                          <QuickSizePicker
+                            product={product}
+                            onSelectSize={(size) => handleSelectSizeShop(product, size)}
+                            onClose={() => setSizePickerProductId(null)}
+                          />
+                        )}
                       </div>
                     );
                   })}

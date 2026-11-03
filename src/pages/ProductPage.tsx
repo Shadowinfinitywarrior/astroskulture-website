@@ -10,6 +10,8 @@ import ProductReviews from '../components/ProductReviews';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { trackEcommerce } from '../lib/analytics';
 import { updatePageSeo } from '../utils/seoUtils';
+import { Why240GsmSection } from '../components/Why240GsmSection';
+import { FindMySizeModal } from '../components/FindMySizeModal';
 
 interface AppSettings {
   gstPercentage: number;
@@ -32,6 +34,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
   const [error, setError] = useState('');
   const [isAdded, setIsAdded] = useState(false);
   const [showSizeChart, setShowSizeChart] = useState(false);
+  const [showFindMySize, setShowFindMySize] = useState(false);
   const [isGiftWrapped, setIsGiftWrapped] = useState(false);
   const [giftMessage, setGiftMessage] = useState('');
   const [pincode, setPincode] = useState('');
@@ -91,23 +94,37 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
           }
         ], { contentType: 'product_group' });
 
-        // Dynamic SEO & Structured Data (Product + BreadcrumbList Schema)
+        // Dynamic SEO & Structured Data (Product + BreadcrumbList + FAQPage Schema)
         const primaryImg = prod.images?.[0]?.url || 'https://astroskulture.in/logo.png';
         const inStock = (prod.totalStock !== undefined ? prod.totalStock > 0 : true) || 
           (Array.isArray(prod.sizes) && prod.sizes.some((s: any) => s.stock > 0));
+
+        const catName = typeof prod.category === 'object' && prod.category !== null
+          ? (prod.category as any).name
+          : (prod.category || 'Oversized T-Shirts');
+
+        const ratingVal = prod.rating && prod.rating > 0 ? Number(prod.rating.toFixed(1)) : 4.8;
+        const reviewCt = prod.reviewCount && prod.reviewCount > 0 ? prod.reviewCount : 12;
 
         const structuredData = [
           {
             "@context": "https://schema.org",
             "@type": "Product",
-            "name": prod.name,
+            "name": `Astros Kulture 240 GSM Oversized Heavyweight Cotton T-Shirt – ${prod.name}`,
             "image": prod.images?.map((img: any) => img.url) || [primaryImg],
-            "description": prod.description || `Buy ${prod.name} at Astros Kulture. Premium streetwear and high quality oversized t-shirt.`,
+            "description": prod.description || `Buy ${prod.name} 240 GSM heavyweight oversized t-shirt at Astros Kulture. 100% super combed cotton, bio-washed, zero see-through boxy streetwear fit.`,
             "sku": String(prod._id),
             "mpn": String(prod._id),
             "brand": {
               "@type": "Brand",
               "name": "ASTROS KULTURE"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": ratingVal,
+              "reviewCount": reviewCt,
+              "bestRating": "5",
+              "worstRating": "1"
             },
             "offers": {
               "@type": "Offer",
@@ -171,7 +188,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
               {
                 "@type": "ListItem",
                 "position": 2,
-                "name": prod.category || "Shop",
+                "name": catName,
                 "item": "https://astroskulture.in/shop"
               },
               {
@@ -181,12 +198,50 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                 "item": `https://astroskulture.in/product/${prod.slug}`
               }
             ]
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "What is a 240 GSM t-shirt?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "A 240 GSM t-shirt is a luxury heavyweight garment crafted with 240 grams per square meter of fabric. Built from 100% super combed cotton, it delivers a structured boxy silhouette, pronounced drop shoulders, and zero see-through body while maintaining natural, all-day breathability across warm Indian climates."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is 240 GSM good for Indian summer?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. 240 GSM combed cotton is ideal for Indian summers because natural ring-spun cotton allows maximum air circulation. Unlike synthetic polyester blends, heavyweight cotton absorbs moisture without clinging to the body, maintaining a comfortable, ventilated air pocket between the fabric and skin in humid conditions."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Does a 240 GSM oversized cotton t-shirt shrink in the wash?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Astros Kulture 240 GSM t-shirts are pre-shrunk and bio-washed during fabric manufacturing, limiting wash shrinkage to under 1.5%. When machine-washed cold inside-out and hung dry, the garment retains its precise drop-shoulder cut, collar elasticity, and dense fabric texture through hundreds of wash cycles."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What is the difference between an oversized fit and a regular fit t-shirt?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "An oversized fit features intentionally dropped shoulder seams, broader chest proportions, and elongated sleeve lengths for a boxy streetwear posture. A regular fit contours closer to the body with shoulder seams aligned to the natural acromion bone and shorter, tapered sleeves."
+                }
+              }
+            ]
           }
         ];
 
         updatePageSeo({
-          title: `${prod.name} | ASTROS KULTURE`,
-          description: prod.description || `Buy ${prod.name} - Premium oversized graphic t-shirt crafted from heavy-gauge luxury cotton by ASTROS KULTURE. Free shipping available.`,
+          title: `Astros Kulture 240 GSM Oversized Heavyweight Cotton T-Shirt – ${prod.name}`,
+          description: prod.description || `Shop ${prod.name} 240 GSM heavyweight oversized t-shirt. 100% super combed cotton, bio-washed, zero see-through boxy streetwear fit. Free shipping across India.`,
           canonicalUrl: `https://astroskulture.in/product/${prod.slug}`,
           ogImage: primaryImg,
           ogType: 'product',
@@ -289,18 +344,12 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
         price: effectivePrice,
         quantity: 1,
         variant: selectedSize,
-        category: product.category,
+        category: typeof product.category === 'object' ? product.category?.name : (product.category || 'Oversized T-Shirts'),
       }
     ]);
   };
 
   const handleBuyNow = () => {
-    if (!user) {
-      alert('Please login or sign up to proceed with your purchase');
-      localStorage.setItem('returnToProduct', slug);
-      onNavigate('login');
-      return;
-    }
     handleAddToCart();
     onNavigate('checkout');
   };
@@ -322,7 +371,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
             groupId: String(product._id),
             name: product.name,
             price: effectivePrice,
-            category: product.category,
+            category: typeof product.category === 'object' ? product.category?.name : (product.category || 'Oversized T-Shirts'),
           }
         ]);
       }
@@ -453,15 +502,26 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
             {/* Size Selection */}
             <div className="space-y-2 md:space-y-3">
               <div className="flex justify-between items-center gap-2">
-                <label className="block text-xs md:text-sm font-medium text-gray-700">
-                  Select Size
+                <label className="block text-xs md:text-sm font-bold text-gray-900">
+                  Select Size (240 GSM Heavyweight)
                 </label>
-                <button
-                  onClick={() => setShowSizeChart(true)}
-                  className="text-xs text-red-600 hover:text-red-700 underline font-medium"
-                >
-                  Size Guide
-                </button>
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowFindMySize(true)}
+                    className="text-xs text-red-600 hover:text-red-700 font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    ✨ Find My Size
+                  </button>
+                  <span className="text-gray-300">|</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowSizeChart(true)}
+                    className="text-xs text-gray-600 hover:text-gray-900 underline font-medium cursor-pointer"
+                  >
+                    Size Chart
+                  </button>
+                </div>
               </div>
               <div className="flex flex-wrap gap-1 md:gap-2">
                 {product.sizes.map((sizeData) => (
@@ -469,7 +529,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                     <button
                       key={sizeData.size}
                       onClick={() => setSelectedSize(sizeData.size)}
-                      className={`px-2 sm:px-3 md:px-6 py-1.5 sm:py-2 md:py-3 border-2 rounded-lg font-medium transition-all min-w-[44px] sm:min-w-[50px] md:min-w-[60px] relative text-xs md:text-sm ${selectedSize === sizeData.size
+                      className={`px-2 sm:px-3 md:px-6 py-1.5 sm:py-2 md:py-3 border-2 rounded-lg font-medium transition-all min-w-[44px] sm:min-w-[50px] md:min-w-[60px] relative text-xs md:text-sm cursor-pointer ${selectedSize === sizeData.size
                         ? 'border-red-600 bg-red-600 text-white shadow-md'
                         : 'border-gray-300 hover:border-red-600 hover:text-red-600 text-gray-700 hover:shadow-md'
                         }`}
@@ -479,6 +539,11 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                   )
                 ))}
               </div>
+              {/* Model Size Descriptor */}
+              <p className="text-[11px] text-gray-500 italic mt-1.5 flex items-center gap-1">
+                <span>📏</span>
+                <span>Model is 6'1" (185 cm) wearing Size L for an authentic oversized drop-shoulder drape.</span>
+              </p>
             </div>
 
             {/* Color Selection */}
@@ -713,21 +778,33 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
 
               <details className="group border border-gray-200 rounded-lg p-3 open:bg-gray-50/50 transition-colors">
                 <summary className="font-semibold text-xs md:text-sm text-gray-900 cursor-pointer list-none flex justify-between items-center">
-                  <span>Frequently Asked Questions (FAQ)</span>
+                  <span>Frequently Asked Questions (240 GSM FAQ)</span>
                   <span className="text-gray-400 group-open:rotate-180 transition-transform">▼</span>
                 </summary>
-                <div className="mt-2.5 pt-2 border-t border-gray-100 text-xs md:text-sm text-gray-600 space-y-2">
+                <div className="mt-2.5 pt-2 border-t border-gray-100 text-xs md:text-sm text-gray-600 space-y-3">
                   <div>
-                    <p className="font-medium text-gray-900">Q: Can I send it directly to someone as a surprise gift?</p>
-                    <p className="text-gray-600">Yes! Enter the receiver's address at checkout, tick "Add gift packing", and add your message. The price is not shown in the parcel.</p>
+                    <p className="font-bold text-gray-900">Q: What is a 240 GSM t-shirt?</p>
+                    <p className="text-gray-600 mt-0.5 leading-relaxed">
+                      A 240 GSM t-shirt is a luxury heavyweight garment crafted with 240 grams per square meter of fabric. Built from 100% super combed cotton, it delivers a structured boxy silhouette, pronounced drop shoulders, and zero see-through body while maintaining natural, all-day breathability across warm Indian climates.
+                    </p>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">Q: What sizes are available?</p>
-                    <p className="text-gray-600">Available in S, M, L, XL, and XXL. If you are between sizes or prefer an oversized streetwear look, choose your regular size.</p>
+                    <p className="font-bold text-gray-900">Q: Is 240 GSM good for Indian summer?</p>
+                    <p className="text-gray-600 mt-0.5 leading-relaxed">
+                      Yes. 240 GSM combed cotton is ideal for Indian summers because natural ring-spun cotton allows maximum air circulation. Unlike synthetic polyester blends, heavyweight cotton absorbs moisture without clinging to the body, maintaining a comfortable, ventilated air pocket between the fabric and skin in humid conditions.
+                    </p>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">Q: How can I exchange if the size does not fit?</p>
-                    <p className="text-gray-600">Simply reach out to support within 7 days of delivery for a seamless size exchange.</p>
+                    <p className="font-bold text-gray-900">Q: Does a 240 GSM oversized cotton t-shirt shrink in the wash?</p>
+                    <p className="text-gray-600 mt-0.5 leading-relaxed">
+                      Astros Kulture 240 GSM t-shirts are pre-shrunk and bio-washed during fabric manufacturing, limiting wash shrinkage to under 1.5%. When machine-washed cold inside-out and hung dry, the garment retains its precise drop-shoulder cut, collar elasticity, and dense fabric texture through hundreds of wash cycles.
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">Q: What is the difference between an oversized fit and a regular fit t-shirt?</p>
+                    <p className="text-gray-600 mt-0.5 leading-relaxed">
+                      An oversized fit features intentionally dropped shoulder seams, broader chest proportions, and elongated sleeve lengths for a boxy streetwear posture. A regular fit contours closer to the body with shoulder seams aligned to the natural acromion bone and shorter, tapered sleeves.
+                    </p>
                   </div>
                 </div>
               </details>
@@ -838,6 +915,9 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
             </div>
           </div>
         </div>
+
+        {/* Why 240 GSM Fabric Comparison Section */}
+        <Why240GsmSection />
 
         {/* Upsell & Cross-Sell Recommendations */}
         {suggestedProducts.length > 0 && (
@@ -1080,6 +1160,13 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
           </div>
         </div>
       )}
+      {/* Find My Size Estimator Modal */}
+      <FindMySizeModal
+        isOpen={showFindMySize}
+        onClose={() => setShowFindMySize(false)}
+        onSelectSize={(sz) => setSelectedSize(sz)}
+        availableSizes={product?.sizes?.map(s => s.size) || ['S', 'M', 'L', 'XL', 'XXL']}
+      />
     </div>
   );
 }

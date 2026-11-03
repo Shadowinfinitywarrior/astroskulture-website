@@ -26,6 +26,7 @@ const UserOrdersPage = lazy(() => import('./pages/UserOrdersPage'));
 const OrderConfirmationPage = lazy(() => import('./pages/OrderConfirmationPage').then(m => ({ default: m.OrderConfirmationPage })));
 const CustomDesignsPage = lazy(() => import('./pages/CustomDesignsPage').then(m => ({ default: m.CustomDesignsPage })));
 const PolicyPage = lazy(() => import('./pages/PolicyPage').then(m => ({ default: m.PolicyPage })));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
 // Lazy-load Admin routes (never required for customer browsing)
 const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'));
@@ -131,6 +132,10 @@ function AppContent() {
       setCurrentPage('shipping-policy');
     } else if (path === '/return-refund-policy') {
       setCurrentPage('return-refund-policy');
+    } else if (path === '/' || path === '') {
+      setCurrentPage('home');
+    } else {
+      setCurrentPage('404');
     }
 
     // Initialize Web Vitals observer (CLS, LCP)
@@ -256,8 +261,10 @@ function AppContent() {
         return <PolicyPage type="shipping" onNavigate={handleNavigate} />;
       case 'return-refund-policy':
         return <PolicyPage type="returns" onNavigate={handleNavigate} />;
+      case '404':
+        return <NotFoundPage onNavigate={handleNavigate} />;
       default:
-        return <HomePage onNavigate={handleNavigate} />;
+        return <NotFoundPage onNavigate={handleNavigate} />;
     }
   };
 

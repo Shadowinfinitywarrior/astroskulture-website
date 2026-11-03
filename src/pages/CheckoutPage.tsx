@@ -63,6 +63,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
   const [error, setError] = useState("");
   const [selectedAddress, setSelectedAddress] = useState < string > ("new");
   const [razorpayKeyId, setRazorpayKeyId] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'cod'>('razorpay');
   const [settings, setSettings] = useState < AppSettings > ({
     gstPercentage: 18,
     gstEnabled: true,
@@ -258,8 +259,8 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
         throw new Error(validationError);
       }
 
-      if (!razorpayKeyId) {
-        throw new Error('Razorpay is not configured. Please contact support.');
+      if (paymentMethod === 'razorpay' && !razorpayKeyId) {
+        throw new Error('Razorpay is not configured. Please choose Cash on Delivery or contact support.');
       }
 
       let tax = 0;
@@ -309,6 +310,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
           country: formData.country,
           phone: formData.phone
         },
+        paymentMethod,
         paymentStatus: 'pending' as const,
         eventId,
         fbp: getCookie('_fbp'),
@@ -325,6 +327,47 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
       const orderId = orderResponse.data._id;
       localStorage.setItem('currentOrderId', orderId);
       console.log('✅ Order created:', orderId);
+
+      // Handle Cash on Delivery (COD) Order Flow
+      if (paymentMethod === 'cod') {
+        if (formData.saveAddress && user) {
+          try {
+            await addAddress({
+              fullName: formData.fullName,
+              flatHouseNumber: formData.flatHouseNumber,
+              areaStreetSector: formData.areaStreetSector,
+              landmark: formData.landmark,
+              address: formData.address,
+              city: formData.city,
+              state: formData.state,
+              postalCode: formData.postalCode,
+              country: formData.country,
+              phone: formData.phone,
+              isDefault: false
+            });
+          } catch (addrErr) {
+            console.warn('Could not auto-save address:', addrErr);
+          }
+        }
+
+        clearCart();
+        trackEcommerce('purchase', items.map(item => ({
+          id: `${item.productId}_${item.size}`,
+          groupId: item.productId,
+          name: item.name,
+          price: item.discountPrice || item.price,
+          quantity: item.quantity,
+          variant: item.size
+        })), {
+          transactionId: orderResponse.data.orderNumber,
+          value: total,
+          currency: 'INR'
+        });
+
+        setLoading(false);
+        onNavigate('order-confirmation', { orderId });
+        return;
+      }
 
       console.log('🔗 Creating Razorpay payment order...');
       const paymentOrderData = await apiService.createPaymentOrder({
@@ -439,7 +482,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
             <button
               onClick={() => onNavigate('shop')}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+              className="bg-gray-900 text-white px-6 py-2.5 rounded-xl hover:bg-black font-semibold text-sm transition-all shadow-xs"
             >
               Continue Shopping
             </button>
@@ -494,7 +537,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
                   <select
                     value={selectedAddress}
                     onChange={(e) => handleAddressSelect(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   >
                     <option value="new">Add New Address</option>
                     {user.addresses.map((address) => (
@@ -517,7 +560,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
                     value={formData.email}
                     onChange={handleInputChange}
                     required
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   />
                 </div>
 
@@ -531,7 +574,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
                     value={formData.fullName}
                     onChange={handleInputChange}
                     required
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   />
                 </div>
 
@@ -545,7 +588,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
                     value={formData.phone}
                     onChange={handleInputChange}
                     required
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   />
                 </div>
 
@@ -559,7 +602,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
                     value={formData.flatHouseNumber}
                     onChange={handleInputChange}
                     placeholder="e.g., 21c/144b North"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   />
                 </div>
 
@@ -573,7 +616,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
                     value={formData.areaStreetSector}
                     onChange={handleInputChange}
                     placeholder="e.g., Kennedy Street"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   />
                 </div>
 
@@ -587,7 +630,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
                     value={formData.landmark}
                     onChange={handleInputChange}
                     placeholder="e.g., Near CSI Church"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   />
                 </div>
 
@@ -600,7 +643,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
                     name="address"
                     value={formData.address}
                     onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   />
                 </div>
 
@@ -615,7 +658,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
                       value={formData.city}
                       onChange={handleInputChange}
                       required
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     />
                   </div>
 
@@ -629,7 +672,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
                       value={formData.state}
                       onChange={handleInputChange}
                       required
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     />
                   </div>
                 </div>
@@ -645,7 +688,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
                       value={formData.postalCode}
                       onChange={handleInputChange}
                       required
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     />
                   </div>
 
@@ -659,7 +702,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
                       value={formData.country}
                       onChange={handleInputChange}
                       required
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     />
                   </div>
                 </div>
@@ -671,7 +714,7 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
                       name="saveAddress"
                       checked={formData.saveAddress}
                       onChange={handleInputChange}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
                     />
                     <label className="ml-2 text-sm text-gray-700">
                       Save this address for future orders
@@ -679,12 +722,81 @@ export function CheckoutPage({ onNavigate }: { onNavigate: (path: string, params
                   </div>
                 )}
 
+                {/* Payment Method Selector */}
+                <div className="pt-2">
+                  <label className="block text-sm font-bold text-gray-900 mb-2">
+                    Payment Method
+                  </label>
+                  <div className="space-y-2.5">
+                    <label 
+                      className={`flex items-start p-3.5 border rounded-xl cursor-pointer transition-all ${
+                        paymentMethod === 'razorpay'
+                          ? 'border-red-600 bg-red-50/40 ring-1 ring-red-600'
+                          : 'border-gray-200 hover:border-gray-300 bg-white'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="razorpay"
+                        checked={paymentMethod === 'razorpay'}
+                        onChange={() => setPaymentMethod('razorpay')}
+                        className="mt-1 w-4 h-4 text-red-600 accent-red-600"
+                      />
+                      <div className="ml-3 flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-sm text-gray-900">Online Payment (Prepaid)</span>
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                            Fastest Delivery
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Instant checkout via UPI (Google Pay, PhonePe, Paytm), Credit/Debit Cards, NetBanking.
+                        </p>
+                      </div>
+                    </label>
+
+                    <label 
+                      className={`flex items-start p-3.5 border rounded-xl cursor-pointer transition-all ${
+                        paymentMethod === 'cod'
+                          ? 'border-red-600 bg-red-50/40 ring-1 ring-red-600'
+                          : 'border-gray-200 hover:border-gray-300 bg-white'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="cod"
+                        checked={paymentMethod === 'cod'}
+                        onChange={() => setPaymentMethod('cod')}
+                        className="mt-1 w-4 h-4 text-red-600 accent-red-600"
+                      />
+                      <div className="ml-3 flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-sm text-gray-900">Cash on Delivery (COD)</span>
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
+                            Verified
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Pay with cash or UPI directly to delivery agent upon parcel arrival.
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-gray-950 hover:bg-black text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
-                  {loading ? "Processing..." : `Pay ₹${finalTotal}`}
+                  {loading 
+                    ? "Processing..." 
+                    : paymentMethod === 'cod'
+                      ? `Confirm Cash on Delivery Order (₹${finalTotal})`
+                      : `Proceed to Secure Pay ₹${finalTotal}`
+                  }
                 </button>
               </form>
             </div>

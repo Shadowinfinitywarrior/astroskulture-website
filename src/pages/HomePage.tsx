@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Heart, Star, ArrowRight, ChevronLeft, ChevronRight, ShoppingCart, Check, Plus } from 'lucide-react';
 import { apiService } from '../lib/mongodb';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { QuickSizePicker } from '../components/QuickSizePicker';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -70,6 +71,8 @@ function ProductCard({
 }) {
   const { addToCart } = useCart();
   const [isAdded, setIsAdded] = useState(false);
+  const [showSizePicker, setShowSizePicker] = useState(false);
+  const [addedSize, setAddedSize] = useState<string | null>(null);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN').format(price);
@@ -80,11 +83,7 @@ function ProductCard({
     ? Math.round((1 - product.discountPrice! / product.price) * 100)
     : 0;
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (product.totalStock === 0) return;
-
-    const defaultSize = product.sizes?.find((s: any) => s.stock > 0)?.size || 'M';
+  const handleSelectSize = (selectedSize: string) => {
     addToCart({
       productId: product._id,
       name: product.name,
@@ -94,12 +93,17 @@ function ProductCard({
       gstApplicable: false,
       shippingFee: 0,
       freeShippingAbove: 0,
-      size: defaultSize,
+      size: selectedSize,
       image: product.images[0]?.url || '',
     });
 
+    setAddedSize(selectedSize);
     setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 2000);
+    setShowSizePicker(false);
+    setTimeout(() => {
+      setIsAdded(false);
+      setAddedSize(null);
+    }, 2500);
   };
 
   const handleBuyNow = (e: React.MouseEvent) => {
@@ -124,7 +128,7 @@ function ProductCard({
   };
 
   return (
-    <div className="bg-white rounded-lg overflow-hidden group hover:shadow-lg transition-all duration-300 h-full flex flex-col border border-gray-200">
+    <div className="bg-white rounded-lg overflow-hidden group hover:shadow-lg transition-all duration-300 h-full flex flex-col border border-gray-200 relative">
       <div className="relative overflow-hidden flex-shrink-0 w-full aspect-square bg-gray-100">
         <a
           href={`/product/${product.slug || product._id}`}
@@ -139,7 +143,7 @@ function ProductCard({
             src={product.images[0]?.url ? optimizeImageUrl(product.images[0]?.url, { width: 400, quality: 'auto:good' }) : '/hero-banner-mobile.webp'}
             srcSet={product.images[0]?.url ? `${optimizeImageUrl(product.images[0]?.url, { width: 280, quality: 'auto:good' })} 280w, ${optimizeImageUrl(product.images[0]?.url, { width: 400, quality: 'auto:good' })} 400w, ${optimizeImageUrl(product.images[0]?.url, { width: 600, quality: 'auto:good' })} 600w` : undefined}
             sizes="(max-width: 640px) 180px, (max-width: 1024px) 292px, 400px"
-            alt={product.name}
+            alt={product.images[0]?.alt || `${product.name} - 240 GSM Heavyweight Oversized Cotton T-Shirt`}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
             loading="lazy"
             decoding="async"
@@ -257,7 +261,10 @@ function ProductCard({
             </button>
           ) : (
             <button
-              onClick={handleAddToCart}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowSizePicker(prev => !prev);
+              }}
               className={`w-full py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center transition-all ${
                 isAdded
                   ? 'bg-emerald-600 text-white shadow-sm'
@@ -268,18 +275,27 @@ function ProductCard({
               {isAdded ? (
                 <>
                   <Check className="w-3.5 h-3.5 mr-1.5" />
-                  Added
+                  Added {addedSize ? `(${addedSize})` : ''}
                 </>
               ) : (
                 <>
                   <Plus className="w-3.5 h-3.5 mr-1" />
-                  Add
+                  Add +
                 </>
               )}
             </button>
           )}
         </div>
       </div>
+
+      {/* Quick Size Picker Popover */}
+      {showSizePicker && (
+        <QuickSizePicker
+          product={product as any}
+          onSelectSize={handleSelectSize}
+          onClose={() => setShowSizePicker(false)}
+        />
+      )}
     </div>
   );
 }
@@ -340,11 +356,12 @@ export function HomePage({ onNavigate }: HomePageProps) {
         {
           "@context": "https://schema.org",
           "@type": "WebSite",
+          "@id": "https://astroskulture.in/#website",
           "name": "ASTROS KULTURE",
           "url": "https://astroskulture.in",
           "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://astroskulture.in/shop?search={search_term_string}",
+            "target": "https://astroskulture.in/shop?q={search_term_string}",
             "query-input": "required name=search_term_string"
           }
         }

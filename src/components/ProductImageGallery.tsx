@@ -102,7 +102,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
         >
           <img
             src={optimizeImageUrl(images[currentIndex].url, { width: 900, quality: 'auto:good' })}
-            alt={images[currentIndex].alt || `${productName} - Image ${currentIndex + 1}`}
+            alt={images[currentIndex].alt || `${productName} - 240 GSM Heavyweight Oversized Cotton T-Shirt (View ${currentIndex + 1})`}
             className={`w-full h-full object-contain transition-transform duration-300 ${
               isZoomed ? 'scale-150 cursor-zoom-out' : 'scale-100'
             }`}
