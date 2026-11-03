@@ -154,7 +154,7 @@ PORT=5000
 CLIENT_URL=https://astroskulture.in
 
 # Razorpay Configuration
-RAZORPAY_KEY_ID=rzp_live_REDACTED_KEY
+RAZORPAY_KEY_ID=YOUR_RAZORPAY_KEY_ID
 RAZORPAY_SECRET_KEY=your_razorpay_secret_key
 
 # Cloudinary Configuration
@@ -167,7 +167,7 @@ CLOUDINARY_FOLDER=custom-designs
 # FRONTEND CONFIGURATION (Vite will inject these into the static bundle during build)
 # =========================================================================
 VITE_API_BASE_URL=https://astroskulture.in/api
-VITE_RAZORPAY_KEY_ID=rzp_live_REDACTED_KEY
+VITE_RAZORPAY_KEY_ID=YOUR_RAZORPAY_KEY_ID
 VITE_ENVIRONMENT=production
 ```
 

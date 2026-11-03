@@ -37,18 +37,20 @@ const connectDB = async () => {
   console.log('✅ Connected to local MongoDB:', mongoose.connection.name);
 };
 
+const defaultAdminPassword = process.env.ADMIN_INITIAL_PASSWORD || process.env.ADMIN_PASSWORD || 'AstrosSecureAdmin2026!';
+
 const adminsToEnsure = [
   {
     username: 'REDACTED_ADMIN_PASS',
     email: 'astroskulture4@gmail.com',
-    password: 'REDACTED_ADMIN_PASS',
+    password: defaultAdminPassword,
     fullName: 'Astros Kulture Admin',
     role: 'admin'
   },
   {
     username: 'Nithish',
     email: 'kathiravankathiravan973@gmail.com',
-    password: 'REDACTED_ADMIN_PASS',
+    password: defaultAdminPassword,
     fullName: 'Nithish',
     role: 'admin'
   }

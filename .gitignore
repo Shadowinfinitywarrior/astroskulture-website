@@ -21,7 +21,18 @@ dist-ssr
 *.sln
 *.sw?
 .env
-.env.local
-.env.*.local
+.env.*
+*.env
 backend/.env
-backend/.env.local
+backend/.env.*
+deployment/.env*
+*.backup
+*.bak
+
+# Archives and sensitive data dumps
+*.tar.gz
+*.tgz
+*.zip
+*.sql
+*.dump
+project.tar.gz
