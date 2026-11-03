@@ -48,8 +48,18 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
       .then(data => {
         if (data?.data && Array.isArray(data.data)) {
           const texts = data.data
-            .filter((b: any) => b.isActive && b.displayText && b.displayText.trim())
-            .map((b: any) => b.displayText.trim());
+            .filter((b: any) => b.isActive)
+            .map((b: any) => {
+              const text = (b.displayText || '').trim();
+              if (text && text.toLowerCase() !== 'special offer') {
+                return text;
+              }
+              if (b.discountPercentage && b.discountPercentage > 0) {
+                return `✨ Special Offer: Get ${b.discountPercentage}% OFF on your order today! | Free Shipping Above ₹999`;
+              }
+              return text || '✨ Special Offer: Free Shipping on orders above ₹999';
+            })
+            .filter((t: string) => t.length > 0);
           setActiveBanners(texts);
         }
       })
@@ -66,6 +76,10 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
   if (announcementText && !bannerList.includes(announcementText)) {
     bannerList.push(announcementText);
   }
+
+  const displayBannerItems = bannerList.length > 0
+    ? (bannerList.length < 3 ? [...bannerList, ...bannerList, ...bannerList] : bannerList)
+    : [];
 
   const handleSignOut = async () => {
     try {
@@ -91,34 +105,25 @@ export function Navbar({ onNavigate, currentPage }: NavbarProps) {
     <header className="sticky top-0 z-50">
       {/* Top Banner Above Header (Strictly Admin-Controlled, No Hardcoded Banners) */}
       {bannerList.length > 0 && (
-        <div className="bg-gradient-to-r from-red-700 via-red-600 to-red-800 text-white text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 overflow-hidden border-b border-red-800/40 select-none shadow-sm">
-          <div className="flex w-fit whitespace-nowrap animate-marquee hover:[animation-play-state:paused]">
-            <div className="flex items-center gap-6 sm:gap-8 px-4 tracking-wider">
-              {(bannerList.length < 3 ? [...bannerList, ...bannerList, ...bannerList] : bannerList).map((text, idx) => (
-                <span key={idx} className="flex items-center gap-6 sm:gap-8">
-                  <span>{text}</span>
-                  <span className="opacity-60">•</span>
+        <div className="relative bg-gradient-to-r from-red-700 via-red-600 to-red-800 text-white text-xs sm:text-sm font-semibold tracking-wide py-2 sm:py-2.5 min-h-[38px] sm:min-h-[42px] overflow-hidden border-b border-red-800/40 select-none shadow-sm flex items-center">
+          <div className="flex w-fit whitespace-nowrap animate-marquee hover:[animation-play-state:paused] items-center">
+            <div className="flex items-center gap-8 sm:gap-12 px-6">
+              {displayBannerItems.map((text, idx) => (
+                <span key={`b1-${idx}`} className="flex items-center gap-8 sm:gap-12">
+                  <span className="drop-shadow-sm font-bold tracking-wide">{text}</span>
+                  <span className="text-red-200/80 text-xs sm:text-sm select-none">•</span>
                 </span>
               ))}
             </div>
-            <div className="flex items-center gap-6 sm:gap-8 px-4 tracking-wider" aria-hidden="true">
-              {(bannerList.length < 3 ? [...bannerList, ...bannerList, ...bannerList] : bannerList).map((text, idx) => (
-                <span key={`dup-${idx}`} className="flex items-center gap-6 sm:gap-8">
-                  <span>{text}</span>
-                  <span className="opacity-60">•</span>
+            <div className="flex items-center gap-8 sm:gap-12 px-6" aria-hidden="true">
+              {displayBannerItems.map((text, idx) => (
+                <span key={`b2-${idx}`} className="flex items-center gap-8 sm:gap-12">
+                  <span className="drop-shadow-sm font-bold tracking-wide">{text}</span>
+                  <span className="text-red-200/80 text-xs sm:text-sm select-none">•</span>
                 </span>
               ))}
             </div>
           </div>
-          <style>{`
-            @keyframes marquee-scroll {
-              0% { transform: translateX(0%); }
-              100% { transform: translateX(-50%); }
-            }
-            .animate-marquee {
-              animation: marquee-scroll 22s linear infinite;
-            }
-          `}</style>
         </div>
       )}
 

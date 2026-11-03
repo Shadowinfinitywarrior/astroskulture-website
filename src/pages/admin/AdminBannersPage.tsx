@@ -25,7 +25,7 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: 'New Banner',
-    displayText: 'Special Offer',
+    displayText: '✨ Special Offer: Get 10% OFF on your order today! | Use Code ASTROS240',
     discountPercentage: 10,
     textColor: '#ffffff',
     backgroundColor: '#dc2626',
@@ -122,7 +122,7 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
 
       setFormData({
         title: 'New Banner',
-        displayText: 'Special Offer',
+        displayText: '✨ Special Offer: Get 10% OFF on your order today! | Use Code ASTROS240',
         discountPercentage: 10,
         textColor: '#ffffff',
         backgroundColor: '#dc2626',
@@ -165,7 +165,7 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
     setAnimationPreview(false);
     setFormData({
       title: 'New Banner',
-      displayText: 'Special Offer',
+      displayText: '✨ Special Offer: Get 10% OFF on your order today! | Use Code ASTROS240',
       discountPercentage: 10,
       textColor: '#ffffff',
       backgroundColor: '#dc2626',
@@ -403,7 +403,7 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
                     className="text-center font-bold text-sm md:text-base"
                     style={{ color: formData.textColor }}
                   >
-                    ✨ Special Offer: Get {formData.discountPercentage}% OFF on your order today!
+                    {(formData as any).displayText || `✨ Special Offer: Get ${formData.discountPercentage}% OFF on your order today!`}
                   </p>
                 </div>
               </div>
@@ -464,7 +464,7 @@ export default function AdminBannersPage({ onNavigate }: AdminBannersPageProps) 
                           color: banner.textColor || '#ffffff'
                         }}
                       >
-                        ✨ Special Offer: Get {banner.discountPercentage}% OFF on your order today!
+                        {(banner as any).displayText || `✨ Special Offer: Get ${banner.discountPercentage}% OFF on your order today!`}
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                         <div>

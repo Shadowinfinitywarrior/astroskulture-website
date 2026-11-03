@@ -64,8 +64,13 @@ export default {
           '0%, 100%': { transform: 'translateY(0)', opacity: '1' },
           '50%': { transform: 'translateY(-20px)', opacity: '1' },
         },
+        marquee: {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
       },
       animation: {
+        marquee: 'marquee 25s linear infinite',
         'slide-slow': 'slide-slow 3s ease-in-out infinite',
         'slide-normal': 'slide-normal 2s ease-in-out infinite',
         'slide-fast': 'slide-fast 1s ease-in-out infinite',
