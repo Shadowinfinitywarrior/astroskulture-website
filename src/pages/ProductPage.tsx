@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ShoppingCart, Heart, Star, Truck, Shield, RefreshCw, ArrowLeft, Check, X } from 'lucide-react';
+import { ShoppingCart, Heart, Star, Truck, Shield, RefreshCw, ArrowLeft, Check, X, Sparkles, Ruler, Gift, RotateCcw, ShieldCheck, ChevronDown } from 'lucide-react';
 import { apiService } from '../lib/mongodb';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -511,7 +511,8 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                     onClick={() => setShowFindMySize(true)}
                     className="text-xs text-red-600 hover:text-red-700 font-bold flex items-center gap-1 cursor-pointer"
                   >
-                    ✨ Find My Size
+                    <Sparkles className="w-3.5 h-3.5 text-red-600 flex-shrink-0" />
+                    <span>Find My Size</span>
                   </button>
                   <span className="text-gray-300">|</span>
                   <button
@@ -540,8 +541,8 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                 ))}
               </div>
               {/* Model Size Descriptor */}
-              <p className="text-[11px] text-gray-500 italic mt-1.5 flex items-center gap-1">
-                <span>📏</span>
+              <p className="text-[11px] text-gray-500 italic mt-1.5 flex items-center gap-1.5">
+                <Ruler className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
                 <span>Model is 6'1" (185 cm) wearing Size L for an authentic oversized drop-shoulder drape.</span>
               </p>
             </div>
@@ -597,7 +598,10 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-xs sm:text-sm text-gray-900">🎁 Add gift packing (+₹49)</span>
+                    <span className="font-semibold text-xs sm:text-sm text-gray-900 flex items-center gap-1.5">
+                      <Gift className="w-4 h-4 text-red-600 flex-shrink-0" />
+                      <span>Add gift packing (+₹49)</span>
+                    </span>
                     <span className="bg-red-100 text-red-700 text-[10px] font-bold px-1.5 py-0.5 rounded">GIFT READY</span>
                   </div>
                   <p className="text-[11px] sm:text-xs text-gray-500 mt-0.5">
@@ -670,10 +674,11 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
               </div>
             )}
 
-            {/* Check Delivery & Pincode Serviceability */}
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-3.5 space-y-2">
-              <span className="font-semibold text-xs md:text-sm text-gray-900 block">
-                Check Delivery & COD Availability
+            {/* Check Delivery & Pincode Serviceability (Mobile Only, hidden in Desktop mode) */}
+            <div className="md:hidden bg-gray-50 border border-gray-200 rounded-xl p-3.5 space-y-2">
+              <span className="font-semibold text-xs md:text-sm text-gray-900 block flex items-center gap-1.5">
+                <Truck className="w-4 h-4 text-gray-700 flex-shrink-0" />
+                <span>Check Delivery & COD Availability</span>
               </span>
               <form onSubmit={handlePincodeCheck} className="flex gap-2">
                 <input
@@ -700,15 +705,18 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
 
             {/* Trust Badges Pills */}
             <div className="grid grid-cols-3 gap-2 text-center text-xs text-gray-600">
-              <div className="border border-gray-200 bg-gray-50/50 rounded-xl p-2.5">
-                <span className="block font-bold text-gray-900">🎁 Gift Ready</span>
+              <div className="border border-gray-200 bg-gray-50/50 rounded-xl p-2.5 flex flex-col items-center justify-center">
+                <Gift className="w-4 h-4 text-gray-800 mb-1" />
+                <span className="block font-bold text-gray-900">Gift Ready</span>
                 <span className="text-[11px] text-gray-500">Wrap + Card</span>
               </div>
-              <div className="border border-gray-200 bg-gray-50/50 rounded-xl p-2.5">
+              <div className="border border-gray-200 bg-gray-50/50 rounded-xl p-2.5 flex flex-col items-center justify-center">
+                <RotateCcw className="w-4 h-4 text-gray-800 mb-1" />
                 <span className="block font-bold text-gray-900">7-Day</span>
                 <span className="text-[11px] text-gray-500">Easy Exchange</span>
               </div>
-              <div className="border border-gray-200 bg-gray-50/50 rounded-xl p-2.5">
+              <div className="border border-gray-200 bg-gray-50/50 rounded-xl p-2.5 flex flex-col items-center justify-center">
+                <ShieldCheck className="w-4 h-4 text-gray-800 mb-1" />
                 <span className="block font-bold text-gray-900">Secure</span>
                 <span className="text-[11px] text-gray-500">UPI, Cards, COD</span>
               </div>
@@ -717,24 +725,30 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
             {/* Key Features */}
             <div className="border-t border-gray-200 pt-4 space-y-2">
               <h3 className="font-semibold text-sm md:text-base text-gray-900">Key Features</h3>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs md:text-sm text-gray-600">
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm text-gray-600">
                 <li className="flex items-center gap-2">
-                  <span className="text-green-600 font-bold">✓</span> 100% Combed Heavy Cotton (240 GSM)
+                  <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  <span>100% Combed Heavy Cotton (240 GSM)</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-600 font-bold">✓</span> Signature streetwear oversized fit
+                  <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  <span>Signature streetwear oversized fit</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-600 font-bold">✓</span> Durable high-definition artwork
+                  <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  <span>Durable high-definition artwork</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-600 font-bold">✓</span> Pre-shrunk bio-washed fabric
+                  <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  <span>Pre-shrunk bio-washed fabric</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-600 font-bold">✓</span> Sizes S to XXL available
+                  <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  <span>Sizes S to XXL available</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-600 font-bold">✓</span> Proudly Made in India
+                  <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  <span>Proudly Made in India</span>
                 </li>
               </ul>
             </div>
@@ -742,7 +756,8 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
             {/* Gifting Section */}
             <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-3.5 text-xs md:text-sm text-amber-900 space-y-1">
               <span className="font-bold flex items-center gap-1.5 text-amber-950">
-                🎁 Perfect for Gifting
+                <Gift className="w-4 h-4 text-amber-700 flex-shrink-0" />
+                <span>Perfect for Gifting</span>
               </span>
               <p className="text-amber-800 leading-relaxed text-xs">
                 Ideal gift for birthdays, match days, anime lovers & celebrations. Tick gift packing, write your message, and ship straight to the recipient's address. Price and invoice remain strictly concealed from the parcel!
@@ -754,7 +769,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
               <details className="group border border-gray-200 rounded-lg p-3 open:bg-gray-50/50 transition-colors" open>
                 <summary className="font-semibold text-xs md:text-sm text-gray-900 cursor-pointer list-none flex justify-between items-center">
                   <span>Product Details & Fabric Care</span>
-                  <span className="text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+                  <ChevronDown className="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" />
                 </summary>
                 <div className="mt-2.5 pt-2 border-t border-gray-100 text-xs md:text-sm text-gray-600 space-y-1.5">
                   <p>• <strong>Material:</strong> 100% Super Combed Bio-Washed Cotton (240 GSM)</p>
@@ -766,7 +781,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
               <details className="group border border-gray-200 rounded-lg p-3 open:bg-gray-50/50 transition-colors">
                 <summary className="font-semibold text-xs md:text-sm text-gray-900 cursor-pointer list-none flex justify-between items-center">
                   <span>Shipping, Gift Packing & Returns</span>
-                  <span className="text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+                  <ChevronDown className="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" />
                 </summary>
                 <div className="mt-2.5 pt-2 border-t border-gray-100 text-xs md:text-sm text-gray-600 space-y-1.5">
                   <p>• <strong>Dispatch:</strong> Dispatched in 1–2 working days with live tracking link via SMS/WhatsApp.</p>
@@ -779,7 +794,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
               <details className="group border border-gray-200 rounded-lg p-3 open:bg-gray-50/50 transition-colors">
                 <summary className="font-semibold text-xs md:text-sm text-gray-900 cursor-pointer list-none flex justify-between items-center">
                   <span>Frequently Asked Questions (240 GSM FAQ)</span>
-                  <span className="text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+                  <ChevronDown className="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" />
                 </summary>
                 <div className="mt-2.5 pt-2 border-t border-gray-100 text-xs md:text-sm text-gray-600 space-y-3">
                   <div>

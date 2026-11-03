@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Sparkles, Wind, Layers, Award } from 'lucide-react';
+import { ShieldCheck, Sparkles, Wind, Layers, Award, Check } from 'lucide-react';
 
 export function Why240GsmSection() {
   const comparisonRows = [
@@ -90,7 +90,7 @@ export function Why240GsmSection() {
                 </td>
                 <td className="py-3.5 px-3 sm:px-4 bg-red-50/40 font-semibold text-gray-950 border-l border-red-100">
                   <div className="flex items-start gap-1.5">
-                    <span className="text-red-600 font-bold">✓</span>
+                    <Check className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
                     <span>{row.astros}</span>
                   </div>
                 </td>
