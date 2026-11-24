@@ -73,6 +73,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
     category: '',
     images: [{ url: '', alt: '' }],
     sizes: [
+      { size: 'XS', stock: 0 },
       { size: 'S', stock: 0 },
       { size: 'M', stock: 0 },
       { size: 'L', stock: 0 },
@@ -459,7 +460,20 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         freeShippingAbove: product.freeShippingAbove !== undefined ? product.freeShippingAbove : 999,
         category: product.category,
         images: (product.images.length > 0 ? product.images : [{ url: '', alt: '' }]) as any,
-        sizes: product.sizes,
+        sizes: (() => {
+          const standardOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+          const existingSizes = Array.isArray(product.sizes) ? product.sizes : [];
+          const mergedSizes = standardOrder.map(sName => {
+            const found = existingSizes.find(s => s.size === sName);
+            return found ? { size: sName, stock: found.stock } : { size: sName, stock: 0 };
+          });
+          existingSizes.forEach(s => {
+            if (!standardOrder.includes(s.size) && !mergedSizes.some(m => m.size === s.size)) {
+              mergedSizes.push(s);
+            }
+          });
+          return mergedSizes;
+        })(),
         colors: product.colors || [],
         isFeatured: product.isFeatured,
         isActive: product.isActive,
@@ -487,6 +501,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
         category: '',
         images: [{ url: '', alt: '' }],
         sizes: [
+          { size: 'XS', stock: 0 },
           { size: 'S', stock: 0 },
           { size: 'M', stock: 0 },
           { size: 'L', stock: 0 },
@@ -908,7 +923,7 @@ export default function AdminProductsPage({ onNavigate }: AdminProductsPageProps
               {/* Sizes Section */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-4">Size & Stock</label>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-3 md:gap-4">
                   {formData.sizes.map((size, index) => (
                     <div key={size.size} className="space-y-2">
                       <label className="block text-sm font-medium text-slate-700 text-center">

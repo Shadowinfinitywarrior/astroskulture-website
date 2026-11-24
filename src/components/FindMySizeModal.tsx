@@ -8,7 +8,7 @@ interface FindMySizeModalProps {
   availableSizes?: string[];
 }
 
-export function FindMySizeModal({ isOpen, onClose, onSelectSize, availableSizes = ['S', 'M', 'L', 'XL', 'XXL'] }: FindMySizeModalProps) {
+export function FindMySizeModal({ isOpen, onClose, onSelectSize, availableSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'] }: FindMySizeModalProps) {
   const [heightCm, setHeightCm] = useState<number>(175);
   const [weightKg, setWeightKg] = useState<number>(70);
   const [preference, setPreference] = useState<'oversized' | 'relaxed'>('oversized');
@@ -18,13 +18,15 @@ export function FindMySizeModal({ isOpen, onClose, onSelectSize, availableSizes 
   // Calculate recommended size
   const calculateSize = (): string => {
     let base = 'M';
-    if (weightKg < 60 && heightCm < 170) base = 'S';
+    if (weightKg < 50 || heightCm < 162) base = 'XS';
+    else if (weightKg < 60 && heightCm < 170) base = 'S';
     else if (weightKg < 72 && heightCm < 178) base = 'M';
     else if (weightKg < 84 && heightCm < 185) base = 'L';
     else if (weightKg < 95 || heightCm < 192) base = 'XL';
     else base = 'XXL';
 
     if (preference === 'oversized') {
+      if (base === 'XS') return 'S';
       if (base === 'S') return 'M';
       if (base === 'M') return 'L';
       if (base === 'L') return 'XL';

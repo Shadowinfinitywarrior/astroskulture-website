@@ -8,7 +8,7 @@ interface QuickSizePickerProps {
   onClose: () => void;
 }
 
-const STANDARD_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
+const STANDARD_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
 export function QuickSizePicker({ product, onSelectSize, onClose }: QuickSizePickerProps) {
   // Extract stock map from product.sizes
@@ -38,7 +38,7 @@ export function QuickSizePicker({ product, onSelectSize, onClose }: QuickSizePic
         </button>
       </div>
 
-      <div className="grid grid-cols-5 gap-1.5">
+      <div className="grid grid-cols-6 gap-1 sm:gap-1.5">
         {STANDARD_SIZES.map((size) => {
           // If product.sizes array exists, check stock; otherwise assume available
           const stock = stockMap[size] !== undefined ? stockMap[size] : 10;

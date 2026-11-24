@@ -744,7 +744,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
-                  <span>Sizes S to XXL available</span>
+                  <span>Sizes XS to XXL available</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
@@ -1125,6 +1125,12 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
+                        <tr className="bg-gray-50/50">
+                          <td className="py-2 px-3 border border-gray-200 font-bold text-gray-900">XS</td>
+                          <td className="py-2 px-3 border border-gray-200">36</td>
+                          <td className="py-2 px-3 border border-gray-200">25</td>
+                          <td className="py-2 px-3 border border-gray-200">17</td>
+                        </tr>
                         <tr>
                           <td className="py-2 px-3 border border-gray-200 font-bold text-gray-900">S</td>
                           <td className="py-2 px-3 border border-gray-200">38</td>
@@ -1180,7 +1186,7 @@ export function ProductPage({ slug, onNavigate }: ProductPageProps) {
         isOpen={showFindMySize}
         onClose={() => setShowFindMySize(false)}
         onSelectSize={(sz) => setSelectedSize(sz)}
-        availableSizes={product?.sizes?.map(s => s.size) || ['S', 'M', 'L', 'XL', 'XXL']}
+        availableSizes={product?.sizes?.map(s => s.size) || ['XS', 'S', 'M', 'L', 'XL', 'XXL']}
       />
     </div>
   );
